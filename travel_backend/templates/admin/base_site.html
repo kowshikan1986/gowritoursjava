@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Luxury Travel Admin{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">Luxury Travel Administration</a></h1>
+{% endblock %}
+
+{% block extrastyle %}
+<style>
+    :root {
+        --primary-color: #7c3aed;
+        --secondary-color: #5b21b6;
+        --accent-color: #6d28d9;
+        --header-bg: #4c1d95;
+        --link-color: #7c3aed;
+    }
+    
+    #header {
+        background: var(--header-bg);
+        color: #fff;
+    }
+    
+    .module h2, .module caption, .inline-group h2 {
+        background-color: var(--secondary-color) !important;
+    }
+    
+    div.breadcrumbs {
+        background-color: var(--primary-color);
+        color: #fff;
+    }
+    
+    a:link, a:visited {
+        color: var(--link-color);
+    }
+    
+    .button, input[type=submit], input[type=button], .submit-row input, a.button {
+        background: var(--primary-color);
+    }
+    
+    .button:hover, input[type=submit]:hover, input[type=button]:hover {
+        background: var(--accent-color);
+    }
+    
+    .selector-chosen h2 {
+        background: var(--primary-color) !important;
+    }
+</style>
+{% endblock %}
