@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       strictPort: true,
       allowedHosts: [
-        'gowritoursjava-main-83a2c51.kuberns.cloud',
+        'gowritoursjava-main-6c0a179.kuberns.cloud',
         ...extraHosts,
       ],
     },
