@@ -1,12 +1,9 @@
-// Frontend data service - fetches from server API instead of local browser database
-import { onDataChange } from './database';
+// Frontend data service - uses local SQL database with auto-seeding
+import { initDatabase, getCategories, getTours, getHeroBanners, onDataChange } from './database';
 
 // Helper to normalize slugs
 export const normalize = (str = '') =>
   str.toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-
-// API Base URL - use environment variable for backend URL or default to same server
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 // Cache for frontend data to avoid re-fetching
 let cachedData = null;
@@ -26,7 +23,7 @@ onDataChange((type) => {
   clearFrontendCache();
 });
 
-// Fetch data from server API
+// Initialize database and fetch data for frontend (with auto-seeding)
 export const fetchFrontendData = async (forceRefresh = false) => {
   // Return cached data if still valid
   const now = Date.now();
@@ -36,23 +33,52 @@ export const fetchFrontendData = async (forceRefresh = false) => {
   }
   
   try {
-    console.log('fetchFrontendData: Fetching from server API...');
+    console.log('fetchFrontendData: Initializing local SQL database...');
+    await initDatabase();
+    console.log('fetchFrontendData: Database initialized, fetching data...');
     
-    // Fetch all data from API
-    const [categoriesRes, toursRes, bannersRes] = await Promise.all([
-      fetch(`${API_BASE}/categories`),
-      fetch(`${API_BASE}/tours`),
-      fetch(`${API_BASE}/banners`)
-    ]);
-    
-    const allCategories = await categoriesRes.json();
-    const tours = await toursRes.json();
-    const banners = await bannersRes.json();
+    const allCategories = getCategories();
+    const tours = getTours();
+    const banners = getHeroBanners();
 
-    console.log('fetchFrontendData: API data -', {
+    console.log('fetchFrontendData: SQL data -', {
       categoriesCount: allCategories?.length || 0,
       toursCount: tours?.length || 0,
       bannersCount: banners?.length || 0
+    });
+
+    // Build category tree structure
+    const categoryMap = new Map();
+    (allCategories || []).forEach(cat => {
+      categoryMap.set(cat.id, {
+        ...cat,
+        tours: [],
+        subcategories: [],
+      });
+    });
+
+    // Build tree structure
+    const rootCategories = [];
+    (allCategories || []).forEach(cat => {
+      const category = categoryMap.get(cat.id);
+      if (cat.parent_id) {
+        const parent = categoryMap.get(cat.parent_id);
+        if (parent) {
+          parent.subcategories.push(category);
+        }
+      } else {
+        rootCategories.push(category);
+      }
+    });
+
+    // Assign tours to categories
+    (tours || []).forEach(tour => {
+      if (tour.category_id) {
+        const category = categoryMap.get(tour.category_id);
+        if (category) {
+          category.tours.push(tour);
+        }
+      }
     });
 
     // Build category tree structure
@@ -103,12 +129,12 @@ export const fetchFrontendData = async (forceRefresh = false) => {
 
     return cachedData;
   } catch (error) {
-    console.error('fetchFrontendData ERROR - Failed to fetch from API:');
+    console.error('fetchFrontendData ERROR - Failed to fetch frontend data:');
     console.error('Error type:', error?.constructor?.name);
     console.error('Error message:', error?.message);
     console.error('Error stack:', error?.stack);
     console.error('Full error object:', error);
-    // Return empty data structure if API fails
+    // Return empty data structure if database fails
     return {
       categories: [],
       allCategories: [],
