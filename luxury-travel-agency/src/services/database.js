@@ -327,6 +327,22 @@ const createSchema = async () => {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  
+  // Check if database is empty (new database)
+  const categoriesCount = db.exec('SELECT COUNT(*) as count FROM categories');
+  const isEmpty = categoriesCount.length === 0 || categoriesCount[0].values[0][0] === 0;
+  
+  if (isEmpty) {
+    console.log('🌱 New database detected - auto-seeding with default data...');
+    // Import the seeding function dynamically to avoid circular dependency
+    try {
+      const { importAllCategories } = await import('./importData.js');
+      await importAllCategories();
+      console.log('✅ Database seeded successfully!');
+    } catch (err) {
+      console.error('❌ Failed to seed database:', err);
+    }
+  }
 
   // Don't save during initial schema creation, will be saved when data is added
 };

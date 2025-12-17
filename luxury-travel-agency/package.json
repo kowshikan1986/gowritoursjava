@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "start": "node server.js",
-    "postinstall": "npm run build"
+    "seed": "node server/seed.js",
+    "postinstall": "npm run build && npm run seed"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -25,7 +26,8 @@
   },
   "optionalDependencies": {
     "express": "^4.18.2",
-    "compression": "^1.7.4"
+    "compression": "^1.7.4",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
