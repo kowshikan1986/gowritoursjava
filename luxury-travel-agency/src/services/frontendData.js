@@ -5,8 +5,8 @@ import { onDataChange } from './database';
 export const normalize = (str = '') =>
   str.toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-// API Base URL - use relative path in production
-const API_BASE = '/api';
+// API Base URL - use environment variable for backend URL or default to same server
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 // Cache for frontend data to avoid re-fetching
 let cachedData = null;
