@@ -172,15 +172,31 @@ app.get('/api/banners', (req, res) => {
 
 // ==================== FRONTEND ====================
 
-// Serve static files from the dist directory
-app.use(express.static(path.join(__dirname, 'dist'), {
-  maxAge: '1y',
-  etag: true
-}));
+// Serve static files from the dist directory (only for non-API routes)
+app.use((req, res, next) => {
+  // Skip static file serving for API routes
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  express.static(path.join(__dirname, 'dist'), {
+    maxAge: '1y',
+    etag: true
+  })(req, res, next);
+});
 
-// Handle SPA routing - send all requests to index.html
+// Handle SPA routing - send all non-API requests to index.html
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  // Don't send index.html for API routes
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'API endpoint not found' });
+  }
+  
+  const indexPath = path.join(__dirname, 'dist', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(500).send('App not built. Run: npm run build');
+  }
 });
 
 app.listen(PORT, () => {

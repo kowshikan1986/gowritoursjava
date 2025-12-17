@@ -1,7 +1,7 @@
 {
   "categories": [
     {
-      "id": "1766002992146-85b2qt3c9",
+      "id": "1766003978372-4m7nigba1",
       "name": "Tours",
       "slug": "tours",
       "description": "Main tours category",
@@ -9,11 +9,11 @@
       "parent_id": null,
       "visible": true,
       "sort_order": 1,
-      "created_at": "2025-12-17T20:23:12.146Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.372Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-jli5ozcjn",
+      "id": "1766003978373-t9rkzro2u",
       "name": "Cruises",
       "slug": "cruises",
       "description": "Cruise packages",
@@ -21,11 +21,11 @@
       "parent_id": null,
       "visible": true,
       "sort_order": 2,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-ih6ey5mfk",
+      "id": "1766003978373-nayge6ohz",
       "name": "Airport Transfers",
       "slug": "airport-transfers",
       "description": "Airport transfer services",
@@ -33,11 +33,11 @@
       "parent_id": null,
       "visible": true,
       "sort_order": 3,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-95hkh8zsv",
+      "id": "1766003978373-6ri2zl616",
       "name": "Vehicle Hire",
       "slug": "vehicle-hire",
       "description": "Vehicle hire services",
@@ -45,11 +45,11 @@
       "parent_id": null,
       "visible": true,
       "sort_order": 4,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-n7lbhmni7",
+      "id": "1766003978373-xtagfe4pd",
       "name": "Sri Lanka Tours",
       "slug": "sri-lanka-tours",
       "description": "Sri Lanka and India tours",
@@ -57,11 +57,11 @@
       "parent_id": null,
       "visible": true,
       "sort_order": 5,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-a7w7hw48j",
+      "id": "1766003978373-tyuk78b37",
       "name": "Other Services",
       "slug": "other-services",
       "description": "Other services",
@@ -69,83 +69,83 @@
       "parent_id": null,
       "visible": true,
       "sort_order": 6,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-4s4cr4u66",
+      "id": "1766003978373-770wfwcy9",
       "name": "UK Tours",
       "slug": "uk-tours",
       "description": "",
       "image": "https://images.unsplash.com/photo-1527258654576-0fb8fdfaf6b9?q=80&w=1470&auto=format&fit=crop",
-      "parent_id": "1766002992146-85b2qt3c9",
+      "parent_id": "1766003978372-4m7nigba1",
       "visible": true,
       "sort_order": 1,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-ee6t2a9lm",
+      "id": "1766003978373-mdf1ea1th",
       "name": "European Tours",
       "slug": "european-tours",
       "description": "",
       "image": "https://images.unsplash.com/photo-1508057198894-247b23fe5ade?q=80&w=1470&auto=format&fit=crop",
-      "parent_id": "1766002992146-85b2qt3c9",
+      "parent_id": "1766003978372-4m7nigba1",
       "visible": true,
       "sort_order": 2,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-ct0sieqo0",
+      "id": "1766003978373-igd5cwcic",
       "name": "World Tours",
       "slug": "world-tours",
       "description": "",
       "image": "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?q=80&w=1470&auto=format&fit=crop",
-      "parent_id": "1766002992146-85b2qt3c9",
+      "parent_id": "1766003978372-4m7nigba1",
       "visible": true,
       "sort_order": 3,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-bo4w7mojw",
+      "id": "1766003978373-ph7iubv9j",
       "name": "London",
       "slug": "london",
       "description": "Explore the vibrant capital city",
       "image": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=80&w=2070",
-      "parent_id": "1766002992148-4s4cr4u66",
+      "parent_id": "1766003978373-770wfwcy9",
       "visible": true,
       "sort_order": 1,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-u4tsp4u06",
+      "id": "1766003978373-jfn518ywn",
       "name": "Scotland Highlights",
       "slug": "scotland-highlights",
       "description": "Experience the majestic Highlands",
       "image": "https://images.unsplash.com/photo-1551506448-074afa034c05?q=80&w=2070",
-      "parent_id": "1766002992148-4s4cr4u66",
+      "parent_id": "1766003978373-770wfwcy9",
       "visible": true,
       "sort_order": 2,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     },
     {
-      "id": "1766002992148-bq7o4nqtv",
+      "id": "1766003978373-8nau8mfzt",
       "name": "Ocean Cruises",
       "slug": "ocean-cruises",
       "description": "Luxury ocean cruises",
       "image": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?q=80&w=1470",
-      "parent_id": "1766002992148-jli5ozcjn",
+      "parent_id": "1766003978373-t9rkzro2u",
       "visible": true,
       "sort_order": 1,
-      "created_at": "2025-12-17T20:23:12.148Z",
-      "updated_at": "2025-12-17T20:23:12.148Z"
+      "created_at": "2025-12-17T20:39:38.373Z",
+      "updated_at": "2025-12-17T20:39:38.373Z"
     }
   ],
   "tours": [],
   "banners": [],
-  "lastUpdated": "2025-12-17T20:23:12.149Z"
+  "lastUpdated": "2025-12-17T20:39:38.373Z"
 }

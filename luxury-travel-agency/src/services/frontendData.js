@@ -5,8 +5,8 @@ import { onDataChange } from './database';
 export const normalize = (str = '') =>
   str.toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-// API Base URL
-const API_BASE = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3000/api';
+// API Base URL - use relative path in production
+const API_BASE = '/api';
 
 // Cache for frontend data to avoid re-fetching
 let cachedData = null;
