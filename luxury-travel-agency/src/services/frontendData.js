@@ -1,9 +1,12 @@
-// Frontend data service - converts database structure to frontend format
-import { initDatabase, getCategories, getTours, getHeroBanners, onDataChange } from './database';
+// Frontend data service - fetches from server API instead of local browser database
+import { onDataChange } from './database';
 
 // Helper to normalize slugs
 export const normalize = (str = '') =>
   str.toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+// API Base URL
+const API_BASE = process.env.NODE_ENV === 'production' ? '/api' : 'http://localhost:3000/api';
 
 // Cache for frontend data to avoid re-fetching
 let cachedData = null;
@@ -23,7 +26,7 @@ onDataChange((type) => {
   clearFrontendCache();
 });
 
-// Initialize database and fetch data for frontend (with caching)
+// Fetch data from server API
 export const fetchFrontendData = async (forceRefresh = false) => {
   // Return cached data if still valid
   const now = Date.now();
@@ -33,15 +36,20 @@ export const fetchFrontendData = async (forceRefresh = false) => {
   }
   
   try {
-    console.log('fetchFrontendData: Initializing database...');
-    await initDatabase();
-    console.log('fetchFrontendData: Database initialized, fetching data...');
+    console.log('fetchFrontendData: Fetching from server API...');
     
-    const allCategories = getCategories();
-    const tours = getTours();
-    const banners = getHeroBanners();
+    // Fetch all data from API
+    const [categoriesRes, toursRes, bannersRes] = await Promise.all([
+      fetch(`${API_BASE}/categories`),
+      fetch(`${API_BASE}/tours`),
+      fetch(`${API_BASE}/banners`)
+    ]);
+    
+    const allCategories = await categoriesRes.json();
+    const tours = await toursRes.json();
+    const banners = await bannersRes.json();
 
-    console.log('fetchFrontendData: Raw data -', {
+    console.log('fetchFrontendData: API data -', {
       categoriesCount: allCategories?.length || 0,
       toursCount: tours?.length || 0,
       bannersCount: banners?.length || 0
@@ -95,12 +103,12 @@ export const fetchFrontendData = async (forceRefresh = false) => {
 
     return cachedData;
   } catch (error) {
-    console.error('fetchFrontendData ERROR - Failed to fetch frontend data:');
+    console.error('fetchFrontendData ERROR - Failed to fetch from API:');
     console.error('Error type:', error?.constructor?.name);
     console.error('Error message:', error?.message);
     console.error('Error stack:', error?.stack);
     console.error('Full error object:', error);
-    // Return empty data structure if database fails
+    // Return empty data structure if API fails
     return {
       categories: [],
       allCategories: [],
