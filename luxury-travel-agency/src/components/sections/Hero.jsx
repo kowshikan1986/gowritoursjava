@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
+import { fetchFrontendData } from '../../services/frontendData';
 
 const HeroContainer = styled.section`
   position: relative;
@@ -206,47 +206,31 @@ const Hero = () => {
   }, []);
 
   useEffect(() => {
+    const fallback = [
+      {
+        title: 'Extraordinary Journeys',
+        subtitle: "Discover the world's most exclusive destinations with personalized luxury travel experiences crafted to perfection for the discerning traveler.",
+        background_image: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=2070&q=80',
+        cta_text: 'Explore Destinations',
+        cta_link: ''
+      },
+      {
+        title: 'Curated Luxury Escapes',
+        subtitle: 'Handpicked retreats and iconic routes designed for comfort and style.',
+        background_image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2070&q=80',
+        cta_text: 'Start Planning',
+        cta_link: ''
+      }
+    ];
+
     const fetchHero = async () => {
       try {
-        const res = await axios.get('http://127.0.0.1:8000/api/hero-banners/');
-        const items = res.data;
-        if (Array.isArray(items) && items.length > 0) {
-          setHeroItems(items);
-        } else {
-          setHeroItems([
-            {
-              title: 'Extraordinary Journeys',
-              subtitle: "Discover the world's most exclusive destinations with personalized luxury travel experiences crafted to perfection for the discerning traveler.",
-              background_image: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-              cta_text: 'Explore Destinations',
-              cta_link: ''
-            },
-            {
-              title: 'Curated Luxury Escapes',
-              subtitle: 'Handpicked retreats and iconic routes designed for comfort and style.',
-              background_image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-              cta_text: 'Start Planning',
-              cta_link: ''
-            }
-          ]);
-        }
+        const data = await fetchFrontendData();
+        const activeBanners = (data.banners || []).filter(item => item.is_active);
+        setHeroItems(activeBanners.length ? activeBanners : fallback);
       } catch (e) {
-        setHeroItems([
-          {
-            title: 'Extraordinary Journeys',
-            subtitle: "Discover the world's most exclusive destinations with personalized luxury travel experiences crafted to perfection for the discerning traveler.",
-            background_image: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-            cta_text: 'Explore Destinations',
-            cta_link: ''
-          },
-          {
-            title: 'Curated Luxury Escapes',
-            subtitle: 'Handpicked retreats and iconic routes designed for comfort and style.',
-            background_image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80',
-            cta_text: 'Start Planning',
-            cta_link: ''
-          }
-        ]);
+        console.log('Failed to load hero banners from database:', e);
+        setHeroItems(fallback);
       }
     };
     fetchHero();
@@ -260,7 +244,15 @@ const Hero = () => {
     return () => clearInterval(timer);
   }, [heroItems.length]);
 
-  const resolveMediaUrl = (url) => (url?.startsWith('http') ? url : `http://127.0.0.1:8000${url}`);
+  const resolveMediaUrl = (url) => {
+    if (!url) return '';
+    // If it's already a full URL, return it
+    if (url.startsWith('http')) return url;
+    // If it's a base64 data URL, return it
+    if (url.startsWith('data:')) return url;
+    // Otherwise return as-is (for local database)
+    return url;
+  };
   const currentHero = heroItems[currentIndex] || {};
 
   const handleScrollToNext = () => {

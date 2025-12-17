@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Database Cache</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        button {
+            background: #6A1B82;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #541567;
+        }
+        .success {
+            color: #059669;
+            background: #d1fae5;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        .info {
+            color: #0284c7;
+            background: #e0f2fe;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        pre {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Database Migration Helper</h1>
+    
+    <div class="info">
+        <strong>Why do I need this?</strong><br>
+        Your browser has cached an old version of the database that doesn't have the new <code>tour_code</code> and <code>details_json</code> columns. 
+        This tool will clear the cache and let the application recreate the database with the correct schema.
+    </div>
+
+    <h2>Option 1: Clear Cache & Reload (Recommended)</h2>
+    <p>This will clear the database cache and reload the page to trigger the migration.</p>
+    <button onclick="clearAndReload()">Clear Cache & Reload</button>
+
+    <h2>Option 2: Just Clear Cache</h2>
+    <p>Clear the cache without reloading. You'll need to manually refresh your app.</p>
+    <button onclick="clearCache()">Clear Cache Only</button>
+
+    <div id="success" class="success"></div>
+
+    <h2>Verification</h2>
+    <p>After clearing the cache, check your browser console for these messages:</p>
+    <pre>✅ Adding tour_code column to tours table...
+✅ Adding details_json column to tours table...
+✅ New columns added successfully. Saving database...
+✅ Database migration complete!</pre>
+
+    <script>
+        async function clearCache() {
+            try {
+                // Clear IndexedDB
+                const dbName = 'travel_agency_db';
+                const deleteRequest = indexedDB.deleteDatabase(dbName);
+                
+                deleteRequest.onsuccess = function() {
+                    const successDiv = document.getElementById('success');
+                    successDiv.style.display = 'block';
+                    successDiv.innerHTML = '✅ Database cache cleared successfully!<br>The next time you load the app, it will run the migration and add the missing columns.';
+                    console.log('✅ Database cache cleared!');
+                };
+                
+                deleteRequest.onerror = function() {
+                    alert('Error clearing database cache');
+                };
+                
+                deleteRequest.onblocked = function() {
+                    alert('Database is blocked. Please close all tabs with the app and try again.');
+                };
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function clearAndReload() {
+            try {
+                const dbName = 'travel_agency_db';
+                const deleteRequest = indexedDB.deleteDatabase(dbName);
+                
+                deleteRequest.onsuccess = function() {
+                    console.log('✅ Database cache cleared! Reloading...');
+                    // Redirect to app
+                    window.location.href = '/';
+                };
+                
+                deleteRequest.onerror = function() {
+                    alert('Error clearing database cache');
+                };
+                
+                deleteRequest.onblocked = function() {
+                    alert('Database is blocked. Please close all tabs with the app and try again.');
+                };
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

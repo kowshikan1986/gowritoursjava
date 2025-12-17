@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navigation from './Navigation';
-import axios from 'axios';
+import { initDatabase, getLogos } from '../../services/database';
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -102,14 +102,22 @@ const Header = () => {
   useEffect(() => {
     const fetchLogo = async () => {
       try {
-        const res = await axios.get('http://127.0.0.1:8000/api/logos/');
-        const items = res.data;
-        if (Array.isArray(items) && items.length > 0) {
-          const active = items.find(i => i.is_active) || items[0];
+        // Initialize database
+        await initDatabase();
+        // Small delay to ensure database is ready
+        await new Promise(resolve => setTimeout(resolve, 50));
+        
+        const logos = getLogos();
+        console.log('Logos from database:', logos);
+        
+        if (Array.isArray(logos) && logos.length > 0) {
+          const active = logos.find(i => i.is_active) || logos[0];
+          console.log('Active logo:', active);
           setLogoUrl(active.image);
         }
       } catch (e) {
-        // keep text logo if API not available
+        console.error('Error loading logo:', e);
+        // keep no logo if database not available
       }
     };
     fetchLogo();
@@ -117,7 +125,12 @@ const Header = () => {
 
   const resolveMediaUrl = (url) => {
     if (!url) return null;
-    return url.startsWith('http') ? url : `http://127.0.0.1:8000${url}`;
+    // If it's already a full URL, return as-is
+    if (url.startsWith('http')) return url;
+    // If it's a base64 data URL, return as-is
+    if (url.startsWith('data:')) return url;
+    // Otherwise assume it's a relative path (shouldn't happen with our setup)
+    return url;
   };
 
   const toggleMobileMenu = () => {

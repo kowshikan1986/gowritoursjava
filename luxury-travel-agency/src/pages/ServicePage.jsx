@@ -1,9 +1,12 @@
-import React, { useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { MapPinIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { servicesData } from '../data/servicesData';
+import { fetchFrontendData, normalize } from '../services/frontendData';
+import { importAllCategories } from '../services/importData';
+import { onDataChange } from '../services/database';
 
 const PageContainer = styled.div`
   padding-top: 0;
@@ -16,7 +19,7 @@ const HeroSection = styled.div`
   align-items: center;
   justify_content: center;
   color: white;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${props => props.bgImage});
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${props => props.$bg});
   background-size: cover;
   background-position: top center;
   margin-bottom: 4rem;
@@ -67,19 +70,80 @@ const TextContent = styled.div`
   h2 {
     font-size: 2.5rem;
     font-family: 'Playfair Display', serif;
+
+  a {
+    margin-top: 1rem;
+  }
     color: #1a1a1a;
     margin-bottom: 1.5rem;
     
     span {
       color: #6A1B82;
     }
+  
+  a {
+    margin-top: 1rem;
   }
-
-  p {
     color: #666;
     line-height: 1.8;
     margin-bottom: 2rem;
     font-size: 1.1rem;
+  }
+  
+  /* Rich text editor content styles */
+  .ql-editor {
+    padding: 0;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    color: #1a1a1a;
+  }
+  
+  p {
+    margin-bottom: 1rem;
+    line-height: 1.8;
+  }
+  
+  ul, ol {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  li {
+    margin-bottom: 0.5rem;
+  }
+  
+  img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 12px;
+    margin: 1.5rem 0;
+  }
+  
+  blockquote {
+    border-left: 4px solid #6A1B82;
+    padding-left: 1rem;
+    margin: 1.5rem 0;
+    font-style: italic;
+    color: #4a4a4a;
+  }
+  
+  code {
+    background: #f3f4f6;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.9em;
+  }
+  
+  pre {
+    background: #f3f4f6;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1rem 0;
   }
 `;
 
@@ -344,20 +408,531 @@ const NotFound = styled.div`
     color: #6A1B82;
     margin-bottom: 1rem;
   }
+
+  p {
+    color: #6b7280;
+  }
+
+  a {
+    margin-top: 1rem;
+  }
+`;
+
+const CategoryGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2.5rem;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const CategoryCard = styled(motion.div)`
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  height: 400px;
+  cursor: pointer;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: block;
+
+  &:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+const CategoryImage = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url(${props => props.$image});
+  background-size: cover;
+  background-position: center;
+  transition: transform 0.5s ease;
+
+  ${CategoryCard}:hover & {
+    transform: scale(1.1);
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      135deg,
+      rgba(0, 0, 0, 0.1) 0%,
+      rgba(0, 0, 0, 0.6) 50%,
+      rgba(0, 0, 0, 0.9) 100%
+    );
+  }
+`;
+
+const CategoryContent = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 2rem;
+  color: white;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+`;
+
+const CategoryName = styled.h3`
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  font-family: 'Playfair Display', serif;
+  color: #ffffff;
+`;
+
+const CategoryLocation = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  opacity: 0.9;
+  font-size: 0.9rem;
+
+  svg {
+    width: 16px;
+    height: 16px;
+    color: #6A1B82;
+  }
+`;
+
+const CategoryDesc = styled.p`
+  font-size: 0.9rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+  opacity: 0.85;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: #ffffff;
+`;
+
+const CategoryFooter = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 1rem;
+`;
+
+const ViewDetailsButton = styled.div`
+  background: #6A1B82;
+  border: 2px solid #6A1B82;
+  color: #ffffff;
+  padding: 0.5rem 1rem;
+  border-radius: 25px;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+
+  ${CategoryCard}:hover & {
+    background: #7C2E9B;
+    border-color: #7C2E9B;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(106, 27, 130, 0.3);
+  }
+
+  ${CategoryCard}:active & {
+    transform: translateY(0);
+    box-shadow: 0 3px 8px rgba(106, 27, 130, 0.25);
+  }
+`;
+
+const SelectionPanel = styled.div`
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 1.25rem;
+  background: #f9fafb;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+`;
+
+const SelectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+`;
+
+const SelectionTitle = styled.h3`
+  margin: 0;
+  font-size: 1.2rem;
+  color: #1f2937;
+`;
+
+const ChipRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+`;
+
+const Chip = styled.button`
+  border: 1px solid #e5e7eb;
+  background: ${props => (props.$active ? '#6A1B82' : '#ffffff')};
+  color: ${props => (props.$active ? '#ffffff' : '#1f2937')};
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(106, 27, 130, 0.15);
+  }
 `;
 
 const ServicePage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const service = servicesData.find(s => s.id === id);
+  const [allCategories, setAllCategories] = useState([]);
+  const [tours, setTours] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(null);
+  const [seedingAttempted, setSeedingAttempted] = useState(false);
+
+  const TOUR_ROOT_SLUGS = [
+    'uk-tours',
+    'european-tours',
+    'world-tours',
+    'india-sri-lankan-tours',
+    'group-tours',
+    'private-tours',
+  ];
+
+  const isTourRoot = (cat) => TOUR_ROOT_SLUGS.includes(normalize(cat?.slug || cat?.name || ''));
+
+  const filterToursByCategory = (listId) => (tours || []).filter((t) => t.category_id === listId);
+
+  const handleCategoryClick = (cat) => {
+    setSelectedCategoryId(cat.id);
+    setSelectedSubcategoryId(null);
+  };
+
+  const handleSubcategoryClick = (sub) => {
+    setSelectedSubcategoryId(sub.id);
+  };
+
+  const findCategoryBySlug = (slug) => (allCategories || []).find((c) => c.slug === slug || c.id === slug);
+
+  const formatPrice = (value) => {
+    if (value === 0 || value) {
+      return `From £${value}`;
+    }
+    return 'From £—';
+  };
+
+  // If the route id matches a category slug, build a service-like object so the page renders instead of 404
+  const matchedCategory = id && findCategoryBySlug(id);
+  const derivedService = service || (matchedCategory
+    ? {
+        id: matchedCategory.slug || matchedCategory.id,
+        title: matchedCategory.name,
+        shortDescription: matchedCategory.description || 'Browse experiences for this category.',
+        fullDescription: matchedCategory.description || '',
+        image: matchedCategory.image || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80',
+        features: [],
+        packages: filterToursByCategory(matchedCategory.id).map((tour) => ({
+          ...tour,
+          price: tour.price,
+        })),
+        seo: {
+          title: matchedCategory.name,
+          description: matchedCategory.description || '',
+        },
+      }
+    : id === 'tours'
+    ? {
+        id: 'tours',
+        title: 'Tours',
+        shortDescription: 'Explore our categories and packages.',
+        fullDescription: 'Browse all tour categories and drill down to see every package.',
+        image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80',
+        features: [],
+        packages: [],
+        seo: {
+          title: 'Tours',
+          description: 'Discover tours by category and subcategory.',
+        },
+      }
+    : null);
 
   useEffect(() => {
-    if (service) {
-      document.title = `${service.seo.title} | Luxury Travel Agency`;
+    if (derivedService) {
+      document.title = `${derivedService.seo.title} | Luxury Travel Agency`;
       window.scrollTo(0, 0);
+      
+      // If this is an L2 subcategory (not a tour root) with packages, redirect to the first (and only) package
+      // Tour roots like UK Tours should NOT redirect - they should show their L2 subcategories
+      if (matchedCategory && matchedCategory.parent_id && !isTourRoot(matchedCategory) && derivedService.packages && derivedService.packages.length > 0) {
+        const firstPackage = derivedService.packages[0];
+        const packageSlug = firstPackage.slug || firstPackage.id;
+        if (packageSlug) {
+          navigate(`/package/${packageSlug}`, { replace: true });
+        }
+      }
     }
-  }, [service]);
+  }, [derivedService, matchedCategory, navigate]);
 
-  if (!service) {
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const populateAndSet = (cats, dbTours) => {
+          setAllCategories(cats || []);
+          setTours(dbTours || []);
+          if (!selectedCategoryId && (cats || []).length > 0) {
+            if (id === 'tours') {
+              const tourRoots = (cats || []).filter((c) => !c.parent_id && isTourRoot(c));
+              const firstTourRoot = tourRoots[0] || (cats || []).find((c) => !c.parent_id);
+              if (firstTourRoot) {
+                setSelectedCategoryId(firstTourRoot.id);
+              }
+            } else {
+              const firstRoot = (cats || []).find((c) => !c.parent_id);
+              if (firstRoot) {
+                setSelectedCategoryId(firstRoot.id);
+              }
+            }
+          }
+        };
+
+        const { allCategories: cats, tours: dbTours } = await fetchFrontendData();
+
+        if ((cats || []).length === 0 && !seedingAttempted) {
+          try {
+            setSeedingAttempted(true);
+            await importAllCategories();
+            const { allCategories: seededCats, tours: seededTours } = await fetchFrontendData();
+            populateAndSet(seededCats, seededTours);
+            return;
+          } catch (seedErr) {
+            console.error('Seeding categories failed:', seedErr);
+          }
+        }
+
+        populateAndSet(cats, dbTours);
+      } catch (err) {
+        console.error('Failed to load categories for Tours page', err);
+        setAllCategories([]);
+        setTours([]);
+      }
+    };
+    
+    // Load categories for this service page (safe no-op for non-tour pages)
+    loadCategories();
+    
+    // Listen for database changes and reload
+    const unsubscribe = onDataChange((type) => {
+      console.log('ServicePage: Database changed, reloading...', type);
+      if (type === 'categories' || type === 'tours') {
+        loadCategories();
+      }
+    });
+    
+    // Cleanup listener on unmount
+    return () => {
+      unsubscribe();
+    };
+  }, [id]);
+
+  const rootCategories = (allCategories || [])
+    .filter((c) => !c.parent_id)
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+  const displayRootCategories = (() => {
+    if (id !== 'tours') {
+      // When on a specific tour root (e.g., /service/uk-tours), ensure it is present
+      if (matchedCategory && !matchedCategory.parent_id && !rootCategories.find((c) => c.id === matchedCategory.id)) {
+        return [matchedCategory, ...rootCategories];
+      }
+      return rootCategories;
+    }
+    const tourRoots = rootCategories.filter((c) => isTourRoot(c));
+    if (tourRoots.length) {
+      // Include the matched category if not already captured
+      if (matchedCategory && !matchedCategory.parent_id && !tourRoots.find((c) => c.id === matchedCategory.id)) {
+        return [matchedCategory, ...tourRoots];
+      }
+      return tourRoots;
+    }
+    return rootCategories;
+  })();
+
+  const shouldShowSubcategories = id === 'tours' || (matchedCategory && isTourRoot(matchedCategory));
+
+  const selectedCategoryIdToUse = matchedCategory?.id
+    || (displayRootCategories.some((c) => c.id === selectedCategoryId)
+      ? selectedCategoryId
+      : displayRootCategories[0]?.id)
+    || null;
+
+  // Prefer the matched tour root even if it lives under a parent (e.g., /service/uk-tours)
+  const selectedCategory = (() => {
+    if (matchedCategory && isTourRoot(matchedCategory)) {
+      return matchedCategory;
+    }
+    return displayRootCategories.find((c) => c.id === selectedCategoryIdToUse) || null;
+  })();
+  const activeParentId = matchedCategory && isTourRoot(matchedCategory)
+    ? matchedCategory.id
+    : selectedCategoryIdToUse;
+
+  // Find the "Tours" main category to get its children (UK Tours, European Tours, etc.)
+  const toursMainCategory = (allCategories || []).find(c => 
+    normalize(c.slug || c.name || '') === 'tours'
+  );
+  
+  // L1 tour categories are children of the "Tours" main category
+  const l1TourCategories = toursMainCategory
+    ? (allCategories || [])
+        .filter((c) => c.parent_id === toursMainCategory.id)
+        .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+    : [];
+
+  // When on /service/tours, show L1 tour categories (UK Tours, European Tours, etc.)
+  // When on /service/uk-tours, show L2 subcategories (Scotland, Wales, etc.)
+  const childCategories = id === 'tours'
+    ? l1TourCategories // Show L1 tour categories on Tours page
+    : (allCategories || [])
+        .filter((c) => c.parent_id === activeParentId)
+        .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+  console.log('ServicePage Debug:', {
+    id,
+    matchedCategory: matchedCategory?.name,
+    matchedCategoryId: matchedCategory?.id,
+    matchedCategoryParentId: matchedCategory?.parent_id,
+    isTourRoot: matchedCategory ? isTourRoot(matchedCategory) : false,
+    selectedCategory: selectedCategory?.name,
+    activeParentId,
+    childCategoriesCount: childCategories.length,
+    childCategoryNames: childCategories.map(c => c.name),
+    toursMainCategory: toursMainCategory?.name,
+    l1TourCategoriesCount: l1TourCategories.length,
+    l1TourCategoryNames: l1TourCategories.map(c => c.name),
+    shouldShowSubcategories,
+    allCategoriesCount: allCategories.length,
+  });
+
+  const selectedSubcategory = (allCategories || []).find((c) => c.id === selectedSubcategoryId) || null;
+  const subChildCategories = (allCategories || [])
+    .filter((c) => c.parent_id === selectedSubcategoryId)
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+  const renderTours = (items) => {
+    if (!items || items.length === 0) {
+      return <p style={{ color: '#6b7280' }}>No packages yet for this category.</p>;
+    }
+
+    return (
+      <PackagesGrid>
+        {items.map((tour, index) => (
+          <PackageCard
+            key={tour.id || tour.slug || index}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: index * 0.05 }}
+          >
+            <CardImage image={tour.featured_image || tour.image} />
+            <CardContent>
+              <PackageTitle>{tour.title}</PackageTitle>
+              {tour.location && (
+                <PackageLocation>
+                  <MapPinIcon />
+                  {tour.location}
+                </PackageLocation>
+              )}
+              {tour.description && <PackageDescription>{tour.description}</PackageDescription>}
+              <CardFooter>
+                <Price>{formatPrice(tour.price)}</Price>
+                <ExploreButton to={`/package/${tour.slug || tour.id}`}>
+                  View Details
+                  <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
+                </ExploreButton>
+              </CardFooter>
+            </CardContent>
+          </PackageCard>
+        ))}
+      </PackagesGrid>
+    );
+  };
+
+
+  // When navigating directly to a category slug, select it in the UI
+  useEffect(() => {
+    if (matchedCategory) {
+      // If this is a tour root (e.g., UK Tours under Tours), select it directly so L2 shows
+      if (isTourRoot(matchedCategory)) {
+        setSelectedCategoryId(matchedCategory.id);
+        setSelectedSubcategoryId(null);
+        return;
+      }
+
+      const parentId = matchedCategory.parent_id;
+      if (parentId) {
+        setSelectedCategoryId(parentId);
+        setSelectedSubcategoryId(matchedCategory.id);
+      } else {
+        setSelectedCategoryId(matchedCategory.id);
+        setSelectedSubcategoryId(null);
+      }
+    }
+  }, [matchedCategory]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const sub = params.get('sub');
+    if (sub && (allCategories || []).length > 0) {
+      const subCat = (allCategories || []).find((c) => c.slug === sub || c.id === sub);
+      if (subCat) {
+        setSelectedCategoryId(subCat.parent_id || selectedCategoryId);
+        setSelectedSubcategoryId(subCat.id);
+      }
+    }
+  }, [location.search, allCategories]);
+
+  const getImage = (item) => item?.image || item?.featured_image || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80';
+
+  // Decide which tours to show based on selection: prefer subcategory -> category -> all
+  const toursToRender = id === 'tours'
+    ? (selectedSubcategoryId
+        ? filterToursByCategory(selectedSubcategoryId)
+        : selectedCategoryIdToUse
+          ? filterToursByCategory(selectedCategoryIdToUse)
+          : tours)
+    : (derivedService?.packages || []);
+
+  if (!derivedService) {
     return (
       <NotFound>
         <h1>Service Not Found</h1>
@@ -370,21 +945,21 @@ const ServicePage = () => {
 
   return (
     <PageContainer>
-      <HeroSection bgImage={service.image}>
+      <HeroSection $bg={derivedService.image}>
         <HeroContent>
           <Title
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            {service.title}
+            {derivedService.title}
           </Title>
           <Subtitle
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            {service.shortDescription}
+            {derivedService.shortDescription}
           </Subtitle>
         </HeroContent>
       </HeroSection>
@@ -398,22 +973,29 @@ const ServicePage = () => {
             transition={{ duration: 0.8 }}
           >
             <h2>Experience <span>Luxury</span></h2>
-            <p>{service.fullDescription}</p>
+            <div 
+              dangerouslySetInnerHTML={{ __html: derivedService.fullDescription }}
+              style={{ lineHeight: '1.8', color: '#666', fontSize: '1.1rem' }}
+            />
             
-            <h3>Key Highlights</h3>
-            <FeaturesList>
-              {service.features.map((feature, index) => (
-                <FeatureItem
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  {feature}
-                </FeatureItem>
-              ))}
-            </FeaturesList>
+            {derivedService.features && derivedService.features.length > 0 && (
+              <>
+                <h3>Key Highlights</h3>
+                <FeaturesList>
+                  {derivedService.features.map((feature, index) => (
+                    <FeatureItem
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      {feature}
+                    </FeatureItem>
+                  ))}
+                </FeaturesList>
+              </>
+            )}
           </motion.div>
         </TextContent>
 
@@ -423,11 +1005,93 @@ const ServicePage = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <img src={service.image} alt={service.title} />
+          <img src={derivedService.image} alt={derivedService.title} />
         </ImageContainer>
       </ContentSection>
 
-      {service.packages && service.packages.length > 0 && (
+      {shouldShowSubcategories && childCategories.length > 0 && (
+        <PackagesSection>
+          <SectionHeader>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              {id === 'tours' ? 'Tour Categories' : `${selectedCategory?.name || derivedService.title} Destinations`}
+            </motion.h2>
+          </SectionHeader>
+          <CategoryGrid>
+            {childCategories.map((sub, index) => {
+              const slug = sub.slug || sub.id || normalize(sub.name || '');
+              
+              // Always link to the subcategory service page, not to packages
+              const linkTarget = `/service/${slug}`;
+              console.log('Category Card Link:', { name: sub.name, slug, linkTarget });
+              const subImage = getImage(sub);
+              
+              // Extract location from subcategory or use default
+              const location = sub.location || sub.description || null;
+                            
+              const handleClick = (e) => {
+                // If Ctrl/Cmd key is pressed, open in admin editor
+                if (e.ctrlKey || e.metaKey) {
+                  e.preventDefault();
+                  navigate(`/admin?tab=subcategories&edit=${sub.id}`);
+                }
+              };
+                            
+              return (
+                <CategoryCard
+                  key={slug}
+                  as={Link}
+                  to={linkTarget}
+                  onClick={handleClick}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <CategoryImage $image={subImage} />
+                  <CategoryContent>
+                    <CategoryName>{sub.name}</CategoryName>
+                    {location && (
+                      <CategoryLocation>
+                        <MapPinIcon />
+                        {location}
+                      </CategoryLocation>
+                    )}
+                    {sub.description && <CategoryDesc>{sub.description}</CategoryDesc>}
+                    <CategoryFooter>
+                      <ViewDetailsButton>
+                        View Details
+                        <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
+                      </ViewDetailsButton>
+                    </CategoryFooter>
+                  </CategoryContent>
+                  {/* Admin edit hint */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '0.5rem',
+                    right: '0.5rem',
+                    background: 'rgba(106, 27, 130, 0.9)',
+                    color: '#fff',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    fontSize: '0.7rem',
+                    opacity: 0.7,
+                    zIndex: 10
+                  }}>
+                    Ctrl+Click to Edit
+                  </div>
+                </CategoryCard>
+              );
+            })}
+          </CategoryGrid>
+        </PackagesSection>
+      )}
+
+      {toursToRender && toursToRender.length > 0 && !shouldShowSubcategories && (
         <PackagesSection>
           <SectionHeader>
             <motion.h2
@@ -440,32 +1104,39 @@ const ServicePage = () => {
             </motion.h2>
           </SectionHeader>
           <PackagesGrid>
-            {service.packages.map((pkg, index) => (
-              <PackageCard
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <CardImage image={pkg.image} />
-                <CardContent>
-                  <PackageTitle>{pkg.title}</PackageTitle>
-                  <PackageLocation>
-                    <MapPinIcon />
-                    {pkg.location}
-                  </PackageLocation>
-                  <PackageDescription>{pkg.description}</PackageDescription>
-                  <CardFooter>
-                    <Price>{pkg.price}</Price>
-                    <ExploreButton to={`/package/${pkg.id}`}>
-                      View Details
-                      <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
-                    </ExploreButton>
-                  </CardFooter>
-                </CardContent>
-              </PackageCard>
-            ))}
+            {toursToRender.map((pkg, index) => {
+              const img = pkg.image || pkg.featured_image;
+              const priceLabel = typeof pkg.price === 'number' ? formatPrice(pkg.price) : (pkg.price || 'From £—');
+              const linkId = pkg.slug || pkg.id;
+              return (
+                <PackageCard
+                  key={linkId || index}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <CardImage image={img} />
+                  <CardContent>
+                    <PackageTitle>{pkg.title}</PackageTitle>
+                    {pkg.location && (
+                      <PackageLocation>
+                        <MapPinIcon />
+                        {pkg.location}
+                      </PackageLocation>
+                    )}
+                    {pkg.description && <PackageDescription>{pkg.description}</PackageDescription>}
+                    <CardFooter>
+                      <Price>{priceLabel}</Price>
+                      <ExploreButton to={`/package/${linkId}`}>
+                        View Details
+                        <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
+                      </ExploreButton>
+                    </CardFooter>
+                  </CardContent>
+                </PackageCard>
+              );
+            })}
           </PackagesGrid>
         </PackagesSection>
       )}
@@ -481,7 +1152,7 @@ const ServicePage = () => {
             Ready to Plan Your Trip?
           </h2>
           <p style={{ color: '#666', marginBottom: '2rem', fontSize: '1.1rem' }}>
-            Contact our travel experts today to customize your {service.title} experience.
+            Contact our travel experts today to customize your {derivedService.title} experience.
           </p>
           <CTAButton to="/#contact">Inquire Now</CTAButton>
         </motion.div>

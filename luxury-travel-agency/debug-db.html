@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Debug</title>
+</head>
+<body>
+    <h1>Database Debug Tool</h1>
+    <button onclick="clearAndReseed()">Clear Database & Re-seed</button>
+    <button onclick="checkDatabase()">Check Database State</button>
+    <pre id="output"></pre>
+
+    <script>
+        function log(msg) {
+            document.getElementById('output').textContent += msg + '\n';
+        }
+
+        function clearAndReseed() {
+            log('Setting force_reseed flag...');
+            localStorage.setItem('force_reseed', 'true');
+            log('Reloading in 1 second...');
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 1000);
+        }
+
+        async function checkDatabase() {
+            log('Opening IndexedDB...');
+            const dbName = 'travel_agency_db';
+            const request = indexedDB.open(dbName, 1);
+            
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                log('Database opened successfully');
+                log('Object stores: ' + Array.from(db.objectStoreNames).join(', '));
+                
+                const transaction = db.transaction(['database'], 'readonly');
+                const store = transaction.objectStore('database');
+                const getRequest = store.get('sqlite');
+                
+                getRequest.onsuccess = function() {
+                    if (getRequest.result) {
+                        log('Database exists with ' + getRequest.result.byteLength + ' bytes');
+                    } else {
+                        log('No database data found');
+                    }
+                };
+            };
+            
+            request.onerror = function() {
+                log('Error opening database: ' + request.error);
+            };
+        }
+    </script>
+</body>
+</html>

@@ -1,5 +1,24 @@
 export const servicesData = [
   {
+    id: 'tours',
+    title: 'Tours',
+    location: 'Global',
+    price: 'From £—',
+    shortDescription: 'Browse all tour categories and drill down to subcategories and packages.',
+    fullDescription: 'Explore our complete catalogue of tours. Pick a main category, then a subcategory, to view all available packages.',
+    features: [
+      'Category and subcategory browsing',
+      'Packages grouped by destination',
+      'Fast drill-down to see all tours',
+    ],
+    packages: [],
+    image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80',
+    seo: {
+      title: 'Tours | Luxury Travel Agency',
+      description: 'Browse tour categories and packages across all destinations.',
+    },
+  },
+  {
     id: 'uk-tours',
     title: 'UK Tours',
     location: 'United Kingdom',

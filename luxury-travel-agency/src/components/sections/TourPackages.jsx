@@ -1,18 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
 import { ArrowRightIcon, MapPinIcon } from '@heroicons/react/24/outline';
-import axios from 'axios';
 import { servicesData } from '../../data/servicesData';
+import { fetchFrontendData, normalize } from '../../services/frontendData';
+import { onDataChange } from '../../services/database';
 
-const normalize = (str = '') =>
-  str
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
+// normalize is imported from frontendData
 
 const SectionContainer = styled.section`
   padding: 8rem 0;
@@ -291,102 +286,175 @@ const ExploreButton = styled(Link)`
   }
 `;
 
-const ServiceCard = ({ service, index }) => {
+const ServiceCard = memo(({ service, index, forceServiceLink }) => {
   const [currentPackageIndex, setCurrentPackageIndex] = useState(0);
   const hasPackages = service.packages && service.packages.length > 0;
   const [showSubs, setShowSubs] = useState(false);
 
   useEffect(() => {
-    if (!hasPackages) return;
+    if (!hasPackages || service.packages.length <= 1) return;
 
     const interval = setInterval(() => {
       setCurrentPackageIndex((prev) => (prev + 1) % service.packages.length);
     }, 4000);
 
     return () => clearInterval(interval);
-  }, [hasPackages, service.packages]);
+  }, [hasPackages, service.packages?.length]);
 
   const currentData = hasPackages ? service.packages[currentPackageIndex] : service;
   
-  // Resolve link: if cycling packages, link to package detail. Else service page.
-  const linkTo = hasPackages && currentData.id 
-    ? `/package/${currentData.id}` 
-    : `/service/${service.id}`;
+  // Resolve link: if forceServiceLink is true, link to the subcategory service page
+  const linkTo = forceServiceLink 
+    ? `/service/${service.id}`
+    : (hasPackages && currentData.id 
+      ? `/package/${currentData.id}` 
+      : `/service/${service.id}`);
   const categorySlug = service.id || service.slug || normalize(service.title);
 
   return (
     <PackageCard
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
     >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={currentData.title || service.title}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.5 }}
-          style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }}
-        >
-          <CardImage image={currentData.image || service.image} />
-          
-          {/* Show Category Name if we are cycling packages inside a category */}
-          {hasPackages && (
-            <CategoryName>
-              {service.title}
-            </CategoryName>
-          )}
+      <CardImage image={currentData.image || service.image} />
+      
+      {/* Show Category Name if we are cycling packages inside a category */}
+      {hasPackages && (
+        <CategoryName>
+          {service.title}
+        </CategoryName>
+      )}
 
-          <CardContent>
-            <PackageTitle>{currentData.title}</PackageTitle>
-            <PackageLocation>
-              <MapPinIcon />
-              {currentData.location || service.location}
-            </PackageLocation>
-            
-            <PackageDescription>
-              {currentData.description || currentData.shortDescription}
-            </PackageDescription>
+      <CardContent>
+        <PackageTitle>{currentData.title}</PackageTitle>
+        <PackageLocation>
+          <MapPinIcon />
+          {currentData.location || service.location}
+        </PackageLocation>
+        
+        <PackageDescription>
+          {currentData.description || currentData.shortDescription}
+        </PackageDescription>
 
-            {service.subcategories && service.subcategories.length > 0 && (
-              <>
-                <SubToggle type="button" onClick={() => setShowSubs((v) => !v)}>
-                  {showSubs ? 'Hide Subcategories' : 'View Subcategories'}
-                </SubToggle>
-                {showSubs && (
-                  <SubCategoryList>
-                    {service.subcategories.map((sub) => (
-                      <SubCategoryChip
-                        key={sub.slug || sub.id}
-                        to={`/service/${categorySlug}?sub=${sub.slug || sub.id || ''}`}
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {sub.name}
-                      </SubCategoryChip>
-                    ))}
-                  </SubCategoryList>
-                )}
-              </>
+        {service.subcategories && service.subcategories.length > 0 && (
+          <>
+            <SubToggle type="button" onClick={() => setShowSubs((v) => !v)}>
+              {showSubs ? 'Hide Subcategories' : 'View Subcategories'}
+            </SubToggle>
+            {showSubs && (
+              <SubCategoryList>
+                {service.subcategories.map((sub) => (
+                  <SubCategoryChip
+                    key={sub.slug || sub.id}
+                    to={`/service/${categorySlug}?sub=${sub.slug || sub.id || ''}`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {sub.name}
+                  </SubCategoryChip>
+                ))}
+              </SubCategoryList>
             )}
+          </>
+        )}
 
-            <CardFooter>
-              <Price>{currentData.price}</Price>
-              <ExploreButton to={linkTo}>
-                Explore
-                <ArrowRightIcon />
-              </ExploreButton>
-            </CardFooter>
-          </CardContent>
-        </motion.div>
-      </AnimatePresence>
+        <CardFooter>
+          <Price>{currentData.price}</Price>
+          <ExploreButton to={linkTo}>
+            Explore
+            <ArrowRightIcon />
+          </ExploreButton>
+        </CardFooter>
+      </CardContent>
     </PackageCard>
   );
-};
+});
+
+// Styled components for L1 category tabs
+const L1TabsContainer = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  
+  &::-webkit-scrollbar {
+    height: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #c7b5d9;
+    border-radius: 10px;
+  }
+`;
+
+const L1Tab = styled.button`
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  border: 2px solid ${props => props.$active ? '#6A1B82' : '#e0e0e0'};
+  background: ${props => props.$active ? '#6A1B82' : 'white'};
+  color: ${props => props.$active ? 'white' : '#333'};
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    border-color: #6A1B82;
+    background: ${props => props.$active ? '#7C2E9B' : '#f8f4fa'};
+  }
+`;
+
+// Loading skeleton for cards
+const SkeletonCard = styled.div`
+  min-width: 360px;
+  height: 450px;
+  border-radius: 20px;
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+`;
+
+const LoadingGrid = styled.div`
+  display: flex;
+  gap: 2rem;
+  overflow-x: auto;
+  padding-bottom: 1rem;
+`;
 
 const TourPackages = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [services, setServices] = useState(servicesData);
+  const [tourL1Categories, setTourL1Categories] = useState([]); // All L1 tour categories with their L2 subcategories
+  const [selectedL1, setSelectedL1] = useState(null); // Currently selected L1 category for Tours
+  
+  // State for other categories with same tabbed structure
+  const [cruiseL1Categories, setCruiseL1Categories] = useState([]);
+  const [selectedCruiseL1, setSelectedCruiseL1] = useState(null);
+  
+  const [transferL1Categories, setTransferL1Categories] = useState([]);
+  const [selectedTransferL1, setSelectedTransferL1] = useState(null);
+  
+  const [vehicleL1Categories, setVehicleL1Categories] = useState([]);
+  const [selectedVehicleL1, setSelectedVehicleL1] = useState(null);
+  
+  const [sriLankaL1Categories, setSriLankaL1Categories] = useState([]);
+  const [selectedSriLankaL1, setSelectedSriLankaL1] = useState(null);
+  
+  const [otherL1Categories, setOtherL1Categories] = useState([]);
+  const [selectedOtherL1, setSelectedOtherL1] = useState(null);
+  
+  // Keep old state for backward compatibility
   const [cruiseServices, setCruiseServices] = useState([]);
   const [transferServices, setTransferServices] = useState([]);
   const [vehicleServices, setVehicleServices] = useState([]);
@@ -396,43 +464,55 @@ const TourPackages = () => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const response = await axios.get('http://127.0.0.1:8000/api/categories/');
-        const apiCategories = response.data;
+        // Use local database instead of API
+        const data = await fetchFrontendData();
+        const { allCategories, tours } = data;
         
-        // Map API data to the structure used by the frontend
+        // Build category tree with tours and subcategories
+        const categoryMap = new Map();
+        allCategories.forEach(cat => {
+          categoryMap.set(cat.id, {
+            ...cat,
+            tours: tours.filter(t => t.category_id === cat.id && t.is_active),
+            subcategories: allCategories.filter(c => c.parent_id === cat.id),
+          });
+        });
+
+        // Get root categories (no parent)
+        const rootCategories = allCategories.filter(c => !c.parent_id).map(cat => categoryMap.get(cat.id));
+        
+        // Map database data to the structure used by the frontend
         const mappedServices = servicesData.map(staticService => {
           const staticSlug = normalize(staticService.id || staticService.title);
-          // Find matching category from API (assuming slug or title match)
-          // Since slugs might differ slightly, we can try to match by normalized title
-          const apiCategory = apiCategories.find(
+          // Find matching category from database
+          const dbCategory = rootCategories.find(
             cat => normalize(cat.name) === staticSlug || normalize(cat.slug) === staticSlug
           );
 
-          if (apiCategory) {
+          if (dbCategory) {
             // Map the nested tours
-            const apiPackages = apiCategory.tours ? apiCategory.tours.map(tour => ({
-              id: tour.slug, // Use slug as ID for frontend routing
+            const apiPackages = dbCategory.tours ? dbCategory.tours.map(tour => ({
+              id: tour.slug,
               title: tour.title,
               price: `From £${tour.price}`,
               location: tour.location,
               description: tour.description,
-              image: tour.featured_image, // API returns full URL or relative path? Django Rest Framework usually returns full URL if request context is passed
+              image: tour.featured_image || '',
               duration: tour.duration
             })) : [];
 
-            const apiSubCategories = apiCategory.subcategories ? apiCategory.subcategories.map(sub => ({
+            const apiSubCategories = dbCategory.subcategories ? dbCategory.subcategories.map(sub => ({
               id: sub.id,
               name: sub.name,
               slug: sub.slug,
               description: sub.description,
-              image: sub.image,
+              image: sub.image || '',
             })) : [];
 
-            // If API has packages, use them. Otherwise fallback to static packages.
-            // Also map category image if available
+            // Use database data, fallback to static if needed
             return {
               ...staticService,
-              image: apiCategory.image || staticService.image,
+              image: dbCategory.image || staticService.image,
               packages: apiPackages.length > 0 ? apiPackages : staticService.packages,
               subcategories: apiSubCategories
             };
@@ -440,9 +520,9 @@ const TourPackages = () => {
           return staticService;
         });
 
-        // Append any API categories not already mapped, so all main categories appear
+        // Append any database categories not already mapped
         const usedSlugs = new Set(mappedServices.map(s => normalize(s.id || s.title)));
-        const extraServices = apiCategories
+        const extraServices = rootCategories
           .filter(cat => !usedSlugs.has(normalize(cat.slug || cat.name)))
           .map(cat => {
             const apiPackages = cat.tours ? cat.tours.map(tour => ({
@@ -451,7 +531,7 @@ const TourPackages = () => {
               price: tour.price ? `From £${tour.price}` : 'From £—',
               location: tour.location,
               description: tour.description,
-              image: tour.featured_image,
+              image: tour.featured_image || '',
               duration: tour.duration
             })) : [];
 
@@ -460,11 +540,11 @@ const TourPackages = () => {
               name: sub.name,
               slug: sub.slug,
               description: sub.description,
-              image: sub.image,
+              image: sub.image || '',
             })) : [];
 
             return {
-              id: cat.slug || cat.name,
+              id: cat.slug || cat.id,
               title: cat.name,
               location: cat.description || '',
               price: apiPackages[0]?.price || 'From £—',
@@ -480,120 +560,424 @@ const TourPackages = () => {
 
         const combined = [...mappedServices, ...extraServices];
 
-        // Keep only main tour categories
-        const allowedTourSlugs = new Set([
-          'uk-tours',
-          'european-tours',
-          'world-tours',
-          'group-tours',
-          'private-tours',
-        ]);
-        const tourOnly = combined.filter(cat =>
-          allowedTourSlugs.has(normalize(cat.id || cat.title))
+        // Find the "Tours" main category from database
+        const toursRootCategory = rootCategories.find(cat => 
+          normalize(cat.slug || cat.name) === 'tours'
         );
-
-        // Capture Cruises separately
-        const mapCategoryToCards = (cat, fallbackLabel) => {
-          if (!cat) return [];
-          if (cat.tours && cat.tours.length > 0) {
-            return cat.tours.map(tour => ({
+        
+        // Helper function to map L2 subcategories to card format
+        const mapL2ToCards = (l1Category) => {
+          const l1Cat = categoryMap.get(l1Category.id) || l1Category;
+          
+          if (l1Cat.subcategories && l1Cat.subcategories.length > 0) {
+            return l1Cat.subcategories.map(l2CatRaw => {
+              const l2Cat = categoryMap.get(l2CatRaw.id) || l2CatRaw;
+              const l2Tours = l2Cat.tours || [];
+              const firstTourPrice = l2Tours.length > 0 ? `£${l2Tours[0].price}` : 'View Details';
+              const l2Slug = l2Cat.slug || l2CatRaw.slug || normalize(l2Cat.name || l2CatRaw.name);
+              
+              return {
+                id: l2Slug,
+                title: l2Cat.name,
+                location: l2Cat.description || l2Cat.name,
+                price: firstTourPrice,
+                shortDescription: l2Cat.description || '',
+                fullDescription: l2Cat.description || '',
+                image: l2Cat.image || (l2Tours.length > 0 ? l2Tours[0].featured_image : ''),
+                packages: [],
+                subcategories: [],
+                features: [],
+                seo: { title: l2Cat.name, description: l2Cat.description || '' },
+              };
+            });
+          } else if (l1Cat.tours && l1Cat.tours.length > 0) {
+            // If L1 has no L2 subcategories but has tours directly, show tours as cards
+            return l1Cat.tours.map(tour => ({
               id: tour.slug,
               title: tour.title,
-              location: tour.location || fallbackLabel,
-              price: tour.price ? `From £${tour.price}` : 'From £—',
+              location: tour.location || l1Cat.description || '',
+              price: tour.price ? `£${tour.price}` : 'View Details',
               shortDescription: tour.description || '',
               fullDescription: tour.description || '',
-              image: tour.featured_image || cat.image || '',
-              packages: [
-                {
-                  id: tour.slug,
-                  title: tour.title,
-                  price: tour.price ? `From £${tour.price}` : 'From £—',
-                  location: tour.location,
-                  description: tour.description,
-                  image: tour.featured_image,
-                  duration: tour.duration,
-                },
-              ],
-              subcategories: cat.subcategories || [],
+              image: tour.featured_image || l1Cat.image || '',
+              packages: [],
+              isTourPackage: true,
+              subcategories: [],
               features: [],
               seo: { title: tour.title, description: tour.description || '' },
             }));
           }
-          // fallback single card
-          return [
-            {
-              id: cat.slug || cat.name,
-              title: cat.name,
-              location: cat.description || fallbackLabel,
-              price: 'From £—',
-              shortDescription: cat.description || '',
-              fullDescription: cat.description || '',
-              image: cat.image || '',
-              packages: [],
-              subcategories: cat.subcategories || [],
+          return [];
+        };
+        
+        // Get ALL L1 tour subcategories (UK Tours, European Tours, World Tours, etc.)
+        let allTourL1Categories = [];
+        if (toursRootCategory && toursRootCategory.subcategories && toursRootCategory.subcategories.length > 0) {
+          allTourL1Categories = toursRootCategory.subcategories.map(l1CatRaw => {
+            const l1Cat = categoryMap.get(l1CatRaw.id) || l1CatRaw;
+            const l2Cards = mapL2ToCards(l1Cat);
+            
+            return {
+              id: l1Cat.slug || normalize(l1Cat.name),
+              name: l1Cat.name,
+              description: l1Cat.description || '',
+              image: l1Cat.image || '',
+              cards: l2Cards,
+            };
+          }).filter(l1 => l1.cards.length > 0); // Only include L1 categories that have L2 cards
+          
+          console.log('TourPackages: All L1 Tour Categories:', allTourL1Categories.map(c => ({ name: c.name, cardCount: c.cards.length })));
+        }
+        
+        // Fallback: use first L1 category's L2 cards for backward compatibility
+        let tourOnly = [];
+        if (allTourL1Categories.length > 0) {
+          // Use all L2 cards from all L1 categories flattened (for backward compat with services state)
+          tourOnly = allTourL1Categories.flatMap(l1 => l1.cards);
+        }
+
+        // Helper function to convert database category subcategories to frontend format (like Tours)
+        const mapCategorySubcategories = (mainCategory) => {
+          if (!mainCategory) {
+            return [];
+          }
+
+          // If category has subcategories, show them (like Tours)
+          if (mainCategory.subcategories && mainCategory.subcategories.length > 0) {
+            return mainCategory.subcategories.map(subCat => {
+              // Get tours for this subcategory
+              const subCategoryTours = subCat.tours ? subCat.tours.map(tour => ({
+                id: tour.slug,
+                title: tour.title,
+                price: tour.price ? `From £${tour.price}` : 'From £—',
+                location: tour.location,
+                description: tour.description,
+                image: tour.featured_image || '',
+                duration: tour.duration,
+              })) : [];
+
+              // Get nested subcategories if any
+              const nestedSubs = subCat.subcategories ? subCat.subcategories.map(nested => ({
+                id: nested.id,
+                name: nested.name,
+                slug: nested.slug,
+                description: nested.description,
+                image: nested.image || '',
+              })) : [];
+
+              return {
+                id: subCat.slug || normalize(subCat.name),
+                title: subCat.name,
+                location: subCat.description || '',
+                price: subCategoryTours.length > 0 ? subCategoryTours[0].price : 'From £—',
+                shortDescription: subCat.description || '',
+                fullDescription: subCat.description || '',
+                image: subCat.image || '',
+                packages: subCategoryTours,
+                subcategories: nestedSubs,
+                features: [],
+                seo: { title: subCat.name, description: subCat.description || '' },
+              };
+            });
+          }
+
+          // If no subcategories but has tours, show tours as cards
+          if (mainCategory.tours && mainCategory.tours.length > 0) {
+            return mainCategory.tours.map(tour => ({
+              id: tour.slug,
+              title: tour.title,
+              location: tour.location || '',
+              price: tour.price ? `From £${tour.price}` : 'From £—',
+              shortDescription: tour.description || '',
+              fullDescription: tour.description || '',
+              image: tour.featured_image || mainCategory.image || '',
+              packages: [{
+                id: tour.slug,
+                title: tour.title,
+                price: tour.price ? `From £${tour.price}` : 'From £—',
+                location: tour.location,
+                description: tour.description,
+                image: tour.featured_image,
+                duration: tour.duration,
+              }],
+              subcategories: [],
               features: [],
-              seo: { title: cat.name, description: cat.description || '' },
-            },
-          ];
+              seo: { title: tour.title, description: tour.description || '' },
+            }));
+          }
+
+          // If no subcategories and no tours, show the category itself as a single card
+          return [{
+            id: mainCategory.slug || normalize(mainCategory.name),
+            title: mainCategory.name,
+            location: mainCategory.description || '',
+            price: 'From £—',
+            shortDescription: mainCategory.description || '',
+            fullDescription: mainCategory.description || '',
+            image: mainCategory.image || '',
+            packages: [],
+            subcategories: [],
+            features: [],
+            seo: { title: mainCategory.name, description: mainCategory.description || '' },
+          }];
         };
 
-        const cruisesCat = apiCategories.find(cat => normalize(cat.slug || cat.name) === 'cruises');
-        const transfersCat = apiCategories.find(cat => normalize(cat.slug || cat.name) === 'airport-transfers');
-        const vehicleCat = apiCategories.find(cat => normalize(cat.slug || cat.name) === 'vehicle-hire');
-        const sriLankaCat = apiCategories.find(cat => normalize(cat.slug || cat.name) === 'india-sri-lanka-tours');
-        const otherCat = apiCategories.find(cat => normalize(cat.slug || cat.name) === 'other-servies');
+        // Helper function to build L1 categories with L2 cards for ANY main category
+        const buildL1CategoriesWithL2Cards = (mainCategory) => {
+          if (!mainCategory || !mainCategory.subcategories || mainCategory.subcategories.length === 0) {
+            return [];
+          }
+          
+          return mainCategory.subcategories.map(l1CatRaw => {
+            const l1Cat = categoryMap.get(l1CatRaw.id) || l1CatRaw;
+            const l2Cards = mapL2ToCards(l1Cat);
+            
+            return {
+              id: l1Cat.slug || normalize(l1Cat.name),
+              name: l1Cat.name,
+              description: l1Cat.description || '',
+              image: l1Cat.image || '',
+              cards: l2Cards,
+            };
+          }).filter(l1 => l1.cards.length > 0);
+        };
 
-        const cruisesMapped = mapCategoryToCards(cruisesCat, 'Cruise');
-        const transfersMapped = mapCategoryToCards(transfersCat, 'Airport Transfer');
-        const vehicleMapped = mapCategoryToCards(vehicleCat, 'Vehicle Hire');
-        const sriLankaMapped = mapCategoryToCards(sriLankaCat, 'Sri Lanka Tours');
-        const otherMapped = mapCategoryToCards(otherCat, 'Other Services');
+        // Get main categories and their subcategories (same format as Tours)
+        const cruisesCat = rootCategories.find(cat => normalize(cat.slug || cat.name) === 'cruises');
+        const transfersCat = rootCategories.find(cat => normalize(cat.slug || cat.name) === 'airport-transfers');
+        const vehicleCat = rootCategories.find(cat => normalize(cat.slug || cat.name) === 'vehicle-hire');
+        const sriLankaCat = rootCategories.find(cat => {
+          const slug = normalize(cat.slug || cat.name);
+          return slug === 'india-and-sri-lankan-tours' || 
+                 slug === 'india-sri-lanka-tours' || 
+                 slug === 'sri-lanka-tours' ||
+                 slug === 'sri-lankan-tours';
+        });
+        const otherCat = rootCategories.find(cat => normalize(cat.slug || cat.name) === 'other-services');
+
+        // Build L1 categories for each main category
+        const cruiseL1Cats = buildL1CategoriesWithL2Cards(cruisesCat);
+        const transferL1Cats = buildL1CategoriesWithL2Cards(transfersCat);
+        const vehicleL1Cats = buildL1CategoriesWithL2Cards(vehicleCat);
+        const sriLankaL1Cats = buildL1CategoriesWithL2Cards(sriLankaCat);
+        const otherL1Cats = buildL1CategoriesWithL2Cards(otherCat);
+
+        // Fallback: use old mapCategorySubcategories for backward compat
+        const cruisesMapped = mapCategorySubcategories(cruisesCat);
+        const transfersMapped = mapCategorySubcategories(transfersCat);
+        const vehicleMapped = mapCategorySubcategories(vehicleCat);
+        const sriLankaMapped = mapCategorySubcategories(sriLankaCat);
+        const otherMapped = mapCategorySubcategories(otherCat);
 
         setServices(tourOnly);
+        setTourL1Categories(allTourL1Categories);
+        if (allTourL1Categories.length > 0) {
+          setSelectedL1(allTourL1Categories[0].id);
+        }
+        
+        // Set L1 categories for other main categories
+        setCruiseL1Categories(cruiseL1Cats);
+        if (cruiseL1Cats.length > 0) {
+          setSelectedCruiseL1(cruiseL1Cats[0].id);
+        }
+        
+        setTransferL1Categories(transferL1Cats);
+        if (transferL1Cats.length > 0) {
+          setSelectedTransferL1(transferL1Cats[0].id);
+        }
+        
+        setVehicleL1Categories(vehicleL1Cats);
+        if (vehicleL1Cats.length > 0) {
+          setSelectedVehicleL1(vehicleL1Cats[0].id);
+        }
+        
+        setSriLankaL1Categories(sriLankaL1Cats);
+        if (sriLankaL1Cats.length > 0) {
+          setSelectedSriLankaL1(sriLankaL1Cats[0].id);
+        }
+        
+        setOtherL1Categories(otherL1Cats);
+        if (otherL1Cats.length > 0) {
+          setSelectedOtherL1(otherL1Cats[0].id);
+        }
+        
+        // Keep old state for backward compat
         setCruiseServices(cruisesMapped);
         setTransferServices(transfersMapped);
         setVehicleServices(vehicleMapped);
         setSriLankaServices(sriLankaMapped);
         setOtherServices(otherMapped);
+        
+        setIsLoading(false);
       } catch (error) {
-        console.error('Error fetching services from API:', error);
+        console.error('Error fetching services from database:', error);
+        setIsLoading(false);
         // Fallback to static data is automatic since initial state is servicesData
       }
     };
 
     fetchServices();
+    
+    // Listen for database changes and reload
+    const unsubscribe = onDataChange((type) => {
+      console.log('TourPackages: Database changed, reloading...', type);
+      if (type === 'categories' || type === 'tours') {
+        fetchServices();
+      }
+    });
+    
+    // Cleanup listener on unmount
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
-  return (
-    <SectionContainer>
-      <Container>
-        <SectionHeader>
+  // Get the L2 cards for the currently selected L1 category
+  const selectedL1Category = tourL1Categories.find(l1 => l1.id === selectedL1);
+  const currentL2Cards = selectedL1Category?.cards || [];
+  
+  // Get L2 cards for other categories
+  const selectedCruiseCategory = cruiseL1Categories.find(l1 => l1.id === selectedCruiseL1);
+  const currentCruiseL2Cards = selectedCruiseCategory?.cards || [];
+  
+  const selectedTransferCategory = transferL1Categories.find(l1 => l1.id === selectedTransferL1);
+  const currentTransferL2Cards = selectedTransferCategory?.cards || [];
+  
+  const selectedVehicleCategory = vehicleL1Categories.find(l1 => l1.id === selectedVehicleL1);
+  const currentVehicleL2Cards = selectedVehicleCategory?.cards || [];
+  
+  const selectedSriLankaCategory = sriLankaL1Categories.find(l1 => l1.id === selectedSriLankaL1);
+  const currentSriLankaL2Cards = selectedSriLankaCategory?.cards || [];
+  
+  const selectedOtherCategory = otherL1Categories.find(l1 => l1.id === selectedOtherL1);
+  const currentOtherL2Cards = selectedOtherCategory?.cards || [];
+
+  // Reusable component for rendering a tabbed category section
+  const renderTabbedSection = (title, l1Categories, selectedL1Id, setSelectedL1Fn, l2Cards, keyPrefix) => {
+    if (l1Categories.length === 0) return null;
+    
+    return (
+      <>
+        <SectionHeader style={{ marginTop: '2rem', textAlign: 'left' }}>
           <SectionTitle
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
+            style={{ fontSize: '2rem' }}
           >
-            Our Exclusive Holiday Packages
+            {title}
           </SectionTitle>
-          <SectionSubtitle
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            Explore our curated selection of premium tour packages designed for the ultimate travel experience
-          </SectionSubtitle>
         </SectionHeader>
-
+        
+        <L1TabsContainer>
+          {l1Categories.map(l1Category => (
+            <L1Tab
+              key={l1Category.id}
+              $active={selectedL1Id === l1Category.id}
+              onClick={() => setSelectedL1Fn(l1Category.id)}
+            >
+              {l1Category.name}
+            </L1Tab>
+          ))}
+        </L1TabsContainer>
+        
         <Grid>
-          {services.map((service, index) => (
-            <ServiceCard key={service.id} service={service} index={index} />
+          {l2Cards.map((service, index) => (
+            <ServiceCard 
+              key={`${keyPrefix}-${selectedL1Id}-${service.id}`} 
+              service={service} 
+              index={index} 
+              forceServiceLink={true} 
+            />
           ))}
         </Grid>
+      </>
+    );
+  };
 
-        {cruiseServices.length > 0 && (
+  return (
+      <SectionContainer>
+        <Container>
+          {/* Loading Skeleton */}
+          {isLoading && (
+            <>
+              <SectionHeader style={{ marginTop: 0, textAlign: 'left' }}>
+                <SectionTitle style={{ fontSize: '2rem' }}>Tours Destinations</SectionTitle>
+              </SectionHeader>
+              <LoadingGrid>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </LoadingGrid>
+            </>
+          )}
+          
+          {/* Tours Section with L1 Tabs */}
+          {!isLoading && tourL1Categories.length > 0 ? (
+            <>
+              <SectionHeader style={{ marginTop: 0, textAlign: 'left' }}>
+                <SectionTitle
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.3 }}
+                  style={{ fontSize: '2rem' }}
+                >
+                  Tours Destinations
+                </SectionTitle>
+              </SectionHeader>
+              
+              {/* L1 Category Tabs */}
+              <L1TabsContainer>
+                {tourL1Categories.map(l1Category => (
+                  <L1Tab
+                    key={l1Category.id}
+                    $active={selectedL1 === l1Category.id}
+                    onClick={() => setSelectedL1(l1Category.id)}
+                  >
+                    {l1Category.name}
+                  </L1Tab>
+                ))}
+              </L1TabsContainer>
+              
+              {/* L2 Cards for Selected L1 Category */}
+              <Grid>
+                {currentL2Cards.map((service, index) => (
+                  <ServiceCard 
+                    key={`${selectedL1}-${service.id}`} 
+                    service={service} 
+                    index={index} 
+                    forceServiceLink={true} 
+                  />
+                ))}
+              </Grid>
+            </>
+          ) : !isLoading && services.length > 0 && (
+            // Fallback to old "Tours Destinations" section if no L1 categories
+            <>
+              <SectionHeader style={{ marginTop: 0, textAlign: 'left' }}>
+                <SectionTitle
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6 }}
+                  style={{ fontSize: '2rem' }}
+                >
+                  Tours Destinations
+                </SectionTitle>
+              </SectionHeader>
+              <Grid>
+                {services.map((service, index) => (
+                  <ServiceCard key={service.id} service={service} index={index} forceServiceLink={true} />
+                ))}
+              </Grid>
+            </>
+          )}
+
+          {cruiseL1Categories.length > 0 ? (
+            renderTabbedSection('Cruises', cruiseL1Categories, selectedCruiseL1, setSelectedCruiseL1, currentCruiseL2Cards, 'cruise')
+          ) : cruiseServices.length > 0 && (
           <>
             <SectionHeader style={{ marginTop: '2rem', textAlign: 'left' }}>
               <SectionTitle
@@ -611,10 +995,11 @@ const TourPackages = () => {
                 <ServiceCard key={`cruise-${service.id}`} service={service} index={index} />
               ))}
             </Grid>
-          </>
-        )}
-
-        {transferServices.length > 0 && (
+          </>)}
+        
+          {transferL1Categories.length > 0 ? (
+            renderTabbedSection('Airport Transfers', transferL1Categories, selectedTransferL1, setSelectedTransferL1, currentTransferL2Cards, 'transfer')
+          ) : transferServices.length > 0 && (
           <>
             <SectionHeader style={{ marginTop: '2rem', textAlign: 'left' }}>
               <SectionTitle
@@ -632,10 +1017,11 @@ const TourPackages = () => {
                 <ServiceCard key={`transfer-${service.id}`} service={service} index={index} />
               ))}
             </Grid>
-          </>
-        )}
-
-        {vehicleServices.length > 0 && (
+          </>)}
+        
+          {vehicleL1Categories.length > 0 ? (
+            renderTabbedSection('Vehicle Hire', vehicleL1Categories, selectedVehicleL1, setSelectedVehicleL1, currentVehicleL2Cards, 'vehicle')
+          ) : vehicleServices.length > 0 && (
           <>
             <SectionHeader style={{ marginTop: '2rem', textAlign: 'left' }}>
               <SectionTitle
@@ -653,10 +1039,11 @@ const TourPackages = () => {
                 <ServiceCard key={`vehicle-${service.id}`} service={service} index={index} />
               ))}
             </Grid>
-          </>
-        )}
-
-        {sriLankaServices.length > 0 && (
+          </>)}
+        
+          {sriLankaL1Categories.length > 0 ? (
+            renderTabbedSection('Sri Lanka Tours', sriLankaL1Categories, selectedSriLankaL1, setSelectedSriLankaL1, currentSriLankaL2Cards, 'srilanka')
+          ) : sriLankaServices.length > 0 && (
           <>
             <SectionHeader style={{ marginTop: '2rem', textAlign: 'left' }}>
               <SectionTitle
@@ -674,10 +1061,11 @@ const TourPackages = () => {
                 <ServiceCard key={`slt-${service.id}`} service={service} index={index} />
               ))}
             </Grid>
-          </>
-        )}
-
-        {otherServices.length > 0 && (
+          </>)}
+        
+          {otherL1Categories.length > 0 ? (
+            renderTabbedSection('Other Services', otherL1Categories, selectedOtherL1, setSelectedOtherL1, currentOtherL2Cards, 'other')
+          ) : otherServices.length > 0 && (
           <>
             <SectionHeader style={{ marginTop: '2rem', textAlign: 'left' }}>
               <SectionTitle
@@ -695,8 +1083,7 @@ const TourPackages = () => {
                 <ServiceCard key={`other-${service.id}`} service={service} index={index} />
               ))}
             </Grid>
-          </>
-        )}
+          </>)}
       </Container>
     </SectionContainer>
   );
