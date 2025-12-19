@@ -85,6 +85,40 @@ export const exportDatabase = () => {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  console.log('✅ Database exported successfully');
+};
+
+// Export database as JSON for easy sharing
+export const exportDatabaseJSON = async () => {
+  if (!db) return;
+  
+  const categories = getCategories();
+  const tours = getTours();
+  const banners = getHeroBanners();
+  const logos = getLogos();
+  const ads = getAds();
+  
+  const data = {
+    categories,
+    tours,
+    banners,
+    logos,
+    ads,
+    exportedAt: new Date().toISOString(),
+    version: '1.0'
+  };
+  
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `travel_agency_backup_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  console.log('✅ Database exported as JSON successfully');
 };
 
 // Import database from file
