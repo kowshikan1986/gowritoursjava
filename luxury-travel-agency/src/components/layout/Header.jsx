@@ -107,7 +107,7 @@ const Header = () => {
         // Small delay to ensure database is ready
         await new Promise(resolve => setTimeout(resolve, 50));
         
-        const logos = getLogos();
+        const logos = await getLogos();
         console.log('Logos from database:', logos);
         
         if (Array.isArray(logos) && logos.length > 0) {

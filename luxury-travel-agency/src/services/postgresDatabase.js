@@ -251,7 +251,21 @@ export const getLogoById = async (id) => {
 
 export const createLogo = async (data) => {
   try {
-    const response = await axios.post(`${API_BASE}/logos`, data);
+    // Convert image file to base64 if present
+    let imageData = '';
+    if (data.imageFile) {
+      imageData = await fileToBase64(data.imageFile);
+    }
+    
+    const payload = {
+      title: data.title,
+      name: data.title, // Map title to name for backend
+      image: imageData,
+      image_url: imageData, // Also send as image_url for compatibility
+      is_active: data.is_active
+    };
+    
+    const response = await axios.post(`${API_BASE}/logos`, payload);
     notifyDataChange('logos');
     return response.data;
   } catch (error) {
