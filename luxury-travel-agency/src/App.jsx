@@ -12,8 +12,7 @@ import ServicePage from './pages/ServicePage';
 import PackageDetailPage from './pages/PackageDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 import CategoryEditPage from './pages/CategoryEditPage';
-import { initDatabase } from './services/database';
-import { importAllCategories } from './services/importData';
+import { initDatabase } from './services/postgresDatabase';
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -30,40 +29,14 @@ function App() {
   useEffect(() => {
     const initializeDatabase = async () => {
       try {
-        console.log('Initializing database...');
+        console.log('Connecting to PostgreSQL database...');
         await initDatabase();
-        
-        // Auto-seed if database is empty - force re-seed for debugging
-        // Check if we need to clear and re-seed (for development)
-        const shouldClearAndReseed = localStorage.getItem('force_reseed') === 'true';
-        if (shouldClearAndReseed) {
-          console.log('Force re-seed detected, clearing IndexedDB...');
-          // Clear IndexedDB
-          const dbName = 'travel_agency_db';
-          const deleteRequest = indexedDB.deleteDatabase(dbName);
-          await new Promise((resolve, reject) => {
-            deleteRequest.onsuccess = resolve;
-            deleteRequest.onerror = reject;
-          });
-          localStorage.removeItem('force_reseed');
-          console.log('Database cleared, reloading...');
-          window.location.reload();
-          return;
-        }
-        
-        try {
-          console.log('Attempting to seed database...');
-          const result = await importAllCategories();
-          console.log('Database seeded successfully:', result);
-        } catch (seedErr) {
-          // If seeding fails (e.g., data already exists), that's okay
-          console.log('Database seeding skipped (data may already exist):', seedErr.message);
-        }
-        
+        console.log('✅ Connected to PostgreSQL successfully');
         setDbInitialized(true);
       } catch (error) {
-        console.error('Failed to initialize database:', error);
-        // Continue anyway to allow the app to run
+        console.error('❌ Failed to connect to PostgreSQL:', error);
+        console.error('Make sure the backend server is running and database is accessible');
+        // Continue anyway to show the UI
         setDbInitialized(true);
       }
     };
@@ -76,7 +49,7 @@ function App() {
       <AppContainer style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
         <div style={{ textAlign: 'center' }}>
           <h2>Loading...</h2>
-          <p>Initializing database</p>
+          <p>Connecting to database...</p>
         </div>
       </AppContainer>
     );

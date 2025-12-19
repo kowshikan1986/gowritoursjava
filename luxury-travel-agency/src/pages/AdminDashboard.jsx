@@ -24,9 +24,10 @@ import {
   createLogo,
   updateLogo,
   deleteLogo,
+  fileToBase64,
   exportDatabase,
   importDatabase,
-} from '../services/database';
+} from '../services/postgresDatabase';
 import { importAllCategories } from '../services/importData';
 
 const Page = styled.div`

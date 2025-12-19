@@ -6,7 +6,7 @@ import { MapPinIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { servicesData } from '../data/servicesData';
 import { fetchFrontendData, normalize } from '../services/frontendData';
 import { importAllCategories } from '../services/importData';
-import { onDataChange } from '../services/database';
+import { onDataChange } from '../services/postgresDatabase';
 
 const PageContainer = styled.div`
   padding-top: 0;

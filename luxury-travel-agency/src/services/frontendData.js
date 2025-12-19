@@ -1,5 +1,5 @@
-// Frontend data service - uses local SQL database with auto-seeding
-import { initDatabase, getCategories, getTours, getHeroBanners, onDataChange } from './database';
+// Frontend data service - uses PostgreSQL database via API
+import { initDatabase, getCategories, getTours, getHeroBanners, onDataChange } from './postgresDatabase';
 
 // Helper to normalize slugs
 export const normalize = (str = '') =>
@@ -23,7 +23,7 @@ onDataChange((type) => {
   clearFrontendCache();
 });
 
-// Initialize database and fetch data for frontend (with auto-seeding)
+// Initialize database and fetch data for frontend
 export const fetchFrontendData = async (forceRefresh = false) => {
   // Return cached data if still valid
   const now = Date.now();
@@ -33,13 +33,13 @@ export const fetchFrontendData = async (forceRefresh = false) => {
   }
   
   try {
-    console.log('fetchFrontendData: Initializing local SQL database...');
+    console.log('fetchFrontendData: Fetching from PostgreSQL database...');
     await initDatabase();
-    console.log('fetchFrontendData: Database initialized, fetching data...');
+    console.log('fetchFrontendData: Database connected, fetching data...');
     
-    const allCategories = getCategories();
-    const tours = getTours();
-    const banners = getHeroBanners();
+    const allCategories = await getCategories();
+    const tours = await getTours();
+    const banners = await getHeroBanners();
 
     console.log('fetchFrontendData: SQL data -', {
       categoriesCount: allCategories?.length || 0,

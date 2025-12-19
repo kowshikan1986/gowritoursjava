@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPinIcon, ClockIcon, CurrencyPoundIcon, CheckCircleIcon, CalendarIcon } from '@heroicons/react/24/outline';
-import { initDatabase, getTours, isDatabaseReady } from '../services/database';
+import { initDatabase, getTours, isDatabaseReady } from '../services/postgresDatabase';
 import { servicesData } from '../data/servicesData';
 
 const PageContainer = styled.div`
