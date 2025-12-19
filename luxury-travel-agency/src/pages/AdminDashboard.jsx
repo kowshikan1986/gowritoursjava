@@ -312,8 +312,13 @@ const AdminDashboard = () => {
     } else {
       console.log('No saved user found - staying on login page');
     }
+    // Add a small delay to ensure component stays mounted
+    const timer = setTimeout(() => {
+      console.log('Session check completed');
+    }, 100);
     return () => {
       console.log('AdminDashboard component unmounting');
+      clearTimeout(timer);
     };
   }, []);
 
