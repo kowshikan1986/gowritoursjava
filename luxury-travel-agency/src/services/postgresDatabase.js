@@ -292,6 +292,38 @@ export const getAds = async () => {
   }
 };
 
+export const createAd = async (data) => {
+  try {
+    const response = await axios.post(`${API_BASE}/ads`, data);
+    notifyDataChange('ads');
+    return response.data;
+  } catch (error) {
+    console.error('Error creating ad:', error);
+    throw error;
+  }
+};
+
+export const updateAd = async (id, data) => {
+  try {
+    const response = await axios.put(`${API_BASE}/ads/${id}`, data);
+    notifyDataChange('ads');
+    return response.data;
+  } catch (error) {
+    console.error('Error updating ad:', error);
+    throw error;
+  }
+};
+
+export const deleteAd = async (id) => {
+  try {
+    await axios.delete(`${API_BASE}/ads/${id}`);
+    notifyDataChange('ads');
+  } catch (error) {
+    console.error('Error deleting ad:', error);
+    throw error;
+  }
+};
+
 // Dummy functions for compatibility
 export const fileToBase64 = (file) => {
   return new Promise((resolve, reject) => {
