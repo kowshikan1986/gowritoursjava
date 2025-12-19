@@ -310,7 +310,7 @@ const AdminDashboard = () => {
         localStorage.removeItem('adminUser');
       }
     } else {
-      console.log('No saved user found');
+      console.log('No saved user found - staying on login page');
     }
     return () => {
       console.log('AdminDashboard component unmounting');
@@ -394,6 +394,7 @@ const AdminDashboard = () => {
 
   // Login handler
   const handleLogin = (e) => {
+    console.log('Login handler called with form:', loginForm);
     e.preventDefault();
     setLoginError('');
 
@@ -402,21 +403,30 @@ const AdminDashboard = () => {
     const ADMIN_USERNAME = process.env.REACT_APP_ADMIN_USERNAME || 'admin';
     const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || 'G0wr!T0ur$';
 
+    console.log('Checking credentials:', { username: loginForm.username, password: loginForm.password });
+    console.log('Expected:', { username: ADMIN_USERNAME, password: ADMIN_PASSWORD });
+
     if (loginForm.username === ADMIN_USERNAME && loginForm.password === ADMIN_PASSWORD) {
+      console.log('Login successful!');
       const userData = { username: loginForm.username, is_staff: true };
       setUser(userData);
       localStorage.setItem('adminUser', JSON.stringify(userData));
       setLoginForm({ username: '', password: '' });
     } else {
+      console.log('Login failed!');
       setLoginError('Invalid username or password');
     }
   };
 
   // Logout handler
   const handleLogout = () => {
+    console.log('Logging out...');
     setUser(null);
     localStorage.removeItem('adminUser');
-    navigate('/');
+    // Only navigate if we're not already on the home page
+    if (window.location.pathname !== '/') {
+      navigate('/');
+    }
   };
 
   const fetchData = async (key) => {
