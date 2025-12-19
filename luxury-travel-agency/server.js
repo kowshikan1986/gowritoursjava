@@ -381,14 +381,16 @@ app.get('/api/logos', async (req, res) => {
 // Create logo
 app.post('/api/logos', async (req, res) => {
   try {
-    const { id, title, image_url, is_active } = req.body;
+    const { id, title, name, image_url, image, link, is_active } = req.body;
     const generatedId = id || `logo-${Date.now()}`;
+    const logoName = title || name || 'Logo';
+    const logoImage = image_url || image || '';
     
     const result = await pool.query(
-      `INSERT INTO logos (id, title, image_url, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, NOW(), NOW())
+      `INSERT INTO logos (id, name, image, link, is_active, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, NOW(), NOW())
        RETURNING *`,
-      [generatedId, title, image_url, is_active !== false]
+      [generatedId, logoName, logoImage, link || '', is_active !== false]
     );
     
     res.status(201).json(result.rows[0]);
@@ -401,14 +403,16 @@ app.post('/api/logos', async (req, res) => {
 // Update logo
 app.put('/api/logos/:id', async (req, res) => {
   try {
-    const { title, image_url, is_active } = req.body;
+    const { title, name, image_url, image, link, is_active } = req.body;
+    const logoName = title || name;
+    const logoImage = image_url || image;
     
     const result = await pool.query(
       `UPDATE logos 
-       SET title = $1, image_url = $2, is_active = $3, updated_at = NOW()
-       WHERE id = $4
+       SET name = $1, image = $2, link = $3, is_active = $4, updated_at = NOW()
+       WHERE id = $5
        RETURNING *`,
-      [title, image_url, is_active, req.params.id]
+      [logoName, logoImage, link, is_active, req.params.id]
     );
     
     if (result.rows.length === 0) {
