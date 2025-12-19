@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5002);
 
 // PostgreSQL connection configuration
 const pool = new Pool({
@@ -179,7 +179,14 @@ app.get('/api/tours', async (req, res) => {
 // Get tour by slug
 app.get('/api/tours/:slug', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM tours WHERE slug = $1', [req.params.slug]);
+    const { slug } = req.params;
+    const result = await pool.query(
+      `SELECT t.*, c.name as category_name 
+       FROM tours t 
+       LEFT JOIN categories c ON t.category_id = c.id 
+       WHERE t.slug = $1`,
+      [slug]
+    );
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Tour not found' });
     }
@@ -190,22 +197,63 @@ app.get('/api/tours/:slug', async (req, res) => {
   }
 });
 
-// Create tour
+// Create new tour
 app.post('/api/tours', async (req, res) => {
   try {
-    const { id, title, slug, description, price, duration, location, featured_image, is_active, is_featured, category_id, tour_code, details_json } = req.body;
-    const generatedId = id || `tour-${Date.now()}`;
+    const { title, slug, description, price, duration, location, category_id, featured_image, is_active, tour_code } = req.body;
+    const tourSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const id = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     
     const result = await pool.query(
-      `INSERT INTO tours (id, title, slug, description, price, duration, location, featured_image, is_active, is_featured, category_id, tour_code, details_json, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NOW(), NOW())
+      `INSERT INTO tours (id, title, slug, description, price, duration, location, category_id, featured_image, is_active, tour_code, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
        RETURNING *`,
-      [generatedId, title, slug, description || '', price || 0, duration || '', location || '', featured_image || '', is_active !== false, is_featured || false, category_id, tour_code || '', details_json || '{}']
+      [id, title, tourSlug, description, price, duration, location, category_id, featured_image, is_active, tour_code]
     );
-    
-    res.status(201).json(result.rows[0]);
+    res.json(result.rows[0]);
   } catch (error) {
     console.error('Error creating tour:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update tour
+app.put('/api/tours/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { title, description, price, duration, location, category_id, featured_image, is_active, tour_code } = req.body;
+    
+    const result = await pool.query(
+      `UPDATE tours 
+       SET title = $1, description = $2, price = $3, duration = $4, location = $5, 
+           category_id = $6, featured_image = $7, is_active = $8, tour_code = $9, updated_at = NOW()
+       WHERE slug = $10
+       RETURNING *`,
+      [title, description, price, duration, location, category_id, featured_image, is_active, tour_code, slug]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Tour not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating tour:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete tour
+app.delete('/api/tours/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const result = await pool.query('DELETE FROM tours WHERE slug = $1 RETURNING *', [slug]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Tour not found' });
+    }
+    res.json({ message: 'Tour deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting tour:', error);
     res.status(500).json({ error: error.message });
   }
 });
@@ -275,6 +323,45 @@ app.post('/api/hero-banners', async (req, res) => {
     res.status(201).json(result.rows[0]);
   } catch (error) {
     console.error('Error creating hero banner:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update hero banner
+app.put('/api/hero-banners/:id', async (req, res) => {
+  try {
+    const { title, subtitle, cta_text, cta_link, background_image, is_active } = req.body;
+    
+    const result = await pool.query(
+      `UPDATE hero_banners 
+       SET title = $1, subtitle = $2, cta_text = $3, cta_link = $4, 
+           background_image = $5, is_active = $6, updated_at = NOW()
+       WHERE id = $7
+       RETURNING *`,
+      [title, subtitle, cta_text, cta_link, background_image, is_active, req.params.id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Hero banner not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating hero banner:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete hero banner
+app.delete('/api/hero-banners/:id', async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM hero_banners WHERE id = $1 RETURNING *', [req.params.id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Hero banner not found' });
+    }
+    res.json({ message: 'Hero banner deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting hero banner:', error);
     res.status(500).json({ error: error.message });
   }
 });
