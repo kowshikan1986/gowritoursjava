@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "start": "node server.js",
-    "setup-db": "node ../setup-database.js",
+    "setup-db": "node setup-database.js",
     "lint": "eslint .",
     "preview": "vite preview",
     "seed": "echo 'Database will be auto-seeded on first run'"

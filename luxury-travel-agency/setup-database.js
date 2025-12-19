@@ -15,10 +15,8 @@ const config = {
   port: 5432,
   database: 'gowritour',
   user: 'admin',
-  password: 'London25@',
-  ssl: {
-    rejectUnauthorized: false
-  }
+  password: 'London25@'
+  // No SSL configuration - server doesn't support SSL
 };
 
 console.log('Connecting to PostgreSQL database...');
@@ -31,7 +29,7 @@ const { Pool } = pg;
 const pool = new Pool(config);
 
 // Read the schema file
-const schemaPath = path.join(__dirname, 'luxury-travel-agency', 'database', 'schema.sql');
+const schemaPath = path.join(__dirname, 'database', 'schema.sql');
 console.log('Reading schema from:', schemaPath);
 
 try {
@@ -51,6 +49,8 @@ try {
   pool.connect(async (err, client, release) => {
     if (err) {
       console.error('Error acquiring client:', err.stack);
+      console.error('Error code:', err.code);
+      console.error('Error message:', err.message);
       process.exit(1);
     }
     
