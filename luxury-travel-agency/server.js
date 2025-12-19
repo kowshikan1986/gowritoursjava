@@ -378,6 +378,64 @@ app.get('/api/logos', async (req, res) => {
   }
 });
 
+// Create logo
+app.post('/api/logos', async (req, res) => {
+  try {
+    const { id, title, image_url, is_active } = req.body;
+    const generatedId = id || `logo-${Date.now()}`;
+    
+    const result = await pool.query(
+      `INSERT INTO logos (id, title, image_url, is_active, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, NOW(), NOW())
+       RETURNING *`,
+      [generatedId, title, image_url, is_active !== false]
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating logo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update logo
+app.put('/api/logos/:id', async (req, res) => {
+  try {
+    const { title, image_url, is_active } = req.body;
+    
+    const result = await pool.query(
+      `UPDATE logos 
+       SET title = $1, image_url = $2, is_active = $3, updated_at = NOW()
+       WHERE id = $4
+       RETURNING *`,
+      [title, image_url, is_active, req.params.id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Logo not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating logo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete logo
+app.delete('/api/logos/:id', async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM logos WHERE id = $1 RETURNING *', [req.params.id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Logo not found' });
+    }
+    res.json({ message: 'Logo deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting logo:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // ==================== ADS ====================
 
 app.get('/api/ads', async (req, res) => {
@@ -386,6 +444,65 @@ app.get('/api/ads', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching ads:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Create ad
+app.post('/api/ads', async (req, res) => {
+  try {
+    const { id, title, description, image_url, link_url, is_active, priority } = req.body;
+    const generatedId = id || `ad-${Date.now()}`;
+    
+    const result = await pool.query(
+      `INSERT INTO ads (id, title, description, image_url, link_url, is_active, priority, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+       RETURNING *`,
+      [generatedId, title, description || '', image_url, link_url || '', is_active !== false, priority || 10]
+    );
+    
+    res.status(201).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error creating ad:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update ad
+app.put('/api/ads/:id', async (req, res) => {
+  try {
+    const { title, description, image_url, link_url, is_active, priority } = req.body;
+    
+    const result = await pool.query(
+      `UPDATE ads 
+       SET title = $1, description = $2, image_url = $3, link_url = $4, 
+           is_active = $5, priority = $6, updated_at = NOW()
+       WHERE id = $7
+       RETURNING *`,
+      [title, description, image_url, link_url, is_active, priority, req.params.id]
+    );
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Ad not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error updating ad:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete ad
+app.delete('/api/ads/:id', async (req, res) => {
+  try {
+    const result = await pool.query('DELETE FROM ads WHERE id = $1 RETURNING *', [req.params.id]);
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Ad not found' });
+    }
+    res.json({ message: 'Ad deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting ad:', error);
     res.status(500).json({ error: error.message });
   }
 });
