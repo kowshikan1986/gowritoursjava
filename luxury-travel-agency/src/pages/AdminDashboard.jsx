@@ -186,7 +186,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [dbInitialized, setDbInitialized] = useState(false);
-  const [user, setUser] = useState({ username: 'admin', is_staff: true }); // Bypass authentication for debugging
+  const [user, setUser] = useState(null); // User is null until logged in
   const [loginForm, setLoginForm] = useState({ username: '', password: '' });
   const [loginError, setLoginError] = useState('');
   const [tours, setTours] = useState([]);
@@ -298,7 +298,6 @@ const AdminDashboard = () => {
 
   // Check for existing session on mount
   useEffect(() => {
-    /* Disabled for debugging - always bypass authentication
     console.log('Checking for existing session');
     const savedUser = localStorage.getItem('adminUser');
     if (savedUser) {
@@ -313,7 +312,6 @@ const AdminDashboard = () => {
     } else {
       console.log('No saved user found');
     }
-    */
     return () => {
       console.log('AdminDashboard component unmounting');
     };
