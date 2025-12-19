@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed": "echo 'Database will be auto-seeded on first run'"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
