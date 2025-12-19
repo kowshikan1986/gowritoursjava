@@ -179,6 +179,7 @@ const sections = [
 ];
 
 const AdminDashboard = () => {
+  console.log('AdminDashboard component mounting');
   const location = useLocation();
   const navigate = useNavigate();
   const [active, setActive] = useState('tours');
@@ -297,16 +298,23 @@ const AdminDashboard = () => {
 
   // Check for existing session on mount
   useEffect(() => {
+    console.log('Checking for existing session');
     const savedUser = localStorage.getItem('adminUser');
     if (savedUser) {
       try {
         const userData = JSON.parse(savedUser);
+        console.log('Found saved user:', userData);
         setUser(userData);
       } catch (e) {
         console.error('Error parsing saved user:', e);
         localStorage.removeItem('adminUser');
       }
+    } else {
+      console.log('No saved user found');
     }
+    return () => {
+      console.log('AdminDashboard component unmounting');
+    };
   }, []);
 
   // Initialize database on mount
@@ -971,6 +979,7 @@ const AdminDashboard = () => {
 
   return (
     <Page>
+      {console.log('Rendering AdminDashboard, user:', user)}
       {/* Show login screen if not authenticated */}
       {!user ? (
         <Card style={{ maxWidth: '500px', margin: '4rem auto', padding: '2rem', minHeight: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 20px 50px rgba(106, 27, 130, 0.2)', border: '2px solid #6A1B82' }}>
