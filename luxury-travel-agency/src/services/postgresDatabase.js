@@ -43,15 +43,17 @@ export const initDatabase = async () => {
 
   try {
     console.log('Initializing PostgreSQL database connection...');
-    const response = await axios.get(`${API_BASE}/health`);
+    const response = await axios.get(`${API_BASE}/health`, { timeout: 5000 });
     if (response.data.status === 'ok') {
       console.log('✅ PostgreSQL database connected successfully');
       isInitialized = true;
       return true;
     }
   } catch (error) {
-    console.error('❌ Failed to connect to PostgreSQL:', error.message);
-    throw error;
+    console.warn('⚠️ PostgreSQL not connected yet:', error.message);
+    console.warn('The app will continue to load, but data will be empty until the database is available.');
+    // Don't throw - let the app load with empty data
+    return false;
   }
 };
 
@@ -60,20 +62,20 @@ export const isDatabaseReady = () => isInitialized;
 // ==================== CATEGORIES ====================
 export const getCategories = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/categories`);
+    const response = await axios.get(`${API_BASE}/categories`, { timeout: 5000 });
     return response.data || [];
   } catch (error) {
-    console.error('Error fetching categories:', error);
+    console.warn('Error fetching categories:', error.message);
     return [];
   }
 };
 
 export const getCategoryBySlug = async (slug) => {
   try {
-    const response = await axios.get(`${API_BASE}/categories/${slug}`);
+    const response = await axios.get(`${API_BASE}/categories/${slug}`, { timeout: 5000 });
     return response.data;
   } catch (error) {
-    console.error('Error fetching category:', error);
+    console.warn('Error fetching category:', error.message);
     return null;
   }
 };
@@ -123,10 +125,10 @@ export const deleteCategoryByName = async (name) => {
 // ==================== TOURS ====================
 export const getTours = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/tours`);
+    const response = await axios.get(`${API_BASE}/tours`, { timeout: 5000 });
     return response.data || [];
   } catch (error) {
-    console.error('Error fetching tours:', error);
+    console.warn('Error fetching tours:', error.message);
     return [];
   }
 };
@@ -176,10 +178,10 @@ export const deleteTour = async (slug) => {
 // ==================== HERO BANNERS ====================
 export const getHeroBanners = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/hero-banners`);
+    const response = await axios.get(`${API_BASE}/hero-banners`, { timeout: 5000 });
     return response.data || [];
   } catch (error) {
-    console.error('Error fetching hero banners:', error);
+    console.warn('Error fetching hero banners:', error.message);
     return [];
   }
 };

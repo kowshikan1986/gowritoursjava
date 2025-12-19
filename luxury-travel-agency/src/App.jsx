@@ -30,12 +30,16 @@ function App() {
     const initializeDatabase = async () => {
       try {
         console.log('Connecting to PostgreSQL database...');
-        await initDatabase();
-        console.log('✅ Connected to PostgreSQL successfully');
+        const connected = await initDatabase();
+        if (connected) {
+          console.log('✅ Connected to PostgreSQL successfully');
+        } else {
+          console.warn('⚠️ Database not connected - app will load with empty data');
+        }
         setDbInitialized(true);
       } catch (error) {
-        console.error('❌ Failed to connect to PostgreSQL:', error);
-        console.error('Make sure the backend server is running and database is accessible');
+        console.error('❌ Database initialization error:', error);
+        console.warn('App will continue to load...');
         // Continue anyway to show the UI
         setDbInitialized(true);
       }
