@@ -22,10 +22,12 @@ const Nav = styled.nav`
     transform: ${props => props.$isMobileMenuOpen ? 'translateY(0)' : 'translateY(-100%)'};
     opacity: ${props => props.$isMobileMenuOpen ? '1' : '0'};
     visibility: ${props => props.$isMobileMenuOpen ? 'visible' : 'hidden'};
+    pointer-events: ${props => props.$isMobileMenuOpen ? 'auto' : 'none'};
     transition: all 0.3s ease;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     height: calc(100vh - 96px);
     overflow-y: auto;
+    z-index: 1200;
   }
 `;
 
