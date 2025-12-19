@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import RichTextEditor from '../components/common/RichTextEditor';
-import { initDatabase, getCategories, updateCategory } from '../services/database';
+import { initDatabase, getCategories, updateCategory } from '../services/postgresDatabase';
 
 const Page = styled.div`
   max-width: 900px;

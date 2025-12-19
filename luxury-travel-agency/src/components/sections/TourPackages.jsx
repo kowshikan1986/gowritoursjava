@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRightIcon, MapPinIcon } from '@heroicons/react/24/outline';
 import { servicesData } from '../../data/servicesData';
 import { fetchFrontendData, normalize } from '../../services/frontendData';
-import { onDataChange } from '../../services/database';
+import { onDataChange } from '../../services/postgresDatabase';
 
 // normalize is imported from frontendData
 

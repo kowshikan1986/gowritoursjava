@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navigation from './Navigation';
-import { initDatabase, getLogos } from '../../services/database';
+import { initDatabase, getLogos } from '../../services/postgresDatabase';
 
 const HeaderContainer = styled.header`
   position: fixed;
