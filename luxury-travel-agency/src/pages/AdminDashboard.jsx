@@ -389,9 +389,10 @@ const AdminDashboard = () => {
     e.preventDefault();
     setLoginError('');
 
-    // Admin credentials (you can change these)
-    const ADMIN_USERNAME = 'admin';
-    const ADMIN_PASSWORD = 'admin123';
+    // Admin credentials (CHANGE THESE FOR PRODUCTION!)
+    // Default: admin / G0wr!T0ur$
+    const ADMIN_USERNAME = process.env.REACT_APP_ADMIN_USERNAME || 'admin';
+    const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || 'G0wr!T0ur$';
 
     if (loginForm.username === ADMIN_USERNAME && loginForm.password === ADMIN_PASSWORD) {
       const userData = { username: loginForm.username, is_staff: true };
@@ -972,8 +973,8 @@ const AdminDashboard = () => {
     <Page>
       {/* Show login screen if not authenticated */}
       {!user ? (
-        <Card style={{ maxWidth: '500px', margin: '4rem auto', padding: '2rem' }}>
-          <Title style={{ textAlign: 'center', marginBottom: '0.5rem' }}>Admin Login</Title>
+        <Card style={{ maxWidth: '500px', margin: '4rem auto', padding: '2rem', minHeight: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 20px 50px rgba(106, 27, 130, 0.2)', border: '2px solid #6A1B82' }}>
+          <Title style={{ textAlign: 'center', marginBottom: '0.5rem', color: '#6A1B82' }}>Admin Login</Title>
           <Info style={{ textAlign: 'center', marginBottom: '2rem' }}>Please enter your credentials to access the admin dashboard</Info>
           
           {loginError && <ErrorMsg style={{ marginBottom: '1rem', textAlign: 'center' }}>{loginError}</ErrorMsg>}
@@ -1006,7 +1007,10 @@ const AdminDashboard = () => {
           </form>
           
           <Info style={{ marginTop: '2rem', fontSize: '0.85rem', color: '#9ca3af', textAlign: 'center' }}>
-            Default credentials: admin / admin123
+            Default credentials: admin / G0wr!T0ur$
+          </Info>
+          <Info style={{ marginTop: '1rem', fontSize: '0.85rem', color: '#6b7280', textAlign: 'center', fontStyle: 'italic' }}>
+            Change these in the source code or use environment variables for production use
           </Info>
         </Card>
       ) : (
