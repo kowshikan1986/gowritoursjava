@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from './components/layout/Header';
@@ -12,7 +12,6 @@ import ServicePage from './pages/ServicePage';
 import PackageDetailPage from './pages/PackageDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 import CategoryEditPage from './pages/CategoryEditPage';
-import { initDatabase } from './services/postgresDatabase';
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -24,41 +23,6 @@ const MainContent = styled.main`
 `;
 
 function App() {
-  const [dbInitialized, setDbInitialized] = useState(false);
-
-  useEffect(() => {
-    const initializeDatabase = async () => {
-      try {
-        console.log('Connecting to PostgreSQL database...');
-        const connected = await initDatabase();
-        if (connected) {
-          console.log('✅ Connected to PostgreSQL successfully');
-        } else {
-          console.warn('⚠️ Database not connected - app will load with empty data');
-        }
-        setDbInitialized(true);
-      } catch (error) {
-        console.error('❌ Database initialization error:', error);
-        console.warn('App will continue to load...');
-        // Continue anyway to show the UI
-        setDbInitialized(true);
-      }
-    };
-
-    initializeDatabase();
-  }, []);
-
-  if (!dbInitialized) {
-    return (
-      <AppContainer style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
-        <div style={{ textAlign: 'center' }}>
-          <h2>Loading...</h2>
-          <p>Connecting to database...</p>
-        </div>
-      </AppContainer>
-    );
-  }
-
   return (
     <Router>
       <AppContent />
@@ -66,7 +30,6 @@ function App() {
   );
 }
 
-// Separate component to use useLocation hook
 function AppContent() {
   const location = useLocation();
   const isAdminPage = location.pathname.startsWith('/admin');

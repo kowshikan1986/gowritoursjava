@@ -179,9 +179,19 @@ const sections = [
 ];
 
 const AdminDashboard = () => {
-  console.log('AdminDashboard component mounting');
+  console.log('🚀 AdminDashboard component mounting');
+  console.log('Current URL:', window.location.href);
   const location = useLocation();
   const navigate = useNavigate();
+  console.log('Location pathname:', location.pathname);
+  
+  // Prevent any automatic redirects
+  useEffect(() => {
+    console.log('AdminDashboard mounted, pathname:', location.pathname);
+    return () => {
+      console.log('AdminDashboard unmounting');
+    };
+  }, []);
   const [active, setActive] = useState('tours');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -328,40 +338,9 @@ const AdminDashboard = () => {
       try {
         await initDatabase();
         setDbInitialized(true);
-        
-        // Auto-cleanup unwanted categories (runs once)
-        const cleanupKey = 'categories_cleaned_v1';
-        if (!localStorage.getItem(cleanupKey)) {
-          console.log('🗑️ Running one-time category cleanup...');
-          const categoriesToDelete = [
-            'Executive MPV',
-            'India Golden Triangle (Delhi–Agra–Jaipur)',
-            'Kerala Backwaters',
-            'Luxury Sedan',
-            'Minibus/Coach'
-          ];
-          
-          for (const categoryName of categoriesToDelete) {
-            try {
-              await deleteCategoryByName(categoryName);
-              console.log(`✅ Deleted: ${categoryName}`);
-            } catch (error) {
-              console.error(`Error deleting ${categoryName}:`, error);
-            }
-          }
-          
-          localStorage.setItem(cleanupKey, 'true');
-          console.log('✅ Category cleanup complete!');
-        }
-        
-        // Small delay to ensure DB is fully ready
-        setTimeout(() => {
-          fetchData(active);
-        }, 100);
       } catch (err) {
         console.error('Database initialization error:', err);
-        setError('Failed to initialize database: ' + (err.message || 'Unknown error. Please refresh the page.'));
-        // Still set as initialized so user can see the error
+        setError('Failed to initialize database: ' + (err.message || 'Unknown error'));
         setDbInitialized(true);
       }
     };
@@ -405,8 +384,8 @@ const AdminDashboard = () => {
 
     // Admin credentials (CHANGE THESE FOR PRODUCTION!)
     // Default: admin / G0wr!T0ur$
-    const ADMIN_USERNAME = process.env.REACT_APP_ADMIN_USERNAME || 'admin';
-    const ADMIN_PASSWORD = process.env.REACT_APP_ADMIN_PASSWORD || 'G0wr!T0ur$';
+    const ADMIN_USERNAME = import.meta.env.VITE_ADMIN_USERNAME || 'admin';
+    const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'G0wr!T0ur$';
 
     console.log('Checking credentials:', { username: loginForm.username, password: loginForm.password });
     console.log('Expected:', { username: ADMIN_USERNAME, password: ADMIN_PASSWORD });
@@ -435,54 +414,40 @@ const AdminDashboard = () => {
   };
 
   const fetchData = async (key) => {
-    if (!dbInitialized) {
-      console.log('Database not initialized yet, skipping fetchData');
-      return;
-    }
+    if (!dbInitialized) return;
     setError('');
     setLoading(true);
     try {
-      console.log(`Fetching data for: ${key}`);
       if (key === 'tours') {
-        const allCategories = getCategories();
-        const allTours = getTours();
-        console.log(`Loaded ${allCategories.length} categories and ${allTours.length} tours`);
+        const allCategories = await getCategories();
+        const allTours = await getTours();
         setTours(allTours);
         setCategories(allCategories);
       } else if (key === 'categories') {
-        const allCategories = getCategories();
-        console.log(`Loaded ${allCategories.length} categories`);
+        const allCategories = await getCategories();
         setCategories(allCategories);
-        // Subcategories are categories with parent_id
         const subs = allCategories.filter(c => c.parent_id);
         setSubCategories(subs);
-        console.log(`Found ${subs.length} subcategories`);
       } else if (key === 'subcategories') {
-        const allCategories = getCategories();
+        const allCategories = await getCategories();
         setCategories(allCategories);
         const subs = allCategories.filter(c => c.parent_id);
         setSubCategories(subs);
-        console.log(`Loaded ${allCategories.length} categories, ${subs.length} subcategories`);
       } else if (key === 'categorytree') {
-        const allCategories = getCategories();
+        const allCategories = await getCategories();
         setCategories(allCategories);
         const subs = allCategories.filter(c => c.parent_id);
         setSubCategories(subs);
-        console.log(`Loaded category tree: ${allCategories.length} total categories`);
       } else if (key === 'hero') {
-        const allBanners = getHeroBanners();
-        console.log(`Loaded ${allBanners.length} hero banners`);
+        const allBanners = await getHeroBanners();
         setBanners(allBanners);
       } else if (key === 'ads') {
-        const allAds = getAds();
-        console.log(`Loaded ${allAds.length} ads`);
+        const allAds = await getAds();
         setAds(allAds);
       } else if (key === 'logos') {
-        const allLogos = getLogos();
-        console.log(`Loaded ${allLogos.length} logos`);
+        const allLogos = await getLogos();
         setLogos(allLogos);
       }
-      console.log('Data fetched successfully');
     } catch (err) {
       console.error('Error fetching data:', err);
       setError(err.message || 'Failed to load data');
@@ -994,7 +959,7 @@ const AdminDashboard = () => {
 
   return (
     <Page>
-      {console.log('Rendering AdminDashboard, user:', user)}
+      {console.log('🎨 Rendering AdminDashboard, user:', user)}
       {/* Show login screen if not authenticated */}
       {!user ? (
         <Card style={{ maxWidth: '500px', margin: '4rem auto', padding: '2rem', minHeight: '300px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: '0 20px 50px rgba(106, 27, 130, 0.2)', border: '2px solid #6A1B82' }}>
@@ -1062,16 +1027,22 @@ const AdminDashboard = () => {
 
       {error && <ErrorMsg>{error}</ErrorMsg>}
       {loading && <Info>Loading...</Info>}
-      {!dbInitialized && <Info>Initializing database...</Info>}
+      {!dbInitialized && (
+        <Card style={{ padding: '2rem', textAlign: 'center' }}>
+          <Title>Initializing Database...</Title>
+          <Info>Please wait while we connect to the database.</Info>
+          <Info style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#666' }}>This may take a few moments.</Info>
+        </Card>
+      )}
 
       {user && (
         <Card>
           <Flex style={{ alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <strong>{user.username}</strong> (SQL Database Mode)
+              <strong>{user.username}</strong> (PostgreSQL Database)
             </div>
             <Flex style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
-              <Info>All data is stored in SQLite database</Info>
+              <Info>All data is stored in PostgreSQL database</Info>
               <Button
                 $variant="outline"
                 onClick={handleLogout}

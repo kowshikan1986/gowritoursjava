@@ -5,11 +5,11 @@ import axios from 'axios';
 
 // Database configuration from environment variables
 const DB_CONFIG = {
-  host: process.env.VITE_DB_HOST || 'ec2-43-205-140-222.ap-south-1.compute.amazonaws.com',
-  port: process.env.VITE_DB_PORT || 5432,
-  database: process.env.VITE_DB_NAME || 'gowritour',
-  user: process.env.VITE_DB_USER || 'admin',
-  password: process.env.VITE_DB_PASSWORD || 'London25@',
+  host: import.meta.env.VITE_DB_HOST || 'ec2-43-205-140-222.ap-south-1.compute.amazonaws.com',
+  port: import.meta.env.VITE_DB_PORT || 5432,
+  database: import.meta.env.VITE_DB_NAME || 'gowritour',
+  user: import.meta.env.VITE_DB_USER || 'admin',
+  password: import.meta.env.VITE_DB_PASSWORD || 'London25@',
 };
 
 // API endpoint - this will be handled by the backend server

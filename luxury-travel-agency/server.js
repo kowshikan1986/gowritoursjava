@@ -10,7 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5002;
 
 // PostgreSQL connection configuration
 const pool = new Pool({
@@ -19,9 +19,8 @@ const pool = new Pool({
   database: process.env.DB_NAME || 'gowritour',
   user: process.env.DB_USER || 'admin',
   password: process.env.DB_PASSWORD || 'London25@',
-  ssl: {
-    rejectUnauthorized: false // For AWS RDS
-  }
+  // SSL disabled - server doesn't support it
+  ssl: false
 });
 
 // Test database connection
@@ -253,7 +252,7 @@ app.delete('/api/tours/:slug', async (req, res) => {
 
 app.get('/api/hero-banners', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM hero_banners ORDER BY priority, created_at DESC');
+    const result = await pool.query('SELECT * FROM hero_banners ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching hero banners:', error);

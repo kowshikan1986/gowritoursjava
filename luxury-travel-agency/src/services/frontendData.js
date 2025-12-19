@@ -1,5 +1,5 @@
 // Frontend data service - uses PostgreSQL database via API
-import { initDatabase, getCategories, getTours, getHeroBanners, onDataChange } from './postgresDatabase';
+import { initDatabase, getCategories, getTours, getHeroBanners } from './postgresDatabase';
 
 // Helper to normalize slugs
 export const normalize = (str = '') =>
@@ -16,12 +16,6 @@ export const clearFrontendCache = () => {
   cacheTimestamp = 0;
   console.log('Frontend data cache cleared');
 };
-
-// Listen for database changes and clear cache
-onDataChange((type) => {
-  console.log('Frontend cache: Database changed, clearing cache...', type);
-  clearFrontendCache();
-});
 
 // Initialize database and fetch data for frontend
 export const fetchFrontendData = async (forceRefresh = false) => {
@@ -96,10 +90,7 @@ export const fetchFrontendData = async (forceRefresh = false) => {
     return cachedData;
   } catch (error) {
     console.error('fetchFrontendData ERROR - Failed to fetch frontend data:');
-    console.error('Error type:', error?.constructor?.name);
-    console.error('Error message:', error?.message);
-    console.error('Error stack:', error?.stack);
-    console.error('Full error object:', error);
+    console.error('Error:', error);
     // Return empty data structure if database fails
     return {
       categories: [],
@@ -153,4 +144,3 @@ export const formatCategoryForFrontend = (dbCategory, allCategories, allTours) =
     },
   };
 };
-

@@ -15,7 +15,15 @@ export default defineConfig(({ mode }) => {
       host: true,
       port: 5173,
       strictPort: true,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:5002',
+          changeOrigin: true,
+        },
+      },
       allowedHosts: [
+        'localhost',
+        '127.0.0.1',
         'gowritoursjava-main-6c0a179.kuberns.cloud',
         'gowritoursjava-main-83a2c51.kuberns.cloud',
         ...extraHosts,
