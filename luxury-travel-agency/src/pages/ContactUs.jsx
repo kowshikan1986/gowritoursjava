@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PhoneIcon, EnvelopeIcon, UserIcon, MapPinIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
-import { servicesData } from '../data/servicesData';
+import { getCategories, getTours } from '../services/postgresDatabase';
 
 const Page = styled.div`
   background: #f9fafb;
@@ -290,26 +290,52 @@ const ContactUs = () => {
   const [errors, setErrors] = useState({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [categories, setCategories] = useState([]);
+  const [tours, setTours] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch categories and tours from database
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [categoriesData, toursData] = await Promise.all([
+          getCategories(),
+          getTours()
+        ]);
+        setCategories(categoriesData);
+        setTours(toursData.filter(t => t.is_active));
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const update = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const submit = (e) => {
     e.preventDefault();
     if (!form.name || !form.email || !form.message) return;
-    const pkgLabel = (() => {
-      const allPkgs = [];
-      for (const s of servicesData) {
-        if (s.packages) {
-          for (const p of s.packages) {
-            allPkgs.push({ id: p.id, label: `${s.title} — ${p.title}` });
-          }
-        }
-      }
-      const found = allPkgs.find(x => x.id === form.packageId);
-      return found ? found.label : form.destination;
-    })();
-    const body = `Name: ${form.name}\nEmail: ${form.email}\nPhone: ${form.phone}\nDestination: ${form.destination}\nMessage: ${form.message}`;
-    const finalBody = `Name: ${form.name}\nEmail: ${form.email}\nPhone: ${form.phone}\nSelected Package: ${pkgLabel || 'N/A'}\nMessage: ${form.message}`;
+    
+    // Find selected package label
+    const selectedTour = tours.find(t => t.id === form.packageId || t.slug === form.packageId);
+    const selectedCategory = categories.find(c => c.id === form.packageId);
+    
+    let pkgLabel = 'N/A';
+    if (selectedTour) {
+      const tourCategory = categories.find(c => c.id === selectedTour.category_id);
+      pkgLabel = tourCategory ? `${tourCategory.name} — ${selectedTour.title}` : selectedTour.title;
+    } else if (selectedCategory) {
+      pkgLabel = selectedCategory.name;
+    }
+    
+    const finalBody = `Name: ${form.name}
+Email: ${form.email}
+Phone: ${form.phone}
+Selected Package: ${pkgLabel}
+Message: ${form.message}`;
     window.location.href = `mailto:info@gowritours.com?subject=Luxury%20Travel%20Inquiry&body=${encodeURIComponent(finalBody)}`;
     setShowSuccess(true);
   };
@@ -418,9 +444,29 @@ const ContactUs = () => {
                   <IconLeft><MapPinIcon style={{ width: 18, height: 18 }} /></IconLeft>
                   <Select name="packageId" value={form.packageId} onChange={update}>
                     <option value="">Select a package</option>
-                    {servicesData.flatMap(service => (service.packages || []).map(pkg => (
-                      <option key={pkg.id} value={pkg.id}>{`${service.title} — ${pkg.title}`}</option>
-                    )))}
+                    {loading ? (
+                      <option disabled>Loading packages...</option>
+                    ) : (
+                      <>
+                        {/* Root categories */}
+                        {categories.filter(c => !c.parent_id).map(category => (
+                          <optgroup key={category.id} label={category.name}>
+                            {/* Subcategories under this root */}
+                            {categories.filter(sub => sub.parent_id === category.id).map(sub => (
+                              <option key={sub.id} value={sub.id}>
+                                {sub.name}
+                              </option>
+                            ))}
+                            {/* Tours directly under this category */}
+                            {tours.filter(tour => tour.category_id === category.id).map(tour => (
+                              <option key={tour.id} value={tour.id}>
+                                {tour.title}
+                              </option>
+                            ))}
+                          </optgroup>
+                        ))}
+                      </>
+                    )}
                   </Select>
                 </InputWrapper>
               </Field>
