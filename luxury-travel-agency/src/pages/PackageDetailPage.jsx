@@ -418,7 +418,7 @@ const PackageDetailPage = () => {
         
         console.log('PackageDetailPage: Database ready after', retries, 'retries');
         
-        const tours = getTours();
+        const tours = await getTours();
         console.log('PackageDetailPage: Found tours in database:', tours.length, tours.map(t => ({ slug: t.slug, id: t.id, title: t.title })));
         
         const tour = tours.find(t => t.slug === id || String(t.id) === String(id));
