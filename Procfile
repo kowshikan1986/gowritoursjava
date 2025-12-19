@@ -1,1 +1,1 @@
-web: cd luxury-travel-agency && npm start
+web: node luxury-travel-agency/server.js
