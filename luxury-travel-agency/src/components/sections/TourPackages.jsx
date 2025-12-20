@@ -78,6 +78,17 @@ const PackageCard = styled(motion.div)`
   background: #f5f5f5; /* Fallback */
   scroll-snap-align: start;
 
+  @media (max-width: 768px) {
+    min-width: 300px;
+    height: 350px;
+    border-radius: 15px;
+  }
+
+  @media (max-width: 480px) {
+    min-width: 280px;
+    height: 300px;
+  }
+
   &:hover {
     transform: translateY(-10px);
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);

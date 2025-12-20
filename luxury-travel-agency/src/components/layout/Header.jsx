@@ -159,7 +159,7 @@ const Header = () => {
           {logoUrl && <LogoImg src={resolveMediaUrl(logoUrl)} alt="GOWRI TOURS logo" />}
         </Logo>
 
-        <Navigation isMobileMenuOpen={isMobileMenuOpen} />
+        <Navigation isMobileMenuOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 
         <MobileMenuButton
           onClick={toggleMobileMenu}

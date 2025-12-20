@@ -220,7 +220,7 @@ const L2Link = styled.a`
   }
 `;
 
-const Navigation = ({ isMobileMenuOpen }) => {
+const Navigation = ({ isMobileMenuOpen, onClose }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [menuCategories, setMenuCategories] = useState([]);
@@ -312,6 +312,7 @@ const Navigation = ({ isMobileMenuOpen }) => {
             }
             setOpenSlug(null);
             setExpandedSubSlug(null);
+            if (onClose) onClose(); // Close mobile menu
           }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -396,7 +397,7 @@ const Navigation = ({ isMobileMenuOpen }) => {
               }}
             >
               <NavLink
-                href={`/service/${categorySlug}`}
+                href="/service/${categorySlug}"
                 onClick={(e) => {
                   e.preventDefault();
                   if (window.innerWidth <= 768) {
@@ -407,6 +408,7 @@ const Navigation = ({ isMobileMenuOpen }) => {
                       if (nextState === null) setExpandedSubSlug(null);
                     } else {
                       navigate(`/service/${categorySlug}`);
+                      if (onClose) onClose(); // Close mobile menu
                     }
                   } else {
                     // Desktop: navigate
@@ -458,6 +460,7 @@ const Navigation = ({ isMobileMenuOpen }) => {
                                   navigate(`/service/${childSlug}`);
                                   setOpenSlug(null);
                                   setExpandedSubSlug(null);
+                                  if (onClose) onClose(); // Close mobile menu
                                 }
                               }}
                               onMouseEnter={() => {
@@ -491,6 +494,7 @@ const Navigation = ({ isMobileMenuOpen }) => {
                                       navigate(`/service/${grandchildSlug}`);
                                       setOpenSlug(null);
                                       setExpandedSubSlug(null);
+                                      if (onClose) onClose(); // Close mobile menu
                                     }}
                                   >
                                     ↳ {grandchild.name}
@@ -514,6 +518,7 @@ const Navigation = ({ isMobileMenuOpen }) => {
           onClick={(e) => {
             e.preventDefault();
             navigate('/contact-us');
+            if (onClose) onClose(); // Close mobile menu
           }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -523,7 +528,10 @@ const Navigation = ({ isMobileMenuOpen }) => {
       </NavItem>
 
       <CTAButton
-        onClick={(e) => handleNavClick(e, 'contact')}
+        onClick={(e) => {
+          handleNavClick(e, 'contact');
+          if (onClose) onClose(); // Close mobile menu
+        }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >

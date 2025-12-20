@@ -183,6 +183,16 @@ const ImageContainer = styled(motion.div)`
   position: relative;
   height: 500px;
 
+  @media (max-width: 768px) {
+    height: 300px;
+    border-radius: 15px;
+  }
+
+  @media (max-width: 480px) {
+    height: 250px;
+    border-radius: 10px;
+  }
+
   img {
     width: 100%;
     height: 100%;
@@ -440,6 +450,15 @@ const CategoryCard = styled(motion.div)`
   cursor: pointer;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease;
+
+  @media (max-width: 768px) {
+    height: 300px;
+    border-radius: 15px;
+  }
+
+  @media (max-width: 480px) {
+    height: 250px;
+  }
   text-decoration: none;
   display: block;
 
