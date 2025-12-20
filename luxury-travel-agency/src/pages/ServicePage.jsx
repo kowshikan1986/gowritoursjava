@@ -21,7 +21,7 @@ const HeroSection = styled.div`
   color: white;
   background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${props => props.$bg});
   background-size: cover;
-  background-position: top center;
+  background-position: center center;
   margin-bottom: 4rem;
 `;
 

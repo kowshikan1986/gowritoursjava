@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import RichTextEditor from '../components/common/RichTextEditor';
-import { initDatabase, getCategories, updateCategory } from '../services/postgresDatabase';
+import { initDatabase, getCategories, updateCategory, deleteCategory } from '../services/postgresDatabase';
 
 const Page = styled.div`
   max-width: 900px;
@@ -218,6 +218,29 @@ const CategoryEditPage = () => {
     }
   };
 
+  const handleDelete = async () => {
+    const categoryType = category.parent_id ? 'subcategory' : 'category';
+    const confirmMsg = `Delete this ${categoryType} "${category.name}"?${!category.parent_id ? ' This will also delete all its subcategories.' : ''}`;
+    
+    if (!window.confirm(confirmMsg)) return;
+    
+    setError('');
+    setSuccess('');
+    setSaving(true);
+    
+    try {
+      await deleteCategory(category.slug);
+      setSuccess(`${categoryType.charAt(0).toUpperCase() + categoryType.slice(1)} deleted successfully!`);
+      setTimeout(() => {
+        navigate('/admin');
+      }, 1000);
+    } catch (err) {
+      console.error('Error deleting category:', err);
+      setError('Failed to delete: ' + err.message);
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <Page>
@@ -330,6 +353,15 @@ const CategoryEditPage = () => {
               onClick={() => navigate('/admin')}
             >
               Cancel
+            </Button>
+            <Button
+              type="button"
+              $variant="outline"
+              onClick={handleDelete}
+              disabled={saving}
+              style={{ color: '#b91c1c', borderColor: '#fca5a5' }}
+            >
+              Delete {category.parent_id ? 'Subcategory' : 'Category'}
             </Button>
           </ButtonGroup>
         </Form>
