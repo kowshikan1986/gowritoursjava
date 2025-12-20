@@ -240,7 +240,7 @@ const Hero = () => {
     if (heroItems.length <= 1) return;
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % heroItems.length);
-    }, 5000);
+    }, 6000); // Changed to 6 seconds for smoother transitions
     return () => clearInterval(timer);
   }, [heroItems.length]);
 
@@ -264,16 +264,32 @@ const Hero = () => {
 
   return (
     <HeroContainer>
-      <AnimatePresence mode="popLayout">
+      <AnimatePresence mode="wait">
         <BackgroundImage
           key={resolveMediaUrl(currentHero.background_image) || 'default-hero'}
           image={resolveMediaUrl(currentHero.background_image)}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 2, ease: 'easeInOut' }}
+          initial={{ 
+            opacity: 0, 
+            scale: 1.2,
+            x: -100
+          }}
+          animate={{ 
+            opacity: 1, 
+            scale: 1.05,
+            x: 0,
+            transition: {
+              opacity: { duration: 1.5, ease: 'easeOut' },
+              scale: { duration: 6, ease: 'linear' },
+              x: { duration: 1.2, ease: 'easeOut' }
+            }
+          }}
+          exit={{ 
+            opacity: 0,
+            scale: 1,
+            transition: { duration: 0.8, ease: 'easeIn' }
+          }}
           style={{
-            transform: `translate(${mousePosition.x}px, ${mousePosition.y}px) scale(1.05)`
+            transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)`
           }}
         />
       </AnimatePresence>

@@ -198,7 +198,25 @@ export const getHeroBannerById = async (id) => {
 
 export const createHeroBanner = async (data) => {
   try {
-    const response = await axios.post(`${API_BASE}/hero-banners`, data);
+    // Convert image file to base64 if present
+    let imageData = '';
+    if (data.background_imageFile) {
+      imageData = await fileToBase64(data.background_imageFile);
+    } else if (data.imageFile) {
+      imageData = await fileToBase64(data.imageFile);
+    }
+    
+    const payload = {
+      title: data.title,
+      subtitle: data.subtitle,
+      cta_text: data.cta_text,
+      cta_link: data.cta_link,
+      background_image: imageData,
+      image: imageData, // Also send as image for backend
+      is_active: data.is_active
+    };
+    
+    const response = await axios.post(`${API_BASE}/hero-banners`, payload);
     notifyDataChange('banners');
     return response.data;
   } catch (error) {

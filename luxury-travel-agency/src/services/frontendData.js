@@ -34,6 +34,12 @@ export const fetchFrontendData = async (forceRefresh = false) => {
     const allCategories = await getCategories();
     const tours = await getTours();
     const banners = await getHeroBanners();
+    
+    // Map database field 'image' to frontend field 'background_image'
+    const mappedBanners = (banners || []).map(banner => ({
+      ...banner,
+      background_image: banner.image || banner.background_image
+    }));
 
     console.log('fetchFrontendData: SQL data -', {
       categoriesCount: allCategories?.length || 0,
@@ -83,7 +89,7 @@ export const fetchFrontendData = async (forceRefresh = false) => {
       categories: rootCategories,
       allCategories: allCategories || [],
       tours: tours || [],
-      banners: banners || [],
+      banners: mappedBanners || [],
     };
     cacheTimestamp = Date.now();
 

@@ -310,14 +310,15 @@ app.get('/api/hero-banners', async (req, res) => {
 
 app.post('/api/hero-banners', async (req, res) => {
   try {
-    const { id, title, subtitle, cta_text, cta_link, background_image, is_active, priority } = req.body;
+    const { id, title, subtitle, cta_text, cta_link, background_image, image, is_active } = req.body;
     const generatedId = id || `hero-${Date.now()}`;
+    const bannerImage = background_image || image || '';
     
     const result = await pool.query(
-      `INSERT INTO hero_banners (id, title, subtitle, cta_text, cta_link, background_image, is_active, priority, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+      `INSERT INTO hero_banners (id, title, subtitle, cta_text, cta_link, image, is_active, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
        RETURNING *`,
-      [generatedId, title, subtitle || '', cta_text || '', cta_link || '', background_image || '', is_active !== false, priority || 10]
+      [generatedId, title, subtitle || '', cta_text || '', cta_link || '', bannerImage, is_active !== false]
     );
     
     res.status(201).json(result.rows[0]);
@@ -330,15 +331,16 @@ app.post('/api/hero-banners', async (req, res) => {
 // Update hero banner
 app.put('/api/hero-banners/:id', async (req, res) => {
   try {
-    const { title, subtitle, cta_text, cta_link, background_image, is_active } = req.body;
+    const { title, subtitle, cta_text, cta_link, background_image, image, is_active } = req.body;
+    const bannerImage = background_image || image;
     
     const result = await pool.query(
       `UPDATE hero_banners 
        SET title = $1, subtitle = $2, cta_text = $3, cta_link = $4, 
-           background_image = $5, is_active = $6, updated_at = NOW()
+           image = $5, is_active = $6, updated_at = NOW()
        WHERE id = $7
        RETURNING *`,
-      [title, subtitle, cta_text, cta_link, background_image, is_active, req.params.id]
+      [title, subtitle, cta_text, cta_link, bannerImage, is_active, req.params.id]
     );
     
     if (result.rows.length === 0) {
