@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import { 
@@ -8,6 +8,7 @@ import {
   ClockIcon,
   PaperAirplaneIcon
 } from '@heroicons/react/24/outline';
+import { fetchFrontendData, normalize } from '../../services/frontendData';
 
 const ContactContainer = styled.section`
   padding: 8rem 0;
@@ -170,6 +171,24 @@ const FormInput = styled.input`
   }
 `;
 
+const FormSelect = styled.select`
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e5e5e5;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #6A1B82;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(106, 27, 130, 0.1);
+  }
+`;
+
 const FormTextarea = styled.textarea`
   width: 100%;
   padding: 1rem;
@@ -234,10 +253,37 @@ const Contact = () => {
     email: '',
     phone: '',
     destination: '',
+    transferService: '',
     message: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [airportTransferCategories, setAirportTransferCategories] = useState([]);
+
+  useEffect(() => {
+    const loadTransferCategories = async () => {
+      try {
+        const { allCategories } = await fetchFrontendData();
+        // Find Airport Transfers main category
+        const airportTransfersMain = (allCategories || []).find(c => 
+          normalize(c.slug || c.name || '') === 'airport-transfers'
+        );
+        
+        if (airportTransfersMain) {
+          // Get subcategories of Airport Transfers
+          const subcats = (allCategories || []).filter(c => 
+            c.parent_id === airportTransfersMain.id
+          ).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+          
+          setAirportTransferCategories(subcats);
+        }
+      } catch (err) {
+        console.error('Error loading airport transfer categories:', err);
+      }
+    };
+    
+    loadTransferCategories();
+  }, []);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -260,6 +306,7 @@ const Contact = () => {
         email: '',
         phone: '',
         destination: '',
+        transferService: '',
         message: ''
       });
     }, 2000);
@@ -387,6 +434,23 @@ const Contact = () => {
                 onChange={handleInputChange}
                 placeholder="Where would you like to travel?"
               />
+            </FormGroup>
+
+            <FormGroup>
+              <FormLabel htmlFor="transferService">Airport Transfer Service</FormLabel>
+              <FormSelect
+                id="transferService"
+                name="transferService"
+                value={formData.transferService}
+                onChange={handleInputChange}
+              >
+                <option value="">Select a service (optional)</option>
+                {airportTransferCategories.map((subcat) => (
+                  <option key={subcat.id} value={subcat.id}>
+                    {subcat.name}
+                  </option>
+                ))}
+              </FormSelect>
             </FormGroup>
 
             <FormGroup>

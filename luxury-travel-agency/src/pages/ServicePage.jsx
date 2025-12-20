@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import { MapPinIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, ArrowRightIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { servicesData } from '../data/servicesData';
 import { fetchFrontendData, normalize } from '../services/frontendData';
 import { importAllCategories } from '../services/importData';
@@ -563,6 +563,155 @@ const ViewDetailsButton = styled.div`
   }
 `;
 
+const BookingFormSection = styled.div`
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3rem;
+  align-items: start;
+
+  @media (max-width: 968px) {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+`;
+
+const BookingForm = styled.form`
+  background: white;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+
+  @media (max-width: 768px) {
+    padding: 2rem;
+  }
+`;
+
+const FormTitle = styled.h3`
+  font-size: 2rem;
+  font-weight: 700;
+  color: #6A1B82;
+  margin-bottom: 0.5rem;
+  font-family: 'Playfair Display', serif;
+`;
+
+const FormSubtitle = styled.p`
+  color: #666;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+`;
+
+const FormGroup = styled.div`
+  margin-bottom: 1.5rem;
+`;
+
+const FormLabel = styled.label`
+  display: block;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+`;
+
+const FormInput = styled.input`
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e5e5e5;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #fafafa;
+
+  &:focus {
+    outline: none;
+    border-color: #6A1B82;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(106, 27, 130, 0.1);
+  }
+
+  &::placeholder {
+    color: #999;
+  }
+`;
+
+const FormSelect = styled.select`
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e5e5e5;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: #6A1B82;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(106, 27, 130, 0.1);
+  }
+`;
+
+const FormTextarea = styled.textarea`
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #e5e5e5;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 120px;
+  transition: all 0.3s ease;
+  background: #fafafa;
+
+  &:focus {
+    outline: none;
+    border-color: #6A1B82;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(106, 27, 130, 0.1);
+  }
+
+  &::placeholder {
+    color: #999;
+  }
+`;
+
+const SubmitButton = styled(motion.button)`
+  background: linear-gradient(135deg, #6A1B82 0%, #7C2E9B 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(106, 27, 130, 0.4);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
 const SelectionPanel = styled.div`
   border: 1px solid #e5e7eb;
   border-radius: 14px;
@@ -619,6 +768,20 @@ const ServicePage = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState(null);
   const [seedingAttempted, setSeedingAttempted] = useState(false);
+  
+  // Booking form state (for airport-transfers page)
+  const [bookingForm, setBookingForm] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    pickupLocation: '',
+    dropoffLocation: '',
+    transferService: '',
+    passengers: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [airportTransferCategories, setAirportTransferCategories] = useState([]);
 
   const TOUR_ROOT_SLUGS = [
     'uk-tours',
@@ -763,6 +926,63 @@ const ServicePage = () => {
       unsubscribe();
     };
   }, [id]);
+
+  // Load airport transfer subcategories for booking form
+  useEffect(() => {
+    if (normalize(id) === 'airport-transfers') {
+      const loadTransferCategories = async () => {
+        try {
+          const { allCategories: cats } = await fetchFrontendData();
+          const airportTransfersMain = (cats || []).find(c => 
+            normalize(c.slug || c.name || '') === 'airport-transfers'
+          );
+          
+          if (airportTransfersMain) {
+            const subcats = (cats || []).filter(c => 
+              c.parent_id === airportTransfersMain.id
+            ).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+            
+            setAirportTransferCategories(subcats);
+          }
+        } catch (err) {
+          console.error('Error loading airport transfer categories:', err);
+        }
+      };
+      
+      loadTransferCategories();
+    }
+  }, [id]);
+
+  // Handle booking form input changes
+  const handleBookingInputChange = (e) => {
+    const { name, value } = e.target;
+    setBookingForm(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Handle booking form submission
+  const handleBookingSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate form submission
+    setTimeout(() => {
+      setIsSubmitting(false);
+      alert('Thank you for your booking request! We will contact you within 24 hours.');
+      setBookingForm({
+        name: '',
+        email: '',
+        phone: '',
+        pickupLocation: '',
+        dropoffLocation: '',
+        transferService: '',
+        passengers: '',
+        message: ''
+      });
+    }, 2000);
+  };
 
   const rootCategories = (allCategories || [])
     .filter((c) => !c.parent_id)
@@ -1009,86 +1229,278 @@ const ServicePage = () => {
         </ImageContainer>
       </ContentSection>
 
-      {shouldShowSubcategories && childCategories.length > 0 && (
-        <PackagesSection>
-          <SectionHeader>
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
-            >
-              {id === 'tours' ? 'Tour Categories' : `${selectedCategory?.name || derivedService.title} Destinations`}
-            </motion.h2>
-          </SectionHeader>
-          <CategoryGrid>
-            {childCategories.map((sub, index) => {
-              const slug = sub.slug || sub.id || normalize(sub.name || '');
+      {/* Airport Transfers special layout with booking form */}
+      {normalize(id) === 'airport-transfers' && childCategories.length > 0 && (
+        <BookingFormSection>
+          {/* Left side - Subcategory cards */}
+          <div>
+            <SectionHeader style={{ textAlign: 'left', marginBottom: '2rem' }}>
+              <motion.h2
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8 }}
+              >
+                Our Transfer Services
+              </motion.h2>
+            </SectionHeader>
+            <CategoryGrid style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
+              {childCategories.map((sub, index) => {
+                const slug = sub.slug || sub.id || normalize(sub.name || '');
+                const linkTarget = `/service/${slug}`;
+                const subImage = getImage(sub);
+                const location = sub.location || sub.description || null;
+                
+                const handleClick = (e) => {
+                  if (e.ctrlKey || e.metaKey) {
+                    e.preventDefault();
+                    navigate(`/admin?tab=subcategories&edit=${sub.id}`);
+                  }
+                };
+                
+                return (
+                  <CategoryCard
+                    key={slug}
+                    as={Link}
+                    to={linkTarget}
+                    onClick={handleClick}
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <CategoryImage $image={subImage} />
+                    <CategoryContent>
+                      <CategoryName>{sub.name}</CategoryName>
+                      {location && (
+                        <CategoryLocation>
+                          <MapPinIcon />
+                          {location}
+                        </CategoryLocation>
+                      )}
+                      {sub.description && <CategoryDesc>{sub.description}</CategoryDesc>}
+                      <CategoryFooter>
+                        <ViewDetailsButton>
+                          View Details
+                          <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
+                        </ViewDetailsButton>
+                      </CategoryFooter>
+                    </CategoryContent>
+                  </CategoryCard>
+                );
+              })}
+            </CategoryGrid>
+          </div>
+
+          {/* Right side - Booking form */}
+          <div>
+            <BookingForm onSubmit={handleBookingSubmit}>
+              <FormTitle>Book Your Transfer</FormTitle>
+              <FormSubtitle>
+                Complete the form below and we'll contact you within 24 hours.
+              </FormSubtitle>
               
-              // Always link to the subcategory service page, not to packages
-              const linkTarget = `/service/${slug}`;
-              console.log('Category Card Link:', { name: sub.name, slug, linkTarget });
-              const subImage = getImage(sub);
-              
-              // Extract location from subcategory or use default
-              const location = sub.location || sub.description || null;
-                            
-              const handleClick = (e) => {
-                // If Ctrl/Cmd key is pressed, open in admin editor
-                if (e.ctrlKey || e.metaKey) {
-                  e.preventDefault();
-                  navigate(`/admin?tab=subcategories&edit=${sub.id}`);
-                }
-              };
-                            
-              return (
-                <CategoryCard
-                  key={slug}
-                  as={Link}
-                  to={linkTarget}
-                  onClick={handleClick}
-                  initial={{ opacity: 0, y: 30 }}
+              <FormGroup>
+                <FormLabel htmlFor="name">Full Name *</FormLabel>
+                <FormInput
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={bookingForm.name}
+                  onChange={handleBookingInputChange}
+                  required
+                  placeholder="Enter your full name"
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <FormLabel htmlFor="email">Email *</FormLabel>
+                <FormInput
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={bookingForm.email}
+                  onChange={handleBookingInputChange}
+                  required
+                  placeholder="your.email@example.com"
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <FormLabel htmlFor="phone">Phone *</FormLabel>
+                <FormInput
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={bookingForm.phone}
+                  onChange={handleBookingInputChange}
+                  required
+                  placeholder="+44 123 456 7890"
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <FormLabel htmlFor="transferService">Service *</FormLabel>
+                <FormSelect
+                  id="transferService"
+                  name="transferService"
+                  value={bookingForm.transferService}
+                  onChange={handleBookingInputChange}
+                  required
+                >
+                  <option value="">Select service</option>
+                  {airportTransferCategories.map((subcat) => (
+                    <option key={subcat.id} value={subcat.id}>
+                      {subcat.name}
+                    </option>
+                  ))}
+                </FormSelect>
+              </FormGroup>
+
+              <FormGroup>
+                <FormLabel htmlFor="pickupLocation">Pickup *</FormLabel>
+                <FormInput
+                  type="text"
+                  id="pickupLocation"
+                  name="pickupLocation"
+                  value={bookingForm.pickupLocation}
+                  onChange={handleBookingInputChange}
+                  required
+                  placeholder="e.g., Heathrow T5"
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <FormLabel htmlFor="dropoffLocation">Drop-off *</FormLabel>
+                <FormInput
+                  type="text"
+                  id="dropoffLocation"
+                  name="dropoffLocation"
+                  value={bookingForm.dropoffLocation}
+                  onChange={handleBookingInputChange}
+                  required
+                  placeholder="e.g., London Hotel"
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <FormLabel htmlFor="passengers">Passengers *</FormLabel>
+                <FormInput
+                  type="number"
+                  id="passengers"
+                  name="passengers"
+                  value={bookingForm.passengers}
+                  onChange={handleBookingInputChange}
+                  required
+                  min="1"
+                  max="50"
+                  placeholder="1"
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <FormLabel htmlFor="message">Additional Notes</FormLabel>
+                <FormTextarea
+                  id="message"
+                  name="message"
+                  value={bookingForm.message}
+                  onChange={handleBookingInputChange}
+                  placeholder="Special requests..."
+                  rows="3"
+                />
+              </FormGroup>
+
+              <SubmitButton
+                type="submit"
+                disabled={isSubmitting}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isSubmitting ? 'Sending...' : (
+                  <>
+                    Book Transfer
+                    <PaperAirplaneIcon />
+                  </>
+                )}
+              </SubmitButton>
+            </BookingForm>
+          </div>
+        </BookingFormSection>
+      )}
+
+      {shouldShowSubcategories && childCategories.length > 0 && normalize(id) !== 'airport-transfers' && (
+            <PackagesSection>
+              <SectionHeader>
+                <motion.h2
+                  initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  transition={{ duration: 0.8 }}
                 >
-                  <CategoryImage $image={subImage} />
-                  <CategoryContent>
-                    <CategoryName>{sub.name}</CategoryName>
-                    {location && (
-                      <CategoryLocation>
-                        <MapPinIcon />
-                        {location}
-                      </CategoryLocation>
-                    )}
-                    {sub.description && <CategoryDesc>{sub.description}</CategoryDesc>}
-                    <CategoryFooter>
-                      <ViewDetailsButton>
-                        View Details
-                        <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
-                      </ViewDetailsButton>
-                    </CategoryFooter>
-                  </CategoryContent>
-                  {/* Admin edit hint */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '0.5rem',
-                    right: '0.5rem',
-                    background: 'rgba(106, 27, 130, 0.9)',
-                    color: '#fff',
-                    padding: '0.25rem 0.5rem',
-                    borderRadius: '4px',
-                    fontSize: '0.7rem',
-                    opacity: 0.7,
-                    zIndex: 10
-                  }}>
-                    Ctrl+Click to Edit
-                  </div>
-                </CategoryCard>
-              );
-            })}
-          </CategoryGrid>
-        </PackagesSection>
+                  {id === 'tours' ? 'Tour Categories' : `${selectedCategory?.name || derivedService.title} Destinations`}
+                </motion.h2>
+              </SectionHeader>
+              <CategoryGrid>
+                {childCategories.map((sub, index) => {
+                  const slug = sub.slug || sub.id || normalize(sub.name || '');
+                  const linkTarget = `/service/${slug}`;
+                  const subImage = getImage(sub);
+                  const location = sub.location || sub.description || null;
+                  
+                  const handleClick = (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                      e.preventDefault();
+                      navigate(`/admin?tab=subcategories&edit=${sub.id}`);
+                    }
+                  };
+                  
+                  return (
+                    <CategoryCard
+                      key={slug}
+                      as={Link}
+                      to={linkTarget}
+                      onClick={handleClick}
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      <CategoryImage $image={subImage} />
+                      <CategoryContent>
+                        <CategoryName>{sub.name}</CategoryName>
+                        {location && (
+                          <CategoryLocation>
+                            <MapPinIcon />
+                            {location}
+                          </CategoryLocation>
+                        )}
+                        {sub.description && <CategoryDesc>{sub.description}</CategoryDesc>}
+                        <CategoryFooter>
+                          <ViewDetailsButton>
+                            View Details
+                            <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
+                          </ViewDetailsButton>
+                        </CategoryFooter>
+                      </CategoryContent>
+                      <div style={{
+                        position: 'absolute',
+                        top: '0.5rem',
+                        right: '0.5rem',
+                        background: 'rgba(106, 27, 130, 0.9)',
+                        color: '#fff',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '4px',
+                        fontSize: '0.7rem',
+                        opacity: 0.7,
+                        zIndex: 10
+                      }}>
+                        Ctrl+Click to Edit
+                      </div>
+                    </CategoryCard>
+                  );
+                })}
+              </CategoryGrid>
+            </PackagesSection>
       )}
 
       {toursToRender && toursToRender.length > 0 && !shouldShowSubcategories && (
