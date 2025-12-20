@@ -153,7 +153,7 @@ const CategoryEditPage = () => {
         // Add a small delay to ensure database is ready
         await new Promise(resolve => setTimeout(resolve, 100));
         
-        const categories = getCategories();
+        const categories = await getCategories();
         console.log('All categories:', categories);
         console.log('Looking for ID:', id, 'Type:', typeof id);
         
