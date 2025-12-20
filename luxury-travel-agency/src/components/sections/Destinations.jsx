@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styled from 'styled-components';
 import { ArrowRightIcon, MapPinIcon, StarIcon } from '@heroicons/react/24/outline';
+import { getCategories } from '../../services/postgresDatabase';
 
 const DestinationsContainer = styled.section`
   padding: 8rem 0;
@@ -253,8 +254,42 @@ const FeatureDescription = styled.p`
 
 const Destinations = () => {
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [destinations, setDestinations] = useState([]);
 
-  const destinations = [
+  useEffect(() => {
+    const fetchDestinations = async () => {
+      try {
+        const categories = await getCategories();
+        // Get main categories with images to display as destinations
+        const mainCats = categories
+          .filter(c => !c.parent_id && c.image) // Only main categories with images
+          .slice(0, 6) // Limit to 6 destinations
+          .map((cat, index) => ({
+            id: cat.id,
+            name: cat.name,
+            location: cat.description?.replace(/<[^>]*>/g, '').substring(0, 100) || 'Explore this destination',
+            image: cat.image,
+            description: cat.description?.replace(/<[^>]*>/g, '').substring(0, 150) || 'Discover amazing experiences',
+            slug: cat.slug,
+            rating: 4.8 + (index * 0.1)
+          }));
+        
+        // If no categories with images, use fallback
+        if (mainCats.length === 0) {
+          setDestinations(fallbackDestinations);
+        } else {
+          setDestinations(mainCats);
+        }
+      } catch (error) {
+        console.error('Error loading destinations:', error);
+        setDestinations(fallbackDestinations);
+      }
+    };
+    
+    fetchDestinations();
+  }, []);
+
+  const fallbackDestinations = [
     {
       id: 1,
       name: 'Maldives Paradise',

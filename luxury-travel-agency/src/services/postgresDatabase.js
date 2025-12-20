@@ -82,7 +82,22 @@ export const getCategoryBySlug = async (slug) => {
 
 export const createCategory = async (data) => {
   try {
-    const response = await axios.post(`${API_BASE}/categories`, data);
+    // Convert image file to base64 if present
+    let imageData = '';
+    if (data.imageFile) {
+      imageData = await fileToBase64(data.imageFile);
+    }
+    
+    const payload = {
+      name: data.name,
+      description: data.description,
+      image: imageData,
+      parent_id: data.parent_id,
+      visible: data.visible,
+      sort_order: data.sort_order
+    };
+    
+    const response = await axios.post(`${API_BASE}/categories`, payload);
     notifyDataChange('categories');
     return response.data;
   } catch (error) {
@@ -93,7 +108,22 @@ export const createCategory = async (data) => {
 
 export const updateCategory = async (slug, data) => {
   try {
-    const response = await axios.put(`${API_BASE}/categories/${slug}`, data);
+    // Convert image file to base64 if present
+    let imageData = data.image;
+    if (data.imageFile) {
+      imageData = await fileToBase64(data.imageFile);
+    }
+    
+    const payload = {
+      name: data.name,
+      description: data.description,
+      image: imageData,
+      parent_id: data.parent_id,
+      visible: data.visible,
+      sort_order: data.sort_order
+    };
+    
+    const response = await axios.put(`${API_BASE}/categories/${slug}`, payload);
     notifyDataChange('categories');
     return response.data;
   } catch (error) {
@@ -145,7 +175,40 @@ export const getTourBySlug = async (slug) => {
 
 export const createTour = async (data) => {
   try {
-    const response = await axios.post(`${API_BASE}/tours`, data);
+    console.log('createTour called with data:', {
+      ...data,
+      featured_imageFile: data.featured_imageFile ? 'File object present' : 'No file',
+      details: data.details
+    });
+    
+    // Convert featured image to base64 if present
+    let featuredImageData = '';
+    if (data.featured_imageFile) {
+      console.log('Converting featured image to base64...');
+      featuredImageData = await fileToBase64(data.featured_imageFile);
+      console.log('Featured image converted, length:', featuredImageData.length);
+    } else {
+      console.warn('No featured_imageFile found in data');
+    }
+    
+    const payload = {
+      ...data,
+      featured_image: featuredImageData,
+      details: JSON.stringify(data.details || {}), // Stringify details for database
+      category_id: data.category_id || data.category
+    };
+    
+    // Remove the file object before sending
+    delete payload.featured_imageFile;
+    
+    console.log('Sending tour payload:', {
+      ...payload,
+      featured_image: payload.featured_image ? `base64 string (${payload.featured_image.length} chars)` : 'empty',
+      details: 'stringified'
+    });
+    
+    const response = await axios.post(`${API_BASE}/tours`, payload);
+    console.log('Tour created successfully:', response.data);
     notifyDataChange('tours');
     return response.data;
   } catch (error) {
@@ -156,7 +219,23 @@ export const createTour = async (data) => {
 
 export const updateTour = async (slug, data) => {
   try {
-    const response = await axios.put(`${API_BASE}/tours/${slug}`, data);
+    // Convert featured image to base64 if present
+    let featuredImageData = data.featured_image;
+    if (data.featured_imageFile) {
+      featuredImageData = await fileToBase64(data.featured_imageFile);
+    }
+    
+    const payload = {
+      ...data,
+      featured_image: featuredImageData,
+      details: JSON.stringify(data.details || {}), // Stringify details for database
+      category_id: data.category_id || data.category
+    };
+    
+    // Remove the file object before sending
+    delete payload.featured_imageFile;
+    
+    const response = await axios.put(`${API_BASE}/tours/${slug}`, payload);
     notifyDataChange('tours');
     return response.data;
   } catch (error) {

@@ -137,6 +137,7 @@ const CategoryEditPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [allCategories, setAllCategories] = useState([]);
   
   const [form, setForm] = useState({
     name: '',
@@ -154,6 +155,7 @@ const CategoryEditPage = () => {
         await new Promise(resolve => setTimeout(resolve, 100));
         
         const categories = await getCategories();
+        setAllCategories(categories);
         console.log('All categories:', categories);
         console.log('Looking for ID:', id, 'Type:', typeof id);
         
@@ -177,6 +179,7 @@ const CategoryEditPage = () => {
           name: found.name || '',
           description: found.description || '',
           image: null,
+          parent_id: found.parent_id || ''
         });
         setLoading(false);
       } catch (err) {
@@ -200,6 +203,7 @@ const CategoryEditPage = () => {
         name: form.name,
         description: form.description,
         imageFile: form.image,
+        parent_id: form.parent_id || null,
       });
       
       setSuccess('Category updated successfully!');
@@ -261,6 +265,41 @@ const CategoryEditPage = () => {
               placeholder="Add detailed description with formatting, images, lists, etc..."
             />
           </Field>
+
+          {/* Parent Category Selection - Only show for subcategories */}
+          {category?.parent_id && (
+            <Field>
+              <Label>Parent Category</Label>
+              <select
+                value={form.parent_id}
+                onChange={(e) => setForm({ ...form, parent_id: e.target.value })}
+                style={{
+                  width: '100%',
+                  padding: '0.75rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '1rem',
+                  background: '#fff'
+                }}
+              >
+                <option value="">Select parent category</option>
+                {allCategories
+                  .filter(c => !c.parent_id) // Show main categories
+                  .map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} (Main)
+                    </option>
+                  ))}
+                {allCategories
+                  .filter(c => c.parent_id && c.id !== category.id) // Show L1 subcategories (exclude self)
+                  .map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} (L1)
+                    </option>
+                  ))}
+              </select>
+            </Field>
+          )}
 
           <Field>
             <Label>Image</Label>

@@ -114,12 +114,17 @@ app.put('/api/categories/:slug', async (req, res) => {
   try {
     const { name, description, image, parent_id, visible, sort_order } = req.body;
     
+    // Generate new slug from name if name is provided
+    const newSlug = name ? name.toString().trim().toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') : req.params.slug;
+    
     const result = await pool.query(
       `UPDATE categories 
-       SET name = $1, description = $2, image = $3, parent_id = $4, visible = $5, sort_order = $6, updated_at = NOW()
-       WHERE slug = $7
+       SET name = $1, description = $2, image = $3, parent_id = $4, visible = $5, sort_order = $6, slug = $7, updated_at = NOW()
+       WHERE slug = $8
        RETURNING *`,
-      [name, description, image, parent_id, visible, sort_order, req.params.slug]
+      [name, description, image, parent_id, visible, sort_order, newSlug, req.params.slug]
     );
     
     if (result.rows.length === 0) {
@@ -200,16 +205,27 @@ app.get('/api/tours/:slug', async (req, res) => {
 // Create new tour
 app.post('/api/tours', async (req, res) => {
   try {
-    const { title, slug, description, price, duration, location, category_id, featured_image, is_active, tour_code } = req.body;
+    const { title, slug, description, price, duration, location, category_id, featured_image, is_active, tour_code, details } = req.body;
+    
+    console.log('POST /api/tours received:', {
+      title,
+      category_id,
+      featured_image: featured_image ? `base64 string (${featured_image.length} chars)` : 'empty or null',
+      details: details ? 'present' : 'empty',
+      tour_code
+    });
+    
     const tourSlug = slug || title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
     const id = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     
     const result = await pool.query(
-      `INSERT INTO tours (id, title, slug, description, price, duration, location, category_id, featured_image, is_active, tour_code, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
+      `INSERT INTO tours (id, title, slug, description, price, duration, location, category_id, featured_image, is_active, tour_code, details_json, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
        RETURNING *`,
-      [id, title, tourSlug, description, price, duration, location, category_id, featured_image, is_active, tour_code]
+      [id, title, tourSlug, description, price, duration, location, category_id, featured_image, is_active, tour_code, details || '{}']
     );
+    
+    console.log('Tour created in DB with featured_image length:', result.rows[0].featured_image?.length || 0);
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error creating tour:', error);
@@ -221,15 +237,15 @@ app.post('/api/tours', async (req, res) => {
 app.put('/api/tours/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    const { title, description, price, duration, location, category_id, featured_image, is_active, tour_code } = req.body;
+    const { title, description, price, duration, location, category_id, featured_image, is_active, tour_code, details } = req.body;
     
     const result = await pool.query(
       `UPDATE tours 
        SET title = $1, description = $2, price = $3, duration = $4, location = $5, 
-           category_id = $6, featured_image = $7, is_active = $8, tour_code = $9, updated_at = NOW()
-       WHERE slug = $10
+           category_id = $6, featured_image = $7, is_active = $8, tour_code = $9, details_json = $10, updated_at = NOW()
+       WHERE slug = $11
        RETURNING *`,
-      [title, description, price, duration, location, category_id, featured_image, is_active, tour_code, slug]
+      [title, description, price, duration, location, category_id, featured_image, is_active, tour_code, details || '{}', slug]
     );
     
     if (result.rows.length === 0) {

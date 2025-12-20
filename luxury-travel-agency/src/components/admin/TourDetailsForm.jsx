@@ -214,6 +214,26 @@ const TourDetailsForm = ({ details, onChange }) => {
         />
       </Field>
       
+      <Field>
+        <Label>Day-by-Day Itinerary (Format: Day Number | Title | Description, one per line)</Label>
+        <TextArea
+          value={(details.itinerary || []).map(day => `Day ${day.day} | ${day.title} | ${day.description}`).join('\n')}
+          onChange={(e) => {
+            const itinerary = e.target.value.split('\n').filter(line => line.trim()).map(line => {
+              const parts = line.split('|').map(s => s.trim());
+              const dayMatch = parts[0]?.match(/\d+/);
+              const day = dayMatch ? dayMatch[0] : '';
+              const title = parts[1] || '';
+              const description = parts[2] || '';
+              return { day, title, description };
+            }).filter(d => d.day);
+            handleDetailsChange('itinerary', itinerary);
+          }}
+          placeholder="Day 1 | London to Edinburgh | Depart from London, journey through scenic landscapes to Edinburgh&#10;Day 2 | Edinburgh City Tour | Visit Edinburgh Castle, Royal Mile, and Holyrood Palace&#10;Day 3 | Scottish Highlands | Explore the beautiful Scottish Highlands and Loch Ness&#10;Day 4 | Return to London | Journey back with wonderful memories"
+          rows="8"
+        />
+      </Field>
+      
       {/* Gallery Images Section */}
       <div style={{ marginTop: '2rem', paddingTop: '1.5rem', borderTop: '2px solid #e5e7eb' }}>
         <h4 style={{ marginBottom: '1rem', color: '#6A1B82' }}>📸 Sidebar Gallery Images</h4>

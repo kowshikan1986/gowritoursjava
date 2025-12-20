@@ -1422,6 +1422,16 @@ const AdminDashboard = () => {
                                         accept="image/*"
                                         onChange={(e) => setTourEditForm({ ...tourEditForm, featured_image: e.target.files[0] })}
                                       />
+                                      {t.featured_image && (
+                                        <div style={{ marginTop: '0.5rem' }}>
+                                          <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Current image:</p>
+                                          <img
+                                            src={t.featured_image}
+                                            alt={t.title}
+                                            style={{ width: '200px', height: 'auto', borderRadius: '8px', marginTop: '0.5rem' }}
+                                          />
+                                        </div>
+                                      )}
                                     </Field>
                                     <Field style={{ flexBasis: '100%' }}>
                                       <Label>Description</Label>
@@ -1620,6 +1630,16 @@ const AdminDashboard = () => {
                                       accept="image/*"
                                       onChange={(e) => setTourEditForm({ ...tourEditForm, featured_image: e.target.files[0] })}
                                     />
+                                    {t.featured_image && (
+                                      <div style={{ marginTop: '0.5rem' }}>
+                                        <p style={{ fontSize: '0.875rem', color: '#6b7280' }}>Current image:</p>
+                                        <img
+                                          src={t.featured_image}
+                                          alt={t.title}
+                                          style={{ width: '200px', height: 'auto', borderRadius: '8px', marginTop: '0.5rem' }}
+                                        />
+                                      </div>
+                                    )}
                                   </Field>
                                   <Field style={{ flexBasis: '100%' }}>
                                     <Label>Description</Label>

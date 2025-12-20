@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { TagIcon, ClockIcon } from '@heroicons/react/24/outline';
+import { getAds } from '../../services/postgresDatabase';
 
 const BannerSection = styled.section`
   background: linear-gradient(135deg, #6A1B82 0%, #6A1B82 100%);
@@ -138,6 +139,28 @@ const Circle = styled(motion.div)`
 `;
 
 const PromotionalBanner = () => {
+  const [ad, setAd] = useState(null);
+
+  useEffect(() => {
+    const fetchAd = async () => {
+      try {
+        const ads = await getAds();
+        // Get the first active ad
+        const activeAd = ads.find(a => a.is_active);
+        if (activeAd) {
+          setAd(activeAd);
+        }
+      } catch (error) {
+        console.error('Error loading promotional ad:', error);
+      }
+    };
+    
+    fetchAd();
+  }, []);
+
+  // Don't render if no active ad
+  if (!ad) return null;
+
   return (
     <BannerSection>
       <Circle 
@@ -159,7 +182,7 @@ const PromotionalBanner = () => {
             viewport={{ once: true }}
           >
             <ClockIcon style={{ width: '18px' }} />
-            Limited Time Offer: Ends in 3 Days!
+            {ad.timer_text || 'Limited Time Offer!'}
           </TimerBadge>
           
           <Title
@@ -169,7 +192,7 @@ const PromotionalBanner = () => {
             viewport={{ once: true }}
           >
             <TagIcon style={{ width: '32px' }} />
-            Exclusive Summer Travel Packages
+            {ad.title || 'Exclusive Travel Packages'}
           </Title>
           
           <Subtitle
@@ -177,19 +200,21 @@ const PromotionalBanner = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             viewport={{ once: true }}
-          >
-            Unlock up to <strong style={{ color: '#ffd700' }}>30% OFF</strong> on all European and Asian tour packages. 
-            Experience luxury for less with our all-inclusive seasonal deals.
-          </Subtitle>
+            dangerouslySetInnerHTML={{ __html: ad.description || 'Discover amazing deals on luxury travel' }}
+          />
         </ContentWrapper>
 
         <ButtonGroup>
-          <PrimaryButton to="/service/european-tours">
-            View Deals
-          </PrimaryButton>
-          <SecondaryButton to="/#contact">
-            Enquire Now
-          </SecondaryButton>
+          {ad.cta_link && (
+            <PrimaryButton to={ad.cta_link}>
+              {ad.cta_text || 'View Deals'}
+            </PrimaryButton>
+          )}
+          {ad.secondary_cta_link && (
+            <SecondaryButton to={ad.secondary_cta_link}>
+              {ad.secondary_cta_text || 'Enquire Now'}
+            </SecondaryButton>
+          )}
         </ButtonGroup>
       </Container>
     </BannerSection>
