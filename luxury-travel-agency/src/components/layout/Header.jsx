@@ -73,13 +73,20 @@ const MobileMenuButton = styled.button`
   padding: 0.5rem;
   border-radius: 8px;
   transition: all 0.3s ease;
+  color: #6A1B82;
+
+  svg {
+    width: 28px;
+    height: 28px;
+    color: #6A1B82;
+  }
 
   @media (max-width: 768px) {
     display: block;
   }
 
   &:hover {
-  background: rgba(106, 27, 130, 0.1);
+    background: rgba(106, 27, 130, 0.1);
   }
 `;
 
