@@ -182,7 +182,7 @@ const PromotionalBanner = () => {
             viewport={{ once: true }}
           >
             <ClockIcon style={{ width: '18px' }} />
-            {ad.timer_text || 'Limited Time Offer!'}
+            Limited Time Offer!
           </TimerBadge>
           
           <Title
@@ -200,21 +200,20 @@ const PromotionalBanner = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
             viewport={{ once: true }}
-            dangerouslySetInnerHTML={{ __html: ad.description || 'Discover amazing deals on luxury travel' }}
-          />
+          >
+            Discover amazing deals on luxury travel experiences!
+          </Subtitle>
         </ContentWrapper>
 
         <ButtonGroup>
-          {ad.cta_link && (
-            <PrimaryButton to={ad.cta_link}>
-              {ad.cta_text || 'View Deals'}
+          {ad.link && (
+            <PrimaryButton to={ad.link}>
+              View Deals
             </PrimaryButton>
           )}
-          {ad.secondary_cta_link && (
-            <SecondaryButton to={ad.secondary_cta_link}>
-              {ad.secondary_cta_text || 'Enquire Now'}
-            </SecondaryButton>
-          )}
+          <SecondaryButton to="/contact">
+            Enquire Now
+          </SecondaryButton>
         </ButtonGroup>
       </Container>
     </BannerSection>

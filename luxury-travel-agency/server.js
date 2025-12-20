@@ -462,7 +462,7 @@ app.delete('/api/logos/:id', async (req, res) => {
 
 app.get('/api/ads', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM ads ORDER BY priority, created_at DESC');
+    const result = await pool.query('SELECT * FROM ads ORDER BY created_at DESC');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching ads:', error);
