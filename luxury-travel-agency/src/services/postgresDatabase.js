@@ -143,10 +143,20 @@ export const updateCategory = async (slug, data) => {
 
 export const deleteCategory = async (slug) => {
   try {
+    console.log('🗑️ deleteCategory called with slug:', slug);
     await axios.delete(`${API_BASE}/categories/${slug}`);
     notifyDataChange('categories');
+    console.log('✅ Category deleted successfully');
   } catch (error) {
-    console.error('Error deleting category:', error);
+    console.error('❌ Error deleting category:', error);
+    console.error('   Slug used:', slug);
+    console.error('   Response:', error.response?.data);
+    console.error('   Status:', error.response?.status);
+    
+    // Provide more helpful error message
+    if (error.response?.status === 404) {
+      throw new Error(`Category "${slug}" not found in database. It may have been already deleted.`);
+    }
     throw error;
   }
 };
