@@ -28,6 +28,7 @@ import {
   exportDatabase,
   importDatabase,
 } from '../services/postgresDatabase';
+import { clearFrontendCache } from '../services/frontendData';
 import { importAllCategories } from '../services/importData';
 
 const Page = styled.div`
@@ -372,7 +373,7 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     if (dbInitialized) {
-      fetchData(active);
+      fetchData(active, true); // Always force refresh in admin
     }
   }, [active, dbInitialized]);
 
@@ -413,11 +414,16 @@ const AdminDashboard = () => {
     }
   };
 
-  const fetchData = async (key) => {
+  const fetchData = async (key, forceRefresh = false) => {
     if (!dbInitialized) return;
     setError('');
     setLoading(true);
     try {
+      // Clear cache if force refresh
+      if (forceRefresh) {
+        clearFrontendCache();
+      }
+      
       if (key === 'tours') {
         const allCategories = await getCategories();
         const allTours = await getTours();
@@ -725,7 +731,7 @@ const AdminDashboard = () => {
     try {
       await deleteCategory(cat.slug);
       setEditCategoryId(null);
-      fetchData('categories');
+      await fetchData('categories', true); // Force refresh cache
     } catch (err) {
       setError(err.message || 'Unable to delete category');
     } finally {
@@ -895,7 +901,7 @@ const AdminDashboard = () => {
     try {
       await deleteCategory(sub.slug);
       setEditSubCategoryId(null);
-      fetchData('subcategories');
+      await fetchData('subcategories', true); // Force refresh cache
     } catch (err) {
       setError(err.message || 'Unable to delete subcategory');
     } finally {

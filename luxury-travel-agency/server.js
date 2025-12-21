@@ -69,8 +69,8 @@ app.get('/api/categories', async (req, res) => {
     const result = await pool.query(
       'SELECT * FROM categories ORDER BY sort_order, name'
     );
-    // Cache for 1 hour
-    res.set('Cache-Control', 'public, max-age=3600');
+    // Cache for 1 second
+    res.set('Cache-Control', 'public, max-age=1');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching categories:', error);
@@ -162,11 +162,24 @@ app.put('/api/categories/:slug', async (req, res) => {
 // Delete category
 app.delete('/api/categories/:slug', async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM categories WHERE slug = $1', [req.params.slug]);
+    console.log('🗑️ Delete request for:', req.params.slug);
+    
+    // Try to delete by slug first, then by ID if slug fails
+    let result = await pool.query('DELETE FROM categories WHERE slug = $1 RETURNING *', [req.params.slug]);
+    
+    // If not found by slug, try by ID
     if (result.rowCount === 0) {
+      console.log('  ❌ Not found by slug, trying by ID...');
+      result = await pool.query('DELETE FROM categories WHERE id = $1 RETURNING *', [req.params.slug]);
+    }
+    
+    if (result.rowCount === 0) {
+      console.log('  ❌ Not found by ID either');
       return res.status(404).json({ error: 'Category not found' });
     }
-    res.json({ message: 'Category deleted successfully' });
+    
+    console.log('  ✅ Deleted:', result.rows[0].name);
+    res.json({ message: 'Category deleted successfully', deleted: result.rows[0] });
   } catch (error) {
     console.error('Error deleting category:', error);
     res.status(500).json({ error: error.message });
@@ -195,8 +208,8 @@ app.get('/api/tours', async (req, res) => {
        LEFT JOIN categories c ON t.category_id = c.id 
        ORDER BY t.created_at DESC`
     );
-    // Cache for 1 hour
-    res.set('Cache-Control', 'public, max-age=3600');
+    // Cache for 1 second
+    res.set('Cache-Control', 'public, max-age=1');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching tours:', error);
@@ -340,8 +353,8 @@ app.delete('/api/tours/:slug', async (req, res) => {
 app.get('/api/hero-banners', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM hero_banners ORDER BY created_at DESC');
-    // Cache for 1 hour
-    res.set('Cache-Control', 'public, max-age=3600');
+    // Cache for 1 second
+    res.set('Cache-Control', 'public, max-age=1');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching hero banners:', error);
@@ -414,8 +427,8 @@ app.delete('/api/hero-banners/:id', async (req, res) => {
 app.get('/api/logos', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM logos ORDER BY created_at DESC');
-    // Cache for 1 hour
-    res.set('Cache-Control', 'public, max-age=3600');
+    // Cache for 1 second
+    res.set('Cache-Control', 'public, max-age=1');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching logos:', error);

@@ -85,9 +85,7 @@ const seedCategories = [
   { name: 'Yacht & Small-Ship', parentSlug: 'cruises', sort_order: 4, description: 'Intimate yacht and small-ship cruises for personalized luxury experiences.', image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?q=80&w=1470&auto=format&fit=crop' },
 
   // Airport Transfers subcategories
-  { name: 'London Airports (LHR, LGW, LTN, STN, LCY)', parentSlug: 'airport-transfers', sort_order: 1, description: 'Professional transfer services to and from all London airports including Heathrow, Gatwick, Luton, Stansted, and London City.', image: 'https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=1470&auto=format&fit=crop' },
-  { name: 'Regional UK Airports', parentSlug: 'airport-transfers', sort_order: 2, description: 'Airport transfer services covering all regional airports across the United Kingdom.', image: 'https://images.unsplash.com/photo-1563729784474-d77dbb933a9e?q=80&w=1470&auto=format&fit=crop' },
-  { name: 'Meet & Greet Service', parentSlug: 'airport-transfers', sort_order: 3, description: 'Premium meet and greet service with personal assistance at the airport terminal.', image: 'https://images.unsplash.com/photo-1534451541221-10e62968e56c?q=80&w=1470&auto=format&fit=crop' },
+  { name: 'Meet & Greet Service', parentSlug: 'airport-transfers', sort_order: 1, description: 'Premium meet and greet service with personal assistance at the airport terminal.', image: 'https://images.unsplash.com/photo-1534451541221-10e62968e56c?q=80&w=1470&auto=format&fit=crop' },
   { name: 'Fleet & Classes', parentSlug: 'airport-transfers', sort_order: 4, description: 'Choose from our range of vehicle classes to suit your needs and budget.', image: 'https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?q=80&w=1470&auto=format&fit=crop' },
   { name: 'Corporate Accounts', parentSlug: 'airport-transfers', sort_order: 5, description: 'Dedicated corporate account services with billing solutions and priority booking.', image: 'https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=1470&auto=format&fit=crop' },
   // Fleet & Classes subcategories

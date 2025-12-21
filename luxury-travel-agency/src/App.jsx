@@ -49,8 +49,7 @@ function AppContent() {
           
           {/* Airport transfer subcategories redirect to parent */}
           <Route path="/service/heathrow-lhr" element={<Navigate to="/service/airport-transfer" replace />} />
-          <Route path="/service/london-airports-lhr-lgw-ltn-stn-lcy" element={<Navigate to="/service/airport-transfer" replace />} />
-          <Route path="/service/regional-uk-airports" element={<Navigate to="/service/airport-transfer" replace />} />
+          <Route path="/service/gatwick-lgw" element={<Navigate to="/service/airport-transfer" replace />} />
           <Route path="/service/meet-greet-service" element={<Navigate to="/service/airport-transfer" replace />} />
           <Route path="/service/fleet-classes" element={<Navigate to="/service/airport-transfer" replace />} />
           
