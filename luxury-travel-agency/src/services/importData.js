@@ -50,9 +50,8 @@ const seedCategories = [
   // European Tours subcategories
   { name: 'France (Paris, Riviera)', parentSlug: 'european-tours', sort_order: 1, description: 'Paris highlights and the French Riviera.', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=1470&auto=format&fit=crop' },
   { name: 'Italy (Rome, Amalfi, Tuscany)', parentSlug: 'european-tours', sort_order: 2, description: 'Rome, Amalfi Coast, and Tuscany countryside.', image: 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?q=80&w=1470&auto=format&fit=crop' },
-  { name: 'Greece (Athens, Cyclades, Santorini)', parentSlug: 'european-tours', sort_order: 3, description: 'Athens and the Cyclades including Santorini.', image: 'https://images.unsplash.com/photo-1506377247377-2a5b3b417ebb?q=80&w=1470&auto=format&fit=crop' },
-  { name: 'Switzerland (Alps, Lakes)', parentSlug: 'european-tours', sort_order: 4, description: 'Swiss Alps and lake regions.', image: 'https://images.unsplash.com/photo-1508264165352-258859e62245?q=80&w=1470&auto=format&fit=crop' },
-  { name: 'Spain & Portugal Highlights', parentSlug: 'european-tours', sort_order: 5, description: 'Barcelona, Madrid, Lisbon, Porto.', image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1470&auto=format&fit=crop' },
+  { name: 'Switzerland (Alps, Lakes)', parentSlug: 'european-tours', sort_order: 3, description: 'Swiss Alps and lake regions.', image: 'https://images.unsplash.com/photo-1508264165352-258859e62245?q=80&w=1470&auto=format&fit=crop' },
+  { name: 'Spain & Portugal Highlights', parentSlug: 'european-tours', sort_order: 4, description: 'Barcelona, Madrid, Lisbon, Porto.', image: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=1470&auto=format&fit=crop' },
 
   // World Tours subcategories
   { name: 'Middle East (Dubai, Abu Dhabi)', parentSlug: 'world-tours', sort_order: 1, description: 'UAE highlights and desert experiences.', image: 'https://images.unsplash.com/photo-1505761671935-60b3a7427bad?q=80&w=1470&auto=format&fit=crop' },
