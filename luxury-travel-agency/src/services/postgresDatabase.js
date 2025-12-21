@@ -21,6 +21,20 @@ let isInitialized = false;
 // Event listeners for data changes
 const dataChangeListeners = [];
 
+// BroadcastChannel for cross-tab communication
+const broadcast = typeof BroadcastChannel !== 'undefined' 
+  ? new BroadcastChannel('db-updates') 
+  : null;
+
+// Listen for updates from other tabs
+if (broadcast) {
+  broadcast.onmessage = (event) => {
+    console.log('📡 Received update from another tab:', event.data);
+    clearFrontendCache();
+    dataChangeListeners.forEach(callback => callback(event.data.type));
+  };
+}
+
 export const onDataChange = (callback) => {
   dataChangeListeners.push(callback);
   return () => {
@@ -34,6 +48,14 @@ export const onDataChange = (callback) => {
 const notifyDataChange = (type) => {
   console.log('🔔 Database changed:', type);
   clearFrontendCache(); // Clear cache when data changes
+  
+  // Notify other tabs via BroadcastChannel
+  if (broadcast) {
+    broadcast.postMessage({ type, timestamp: Date.now() });
+    console.log('📡 Broadcasted update to other tabs');
+  }
+  
+  // Notify listeners in current tab
   dataChangeListeners.forEach(callback => callback(type));
 };
 
