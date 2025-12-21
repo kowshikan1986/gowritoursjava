@@ -8,7 +8,7 @@ export const normalize = (str = '') =>
 // Cache for frontend data to avoid re-fetching
 let cachedData = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 0; // No cache - always fetch fresh data
+const CACHE_DURATION = 100; // 100ms cache - fresh data but prevents excessive requests
 let isFetching = false; // Prevent parallel fetches
 
 // Clear cache (call when data is updated)

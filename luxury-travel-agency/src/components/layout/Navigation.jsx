@@ -231,8 +231,8 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        // Use local database instead of API
-        const { categories, allCategories } = await fetchFrontendData(true); // Force refresh
+        // Don't force refresh on initial load - only refresh on data changes
+        const { categories, allCategories } = await fetchFrontendData();
         const roots = (allCategories && allCategories.length ? allCategories : categories) || [];
         console.log('🔍 Navigation: Fetched categories:', roots);
         console.log('📊 Navigation: Number of categories:', roots?.length || 0);
