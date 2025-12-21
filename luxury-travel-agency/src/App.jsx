@@ -12,6 +12,7 @@ import ServicePage from './pages/ServicePage';
 import PackageDetailPage from './pages/PackageDetailPage';
 import AdminDashboard from './pages/AdminDashboard';
 import CategoryEditPage from './pages/CategoryEditPage';
+import { fetchFrontendData } from './services/frontendData';
 
 const AppContainer = styled.div`
   min-height: 100vh;
@@ -23,6 +24,11 @@ const MainContent = styled.main`
 `;
 
 function App() {
+  // Preload data on app startup for instant first page load
+  useEffect(() => {
+    fetchFrontendData(); // Start loading data immediately
+  }, []);
+
   return (
     <Router>
       <AppContent />

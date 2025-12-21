@@ -20,7 +20,11 @@ const pool = new Pool({
   user: process.env.DB_USER || 'admin',
   password: process.env.DB_PASSWORD || 'London25@',
   // SSL disabled - server doesn't support it
-  ssl: false
+  ssl: false,
+  // Connection pool settings for better performance
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
+  connectionTimeoutMillis: 2000, // Return error after 2 seconds if connection cannot be established
 });
 
 // Test database connection
@@ -33,7 +37,7 @@ pool.query('SELECT NOW()', (err, res) => {
 });
 
 // Middleware
-app.use(compression());
+app.use(compression({ level: 9, threshold: 0 })); // Max compression for all responses
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
@@ -65,6 +69,8 @@ app.get('/api/categories', async (req, res) => {
     const result = await pool.query(
       'SELECT * FROM categories ORDER BY sort_order, name'
     );
+    // Cache for 1 hour
+    res.set('Cache-Control', 'public, max-age=3600');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching categories:', error);
@@ -189,6 +195,8 @@ app.get('/api/tours', async (req, res) => {
        LEFT JOIN categories c ON t.category_id = c.id 
        ORDER BY t.created_at DESC`
     );
+    // Cache for 1 hour
+    res.set('Cache-Control', 'public, max-age=3600');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching tours:', error);
@@ -332,6 +340,8 @@ app.delete('/api/tours/:slug', async (req, res) => {
 app.get('/api/hero-banners', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM hero_banners ORDER BY created_at DESC');
+    // Cache for 1 hour
+    res.set('Cache-Control', 'public, max-age=3600');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching hero banners:', error);
@@ -404,6 +414,8 @@ app.delete('/api/hero-banners/:id', async (req, res) => {
 app.get('/api/logos', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM logos ORDER BY created_at DESC');
+    // Cache for 1 hour
+    res.set('Cache-Control', 'public, max-age=3600');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching logos:', error);

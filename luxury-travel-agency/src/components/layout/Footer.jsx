@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import { Link } from 'react-router-dom';
@@ -9,6 +9,7 @@ import {
   ClockIcon 
 } from '@heroicons/react/24/outline';
 import { servicesData } from '../../data/servicesData';
+import { fetchFrontendData } from '../../services/frontendData';
 
 const FooterContainer = styled.footer`
   background: linear-gradient(135deg, #6A1B82 0%, #6A1B82 100%);
@@ -124,11 +125,32 @@ const FooterBottom = styled.div`
 `;
 
 const Footer = () => {
+  const [rootCategories, setRootCategories] = useState([]);
+
+  useEffect(() => {
+    // Load main categories for Quick Links
+    const loadCategories = async () => {
+      try {
+        const { allCategories } = await fetchFrontendData();
+        const roots = (allCategories || [])
+          .filter(cat => !cat.parent_id && cat.visible)
+          .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
+          .slice(0, 6); // Show max 6 main categories
+        setRootCategories(roots);
+      } catch (error) {
+        console.error('Error loading categories:', error);
+      }
+    };
+    loadCategories();
+  }, []);
+
   const quickLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Destinations', path: '/#destinations' },
-    { name: 'Services', path: '/#services' },
-    { name: 'Contact', path: '/#contact' }
+    ...rootCategories.map(cat => ({
+      name: cat.name,
+      path: `/service/${cat.slug || cat.id}`
+    })),
+    { name: 'Contact', path: '/contact-us' }
   ];
 
   // Display first 6 services in footer to save space
@@ -171,9 +193,9 @@ const Footer = () => {
           <ul>
             {quickLinks.map((link, index) => (
               <li key={index}>
-                <a href={link.path}>
+                <Link to={link.path}>
                   {link.name}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>

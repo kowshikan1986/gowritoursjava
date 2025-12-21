@@ -45,7 +45,7 @@ export const initDatabase = async () => {
 
   try {
     console.log('Initializing PostgreSQL database connection...');
-    const response = await axios.get(`${API_BASE}/health`, { timeout: 15000 });
+    const response = await axios.get(`${API_BASE}/health`, { timeout: 5000 });
     if (response.data.status === 'ok') {
       console.log('✅ PostgreSQL database connected successfully');
       isInitialized = true;
@@ -64,7 +64,7 @@ export const isDatabaseReady = () => isInitialized;
 // ==================== CATEGORIES ====================
 export const getCategories = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/categories`, { timeout: 15000 });
+    const response = await axios.get(`${API_BASE}/categories`, { timeout: 5000 });
     return response.data || [];
   } catch (error) {
     console.warn('Error fetching categories:', error.message);
@@ -164,7 +164,7 @@ export const deleteCategoryByName = async (name) => {
 // ==================== TOURS ====================
 export const getTours = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/tours`, { timeout: 15000 });
+    const response = await axios.get(`${API_BASE}/tours`, { timeout: 5000 });
     return response.data || [];
   } catch (error) {
     console.warn('Error fetching tours:', error.message);
@@ -266,7 +266,7 @@ export const deleteTour = async (slug) => {
 // ==================== HERO BANNERS ====================
 export const getHeroBanners = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/hero-banners`, { timeout: 15000 });
+    const response = await axios.get(`${API_BASE}/hero-banners`, { timeout: 5000 });
     return response.data || [];
   } catch (error) {
     console.warn('Error fetching hero banners:', error.message);
