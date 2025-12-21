@@ -1026,12 +1026,12 @@ const ServicePage = () => {
 
   // Load airport transfer subcategories for booking form
   useEffect(() => {
-    if (normalize(id) === 'airport-transfers') {
+    if (normalize(id) === 'airport-transfer') {
       const loadTransferCategories = async () => {
         try {
           const { allCategories: cats } = await fetchFrontendData();
           const airportTransfersMain = (cats || []).find(c => 
-            normalize(c.slug || c.name || '') === 'airport-transfers'
+            normalize(c.slug || c.name || '') === 'airport-transfer'
           );
           
           if (airportTransfersMain) {

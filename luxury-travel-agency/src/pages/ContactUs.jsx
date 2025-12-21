@@ -303,6 +303,30 @@ const Step = styled.div`
   }
 `;
 
+const FormTypeTabs = styled.div`
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #e5e7eb;
+`;
+
+const FormTypeTab = styled.button`
+  background: none;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: ${props => props.$active ? '#6A1B82' : '#666'};
+  border-bottom: 3px solid ${props => props.$active ? '#6A1B82' : 'transparent'};
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: -2px;
+  
+  &:hover {
+    color: #6A1B82;
+  }
+`;
+
 const InterestGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -491,45 +515,7 @@ ${form.message}`;
   return (
     <Page>
       <Container>
-        <Header>
-          <Title initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>Get in Touch</Title>
-          <SubTitle initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Plan Your Luxury Experience</SubTitle>
-        </Header>
-
         <Grid>
-          <AnimatedCard
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <InfoItem>
-              <IconWrap><PhoneIcon style={{ width: 20, height: 20 }} /></IconWrap>
-              <InfoText>
-                <span>Telephone</span>
-                <strong>+44 20 8830 8611</strong>
-                <span>Main Office</span>
-              </InfoText>
-            </InfoItem>
-
-            <InfoItem>
-              <IconWrap><PhoneIcon style={{ width: 20, height: 20 }} /></IconWrap>
-              <InfoText>
-                <span>Mobile</span>
-                <strong>07956 375 803</strong>
-                <span>24/7 Support</span>
-              </InfoText>
-            </InfoItem>
-
-            <InfoItem>
-              <IconWrap><EnvelopeIcon style={{ width: 20, height: 20 }} /></IconWrap>
-              <InfoText>
-                <span>E-mail</span>
-                <strong>info@gowritours.com</strong>
-                <span>Response within 24 hours</span>
-              </InfoText>
-              </InfoItem>
-          </AnimatedCard>
-
           <WideCard
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -735,6 +721,44 @@ ${form.message}`;
               )}
             </AnimatePresence>
           </WideCard>
+          
+          <AnimatedCard
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Header style={{ marginBottom: '2rem' }}>
+              <Title initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} style={{ fontSize: '2rem' }}>Get in Touch</Title>
+              <SubTitle initial={{ opacity: 0 }} animate={{ opacity: 1 }}>Plan Your Luxury Experience</SubTitle>
+            </Header>
+            
+            <InfoItem>
+              <IconWrap><PhoneIcon style={{ width: 20, height: 20 }} /></IconWrap>
+              <InfoText>
+                <span>Telephone</span>
+                <strong>+44 20 8830 8611</strong>
+                <span>Main Office</span>
+              </InfoText>
+            </InfoItem>
+
+            <InfoItem>
+              <IconWrap><PhoneIcon style={{ width: 20, height: 20 }} /></IconWrap>
+              <InfoText>
+                <span>Mobile</span>
+                <strong>07956 375 803</strong>
+                <span>24/7 Support</span>
+              </InfoText>
+            </InfoItem>
+
+            <InfoItem>
+              <IconWrap><EnvelopeIcon style={{ width: 20, height: 20 }} /></IconWrap>
+              <InfoText>
+                <span>E-mail</span>
+                <strong>info@gowritours.com</strong>
+                <span>Response within 24 hours</span>
+              </InfoText>
+            </InfoItem>
+          </AnimatedCard>
         </Grid>
       </Container>
     </Page>
