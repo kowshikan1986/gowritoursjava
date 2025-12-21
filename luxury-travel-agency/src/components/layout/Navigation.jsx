@@ -232,7 +232,7 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
     const fetchCategories = async () => {
       try {
         // Use local database instead of API
-        const { categories, allCategories } = await fetchFrontendData();
+        const { categories, allCategories } = await fetchFrontendData(true); // Force refresh
         const roots = (allCategories && allCategories.length ? allCategories : categories) || [];
         console.log('🔍 Navigation: Fetched categories:', roots);
         console.log('📊 Navigation: Number of categories:', roots?.length || 0);
@@ -268,6 +268,15 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
       }
     });
     
+    // Refresh when page becomes visible (e.g., switching tabs)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('👁️ Navigation: Page visible, refreshing categories...');
+        fetchCategories();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
     // Click outside handler to close dropdowns
     const handleClickOutside = (e) => {
       // Close dropdown if clicking outside navigation
@@ -281,6 +290,7 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
     
     return () => {
       unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
       document.removeEventListener('click', handleClickOutside);
     };
   }, []);
