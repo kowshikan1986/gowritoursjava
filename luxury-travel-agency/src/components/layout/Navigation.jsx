@@ -442,15 +442,20 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
                               .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
                               .map((grandchild) => {
                                 const grandchildSlug = grandchild.slug || grandchild.id || normalize(grandchild.name || '');
+                                // For airport-transfer and vehicle-hire subcategories, link to parent instead
+                                // Check if parent (child) is airport-transfer or vehicle-hire
+                                const parentCategory = menuCategories.find(c => c.id === grandchild.parent_id);
+                                const parentSlug = parentCategory?.slug;
+                                const targetSlug = (parentSlug === 'airport-transfer' || parentSlug === 'vehicle-hire') ? parentSlug : grandchildSlug;
                                 return (
                                   <L2Link
                                     key={grandchildSlug}
-                                    href={`/service/${grandchildSlug}`}
+                                    href={`/service/${targetSlug}`}
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      console.log('📍 L2 Click - Navigating to:', grandchildSlug, grandchild.name);
-                                      navigate(`/service/${grandchildSlug}`);
+                                      console.log('📍 L2 Click - Parent:', parentSlug, 'Target:', targetSlug, grandchild.name);
+                                      navigate(`/service/${targetSlug}`);
                                       setOpenSlug(null);
                                       setExpandedSubSlug(null);
                                       if (onClose) onClose(); // Close mobile menu

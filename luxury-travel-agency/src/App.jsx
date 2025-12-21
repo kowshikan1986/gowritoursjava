@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import styled from 'styled-components';
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer';
@@ -40,6 +40,26 @@ function AppContent() {
       <MainContent $noHeader={isAdminPage}>
         <Routes>
           <Route path="/" element={<Home />} />
+          
+          {/* Airport transfer subcategories redirect to parent */}
+          <Route path="/service/heathrow-lhr" element={<Navigate to="/service/airport-transfer" replace />} />
+          <Route path="/service/london-airports-lhr-lgw-ltn-stn-lcy" element={<Navigate to="/service/airport-transfer" replace />} />
+          <Route path="/service/regional-uk-airports" element={<Navigate to="/service/airport-transfer" replace />} />
+          <Route path="/service/meet-greet-service" element={<Navigate to="/service/airport-transfer" replace />} />
+          <Route path="/service/fleet-classes" element={<Navigate to="/service/airport-transfer" replace />} />
+          
+          {/* Vehicle hire subcategories redirect to parent */}
+          <Route path="/service/mpv" element={<Navigate to="/service/vehicle-hire" replace />} />
+          <Route path="/service/8-seater" element={<Navigate to="/service/vehicle-hire" replace />} />
+          <Route path="/service/16-seater" element={<Navigate to="/service/vehicle-hire" replace />} />
+          <Route path="/service/23-seater" element={<Navigate to="/service/vehicle-hire" replace />} />
+          <Route path="/service/33-seater" element={<Navigate to="/service/vehicle-hire" replace />} />
+          <Route path="/service/51-seater" element={<Navigate to="/service/vehicle-hire" replace />} />
+          <Route path="/service/83-seater" element={<Navigate to="/service/vehicle-hire" replace />} />
+          <Route path="/service/estate-car" element={<Navigate to="/service/vehicle-hire" replace />} />
+          <Route path="/service/executive-suv" element={<Navigate to="/service/vehicle-hire" replace />} />
+          <Route path="/service/premium-suv" element={<Navigate to="/service/vehicle-hire" replace />} />
+          
           <Route path="/service/:id" element={<ServicePage />} />
           <Route path="/package/:id" element={<PackageDetailPage />} />
           <Route path="/contact-us" element={<ContactUs />} />

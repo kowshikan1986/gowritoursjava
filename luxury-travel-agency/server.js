@@ -95,11 +95,16 @@ app.post('/api/categories', async (req, res) => {
     const { id, name, slug, description, image, parent_id, visible, sort_order } = req.body;
     const generatedId = id || `cat-${Date.now()}`;
     
+    // Auto-generate slug from name if not provided
+    const finalSlug = slug || name.toString().trim().toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    
     const result = await pool.query(
       `INSERT INTO categories (id, name, slug, description, image, parent_id, visible, sort_order, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
        RETURNING *`,
-      [generatedId, name, slug, description || '', image || '', parent_id || null, visible !== false, sort_order || 0]
+      [generatedId, name, finalSlug, description || '', image || '', parent_id || null, visible !== false, sort_order || 0]
     );
     
     res.status(201).json(result.rows[0]);

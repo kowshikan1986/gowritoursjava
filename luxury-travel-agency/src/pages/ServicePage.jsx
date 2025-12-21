@@ -1356,7 +1356,13 @@ const ServicePage = () => {
       </ContentSection>
 
       {/* Airport Transfers special layout with booking form */}
-      {normalize(id) === 'airport-transfers' && childCategories.length > 0 && (
+      {(() => {
+        const normalizedId = normalize(id);
+        const hasChildren = childCategories.length > 0;
+        const shouldShow = normalizedId === 'airport-transfer' && hasChildren;
+        console.log('🚕 Airport section check:', { id, normalizedId, hasChildren, childCategoriesLength: childCategories.length, shouldShow });
+        return shouldShow;
+      })() && (
         <BookingFormSection>
           {/* Left side - Subcategory cards */}
           <div>
@@ -1374,7 +1380,7 @@ const ServicePage = () => {
               {childCategories.map((sub, index) => {
                 const slug = sub.slug || sub.id || normalize(sub.name || '');
                 const subImage = getImage(sub);
-                const location = sub.location || sub.description || null;
+                const location = sub.location || null;
                 
                 console.log('🖼️ Airport transfer subcategory:', sub.name, 'Image:', sub.image?.substring(0, 50));
                 
@@ -1403,19 +1409,7 @@ const ServicePage = () => {
                     <CategoryImage $image={subImage} />
                     <CategoryContent>
                       <CategoryName>{sub.name}</CategoryName>
-                      {location && (
-                        <CategoryLocation>
-                          <MapPinIcon />
-                          {location}
-                        </CategoryLocation>
-                      )}
                       {sub.description && <CategoryDesc>{sub.description}</CategoryDesc>}
-                      <CategoryFooter>
-                        <ViewDetailsButton>
-                          View Details
-                          <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
-                        </ViewDetailsButton>
-                      </CategoryFooter>
                     </CategoryContent>
                   </CategoryCard>
                 );
@@ -1559,7 +1553,60 @@ const ServicePage = () => {
         </BookingFormSection>
       )}
 
-      {shouldShowSubcategories && childCategories.length > 0 && normalize(id) !== 'airport-transfers' && (
+      {/* Vehicle Hire subcategory cards */}
+      {normalize(id) === 'vehicle-hire' && childCategories.length > 0 && (
+        <PackagesSection>
+          <SectionHeader style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              Our Vehicle Options
+            </motion.h2>
+          </SectionHeader>
+          <CategoryGrid>
+            {childCategories.map((sub, index) => {
+              const slug = sub.slug || sub.id || normalize(sub.name || '');
+              const subImage = getImage(sub);
+              const location = sub.location || null;
+              
+              const handleClick = (e) => {
+                // Prevent navigation for vehicle-hire subcategories
+                e.preventDefault();
+                
+                if (e.ctrlKey || e.metaKey) {
+                  // Allow admin edit with Ctrl/Cmd+Click
+                  navigate(`/admin?tab=subcategories&edit=${sub.id}`);
+                }
+                // Otherwise, do nothing - stay on current page
+              };
+              
+              return (
+                <CategoryCard
+                  key={slug}
+                  as={motion.div}
+                  onClick={handleClick}
+                  style={{ cursor: 'default' }}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <CategoryImage $image={subImage} />
+                  <CategoryContent>
+                    <CategoryName>{sub.name}</CategoryName>
+                    {sub.description && <CategoryDesc>{sub.description}</CategoryDesc>}
+                  </CategoryContent>
+                </CategoryCard>
+              );
+            })}
+          </CategoryGrid>
+        </PackagesSection>
+      )}
+
+      {shouldShowSubcategories && childCategories.length > 0 && normalize(id) !== 'airport-transfer' && normalize(id) !== 'vehicle-hire' && (
             <PackagesSection>
               <SectionHeader>
                 <motion.h2
@@ -1576,7 +1623,7 @@ const ServicePage = () => {
                   const slug = sub.slug || sub.id || normalize(sub.name || '');
                   const linkTarget = `/service/${slug}`;
                   const subImage = getImage(sub);
-                  const location = sub.location || sub.description || null;
+                  const location = sub.location || null;
                   
                   const handleClick = (e) => {
                     if (e.ctrlKey || e.metaKey) {
@@ -1605,7 +1652,6 @@ const ServicePage = () => {
                             {location}
                           </CategoryLocation>
                         )}
-                        {sub.description && <CategoryDesc>{sub.description}</CategoryDesc>}
                         <CategoryFooter>
                           <ViewDetailsButton>
                             View Details
