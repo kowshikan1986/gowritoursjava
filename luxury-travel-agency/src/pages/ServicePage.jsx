@@ -21,6 +21,7 @@ const HeroSection = styled.div`
   color: white;
   margin-bottom: 4rem;
   overflow: hidden;
+  border-radius: 50px;
 `;
 
 const HeroBackground = styled.div`
@@ -30,6 +31,7 @@ const HeroBackground = styled.div`
   right: 0;
   bottom: 0;
   z-index: 0;
+  border-radius: 50px;
   
   &::before {
     content: '';
@@ -40,12 +42,14 @@ const HeroBackground = styled.div`
     bottom: 0;
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
     z-index: 1;
+    border-radius: 50px;
   }
   
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 50px;
   }
 `;
 
@@ -1609,20 +1613,6 @@ const ServicePage = () => {
                           </ViewDetailsButton>
                         </CategoryFooter>
                       </CategoryContent>
-                      <div style={{
-                        position: 'absolute',
-                        top: '0.5rem',
-                        right: '0.5rem',
-                        background: 'rgba(106, 27, 130, 0.9)',
-                        color: '#fff',
-                        padding: '0.25rem 0.5rem',
-                        borderRadius: '4px',
-                        fontSize: '0.7rem',
-                        opacity: 0.7,
-                        zIndex: 10
-                      }}>
-                        Ctrl+Click to Edit
-                      </div>
                     </CategoryCard>
                   );
                 })}
