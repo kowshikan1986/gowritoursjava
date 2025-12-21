@@ -1094,7 +1094,11 @@ const ServicePage = () => {
         pickupAddress2: '',
         pickupCity: '',
         pickupPostcode: '',
-        dropoffAddress: '',
+        dropoffSameAddress: '',
+        dropoffAddress1: '',
+        dropoffAddress2: '',
+        dropoffCity: '',
+        dropoffPostcode: '',
         returnDate: '',
         returnTime: '',
         vehicleType: ''
@@ -1630,7 +1634,7 @@ const ServicePage = () => {
             <BookingForm onSubmit={handleBookingSubmit}>
               <FormTitle>Book Now</FormTitle>
               <FormSubtitle>
-                Either contact us on +44(0) 20 8890 8181 or complete the form below to let us know which trip and date you'd like to book. We'll be in touch with you to talk about next steps within one working day.
+                To book your vehicle hire, either give us a call on +44(0) 20 8890 8181 or fill out the form below with your preferred dates and vehicle choice. We'll get back to you within one working day to discuss furthe
               </FormSubtitle>
 
               <FormLabel>Vehicle Details</FormLabel>
@@ -1688,17 +1692,55 @@ const ServicePage = () => {
                 />
               </div>
 
+              <FormLabel>Drop Off Same Address</FormLabel>
               <FormSelect
-                name="dropoffAddress"
-                value={bookingForm.dropoffAddress}
+                name="dropoffSameAddress"
+                value={bookingForm.dropoffSameAddress}
                 onChange={handleBookingChange}
               >
                 <option value="">Select Drop Off Address</option>
-                <option value="airport">Airport</option>
-                <option value="hotel">Hotel</option>
-                <option value="custom">Custom Address</option>
+                <option value="yes">Yes</option>
+                <option value="no">No (different address)</option>
               </FormSelect>
-              <FormLabel>Drop Off Same Address</FormLabel>
+
+              {bookingForm.dropoffSameAddress === 'no' && (
+                <>
+                  <FormLabel>Drop Off Address *</FormLabel>
+                  <FormInput
+                    type="text"
+                    name="dropoffAddress1"
+                    placeholder="Drop Off Address Line 1"
+                    value={bookingForm.dropoffAddress1}
+                    onChange={handleBookingChange}
+                    required
+                  />
+
+                  <FormInput
+                    type="text"
+                    name="dropoffAddress2"
+                    placeholder="Drop Off Address Line 2"
+                    value={bookingForm.dropoffAddress2}
+                    onChange={handleBookingChange}
+                  />
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                    <FormInput
+                      type="text"
+                      name="dropoffCity"
+                      placeholder="City"
+                      value={bookingForm.dropoffCity}
+                      onChange={handleBookingChange}
+                    />
+                    <FormInput
+                      type="text"
+                      name="dropoffPostcode"
+                      placeholder="Postal / Zip Code"
+                      value={bookingForm.dropoffPostcode}
+                      onChange={handleBookingChange}
+                    />
+                  </div>
+                </>
+              )}
 
               <FormInput
                 type="date"
