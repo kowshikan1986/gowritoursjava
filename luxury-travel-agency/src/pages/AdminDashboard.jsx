@@ -679,6 +679,14 @@ const AdminDashboard = () => {
     if (!editCategoryId) return;
     const cat = categories.find((c) => c.id === editCategoryId);
     if (!cat) return;
+    
+    console.log('🚀 AdminDashboard updating category:', {
+      slug: cat.slug,
+      name: categoryEditForm.name,
+      hasImageFile: !!categoryEditForm.image,
+      imageFileName: categoryEditForm.image?.name
+    });
+    
     setError('');
     setLoading(true);
     try {

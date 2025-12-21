@@ -8,7 +8,8 @@ export const normalize = (str = '') =>
 // Cache for frontend data to avoid re-fetching
 let cachedData = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 30000; // 30 seconds cache
+const CACHE_DURATION = 5000; // 5 seconds cache (reduced from 30s)
+let isFetching = false; // Prevent parallel fetches
 
 // Clear cache (call when data is updated)
 export const clearFrontendCache = () => {
@@ -25,6 +26,19 @@ export const fetchFrontendData = async (forceRefresh = false) => {
     console.log('fetchFrontendData: Using cached data');
     return cachedData;
   }
+  
+  // If already fetching, wait for the existing request
+  if (isFetching) {
+    console.log('fetchFrontendData: Already fetching, waiting...');
+    // Wait for the fetch to complete by checking every 100ms
+    while (isFetching) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    // Return the cached result from the completed fetch
+    if (cachedData) return cachedData;
+  }
+  
+  isFetching = true;
   
   try {
     console.log('fetchFrontendData: Fetching from PostgreSQL database...');
@@ -104,6 +118,8 @@ export const fetchFrontendData = async (forceRefresh = false) => {
       tours: [],
       banners: [],
     };
+  } finally {
+    isFetching = false; // Reset flag when done
   }
 };
 

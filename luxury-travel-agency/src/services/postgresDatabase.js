@@ -2,6 +2,7 @@
 // This connects to the PostgreSQL database and provides CRUD operations
 
 import axios from 'axios';
+import { clearFrontendCache } from './frontendData';
 
 // Database configuration from environment variables
 const DB_CONFIG = {
@@ -31,7 +32,8 @@ export const onDataChange = (callback) => {
 };
 
 const notifyDataChange = (type) => {
-  console.log('Database changed:', type);
+  console.log('🔔 Database changed:', type);
+  clearFrontendCache(); // Clear cache when data changes
   dataChangeListeners.forEach(callback => callback(type));
 };
 
@@ -43,7 +45,7 @@ export const initDatabase = async () => {
 
   try {
     console.log('Initializing PostgreSQL database connection...');
-    const response = await axios.get(`${API_BASE}/health`, { timeout: 5000 });
+    const response = await axios.get(`${API_BASE}/health`, { timeout: 15000 });
     if (response.data.status === 'ok') {
       console.log('✅ PostgreSQL database connected successfully');
       isInitialized = true;
@@ -62,7 +64,7 @@ export const isDatabaseReady = () => isInitialized;
 // ==================== CATEGORIES ====================
 export const getCategories = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/categories`, { timeout: 5000 });
+    const response = await axios.get(`${API_BASE}/categories`, { timeout: 15000 });
     return response.data || [];
   } catch (error) {
     console.warn('Error fetching categories:', error.message);
@@ -72,7 +74,7 @@ export const getCategories = async () => {
 
 export const getCategoryBySlug = async (slug) => {
   try {
-    const response = await axios.get(`${API_BASE}/categories/${slug}`, { timeout: 5000 });
+    const response = await axios.get(`${API_BASE}/categories/${slug}`, { timeout: 15000 });
     return response.data;
   } catch (error) {
     console.warn('Error fetching category:', error.message);
@@ -109,7 +111,7 @@ export const createCategory = async (data) => {
 export const updateCategory = async (slug, data) => {
   try {
     // Convert image file to base64 if present
-    let imageData = data.image;
+    let imageData = undefined;
     if (data.imageFile) {
       imageData = await fileToBase64(data.imageFile);
     }
@@ -117,11 +119,18 @@ export const updateCategory = async (slug, data) => {
     const payload = {
       name: data.name,
       description: data.description,
-      image: imageData,
+      highlights: data.highlights,
       parent_id: data.parent_id,
       visible: data.visible,
       sort_order: data.sort_order
     };
+    
+    // Only include image in payload if it's being updated
+    if (imageData !== undefined) {
+      payload.image = imageData;
+    }
+    
+    console.log('📦 Updating category', slug, 'with image:', imageData ? 'YES (' + imageData.length + ' chars)' : 'NO (keeping existing)');
     
     const response = await axios.put(`${API_BASE}/categories/${slug}`, payload);
     notifyDataChange('categories');
@@ -155,7 +164,7 @@ export const deleteCategoryByName = async (name) => {
 // ==================== TOURS ====================
 export const getTours = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/tours`, { timeout: 5000 });
+    const response = await axios.get(`${API_BASE}/tours`, { timeout: 15000 });
     return response.data || [];
   } catch (error) {
     console.warn('Error fetching tours:', error.message);
@@ -257,7 +266,7 @@ export const deleteTour = async (slug) => {
 // ==================== HERO BANNERS ====================
 export const getHeroBanners = async () => {
   try {
-    const response = await axios.get(`${API_BASE}/hero-banners`, { timeout: 5000 });
+    const response = await axios.get(`${API_BASE}/hero-banners`, { timeout: 15000 });
     return response.data || [];
   } catch (error) {
     console.warn('Error fetching hero banners:', error.message);

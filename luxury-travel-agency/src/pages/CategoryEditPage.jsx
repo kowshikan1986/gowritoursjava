@@ -142,6 +142,7 @@ const CategoryEditPage = () => {
   const [form, setForm] = useState({
     name: '',
     description: '',
+    highlights: '',
     image: null,
   });
 
@@ -178,6 +179,7 @@ const CategoryEditPage = () => {
         setForm({
           name: found.name || '',
           description: found.description || '',
+          highlights: found.highlights || '',
           image: null,
           parent_id: found.parent_id || ''
         });
@@ -198,10 +200,18 @@ const CategoryEditPage = () => {
     setSuccess('');
     setSaving(true);
     
+    console.log('🚀 Submitting category update:', {
+      slug: category.slug,
+      name: form.name,
+      hasImageFile: !!form.image,
+      imageFileName: form.image?.name
+    });
+    
     try {
       await updateCategory(category.slug, {
         name: form.name,
         description: form.description,
+        highlights: form.highlights,
         imageFile: form.image,
         parent_id: form.parent_id || null,
       });
@@ -286,6 +296,15 @@ const CategoryEditPage = () => {
               value={form.description}
               onChange={(value) => setForm({ ...form, description: value })}
               placeholder="Add detailed description with formatting, images, lists, etc..."
+            />
+          </Field>
+
+          <Field>
+            <Label>Key Highlights (Rich Text)</Label>
+            <RichTextEditor
+              value={form.highlights}
+              onChange={(value) => setForm({ ...form, highlights: value })}
+              placeholder="Add key highlights like: Wide selection of luxury cars, Self-drive options, GPS available..."
             />
           </Field>
 

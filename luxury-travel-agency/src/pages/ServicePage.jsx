@@ -4,7 +4,7 @@ import styled from 'styled-components';
 import { motion } from 'framer-motion';
 import { MapPinIcon, ArrowRightIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { servicesData } from '../data/servicesData';
-import { fetchFrontendData, normalize } from '../services/frontendData';
+import { fetchFrontendData, normalize, clearFrontendCache } from '../services/frontendData';
 import { importAllCategories } from '../services/importData';
 import { onDataChange } from '../services/postgresDatabase';
 
@@ -17,12 +17,36 @@ const HeroSection = styled.div`
   position: relative;
   display: flex;
   align-items: center;
-  justify_content: center;
+  justify-content: center;
   color: white;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${props => props.$bg});
-  background-size: cover;
-  background-position: center center;
   margin-bottom: 4rem;
+  overflow: hidden;
+`;
+
+const HeroBackground = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+    z-index: 1;
+  }
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 `;
 
 const HeroContent = styled.div`
@@ -30,6 +54,7 @@ const HeroContent = styled.div`
   max-width: 800px;
   padding: 0 2rem;
   z-index: 2;
+  position: relative;
 `;
 
 const Title = styled(motion.h1)`
@@ -824,7 +849,12 @@ const ServicePage = () => {
     setSelectedSubcategoryId(sub.id);
   };
 
-  const findCategoryBySlug = (slug) => (allCategories || []).find((c) => c.slug === slug || c.id === slug);
+  const findCategoryBySlug = (slug) => {
+    console.log('🔍 findCategoryBySlug called with:', slug, '| allCategories count:', (allCategories || []).length);
+    const found = (allCategories || []).find((c) => c.slug === slug || c.id === slug);
+    console.log('🔍 Found category:', found?.name, '| Has image:', !!found?.image);
+    return found;
+  };
 
   const formatPrice = (value) => {
     if (value === 0 || value) {
@@ -834,14 +864,35 @@ const ServicePage = () => {
   };
 
   // If the route id matches a category slug, build a service-like object so the page renders instead of 404
-  const matchedCategory = id && findCategoryBySlug(id);
-  const derivedService = service || (matchedCategory
-    ? {
+  const matchedCategory = React.useMemo(() => {
+    if (!id || (allCategories || []).length === 0) return null;
+    return (allCategories || []).find((c) => c.slug === id || c.id === id);
+  }, [id, allCategories]);
+  
+  console.log('🖼️ matchedCategory for', id, ':', {
+    name: matchedCategory?.name,
+    hasImage: !!matchedCategory?.image,
+    imageStart: matchedCategory?.image?.substring(0, 80),
+    imageLength: matchedCategory?.image?.length,
+    allCategoriesCount: (allCategories || []).length
+  });
+  
+  // Compute derivedService with useMemo to react to category changes
+  const derivedService = React.useMemo(() => {
+    console.log('🔨 Building derivedService - service:', !!service, 'matchedCategory:', !!matchedCategory, 'id:', id);
+    
+    if (service) return service;
+    
+    if (matchedCategory) {
+      const imageToUse = matchedCategory.image || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80';
+      console.log('🎯 derivedService building for', id, '| Image length:', imageToUse?.length);
+      
+      return {
         id: matchedCategory.slug || matchedCategory.id,
         title: matchedCategory.name,
         shortDescription: matchedCategory.description || 'Browse experiences for this category.',
         fullDescription: matchedCategory.description || '',
-        image: matchedCategory.image || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80',
+        image: imageToUse,
         features: [],
         packages: filterToursByCategory(matchedCategory.id).map((tour) => ({
           ...tour,
@@ -851,9 +902,11 @@ const ServicePage = () => {
           title: matchedCategory.name,
           description: matchedCategory.description || '',
         },
-      }
-    : id === 'tours'
-    ? {
+      };
+    }
+    
+    if (id === 'tours') {
+      return {
         id: 'tours',
         title: 'Tours',
         shortDescription: 'Explore our categories and packages.',
@@ -865,13 +918,28 @@ const ServicePage = () => {
           title: 'Tours',
           description: 'Discover tours by category and subcategory.',
         },
-      }
-    : null);
+      };
+    }
+    
+    return null;
+  }, [service, matchedCategory, id]);
 
   useEffect(() => {
     if (derivedService) {
       document.title = `${derivedService.seo.title} | Luxury Travel Agency`;
       window.scrollTo(0, 0);
+      
+      // Check if this is an airport-transfers subcategory - redirect to main page
+      if (matchedCategory && matchedCategory.parent_id) {
+        const parentCategory = allCategories.find(c => c.id === matchedCategory.parent_id);
+        const parentSlug = normalize(parentCategory?.slug || parentCategory?.name || '');
+        
+        if (parentSlug === 'airport-transfers') {
+          // This is a subcategory of airport-transfers, redirect to main page
+          navigate('/service/airport-transfers', { replace: true });
+          return;
+        }
+      }
       
       // If this is an L2 subcategory (not a tour root) with packages, redirect to the first (and only) package
       // Tour roots like UK Tours should NOT redirect - they should show their L2 subcategories
@@ -883,7 +951,7 @@ const ServicePage = () => {
         }
       }
     }
-  }, [derivedService, matchedCategory, navigate]);
+  }, [derivedService, matchedCategory, navigate, allCategories]);
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -936,7 +1004,13 @@ const ServicePage = () => {
     const unsubscribe = onDataChange((type) => {
       console.log('ServicePage: Database changed, reloading...', type);
       if (type === 'categories' || type === 'tours') {
-        loadCategories();
+        // Clear cache and force refresh to get updated data
+        clearFrontendCache();
+        fetchFrontendData(true).then(({ allCategories: cats, tours: dbTours }) => {
+          setAllCategories(cats || []);
+          setTours(dbTours || []);
+          console.log('🔄 Categories reloaded with fresh data, count:', (cats || []).length);
+        });
       }
     });
     
@@ -961,6 +1035,7 @@ const ServicePage = () => {
               c.parent_id === airportTransfersMain.id
             ).sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
             
+            console.log('🔄 Loaded airport transfer subcategories:', subcats);
             setAirportTransferCategories(subcats);
           }
         } catch (err) {
@@ -969,6 +1044,16 @@ const ServicePage = () => {
       };
       
       loadTransferCategories();
+      
+      // Also listen for category changes to refresh
+      const unsubscribe = onDataChange((type) => {
+        if (type === 'categories') {
+          console.log('🔄 Categories changed, reloading airport transfers...');
+          loadTransferCategories();
+        }
+      });
+      
+      return () => unsubscribe();
     }
   }, [id]);
 
@@ -1065,6 +1150,14 @@ const ServicePage = () => {
         .filter((c) => c.parent_id === activeParentId)
         .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
+  console.log('🔍 ServicePage childCategories:', {
+    id,
+    activeParentId,
+    matchedCategoryName: matchedCategory?.name,
+    childCategoriesCount: childCategories.length,
+    childCategories: childCategories.map(c => ({ name: c.name, hasImage: !!c.image, imageStart: c.image?.substring(0, 30) }))
+  });
+
   console.log('ServicePage Debug:', {
     id,
     matchedCategory: matchedCategory?.name,
@@ -1160,7 +1253,14 @@ const ServicePage = () => {
     }
   }, [location.search, allCategories]);
 
-  const getImage = (item) => item?.image || item?.featured_image || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80';
+  const getImage = (item) => {
+    const img = item?.image || item?.featured_image || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80';
+    // Add timestamp to base64 images to prevent caching
+    if (img && img.startsWith('data:image')) {
+      return img; // Base64 images don't need cache busting
+    }
+    return img;
+  };
 
   // Decide which tours to show based on selection: prefer subcategory -> category -> all
   const toursToRender = id === 'tours'
@@ -1184,7 +1284,10 @@ const ServicePage = () => {
 
   return (
     <PageContainer>
-      <HeroSection $bg={derivedService.image}>
+      <HeroSection>
+        <HeroBackground>
+          <img src={derivedService.image} alt={derivedService.title} />
+        </HeroBackground>
         <HeroContent>
           <Title
             initial={{ opacity: 0, y: 20 }}
@@ -1266,23 +1369,28 @@ const ServicePage = () => {
             <CategoryGrid style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))' }}>
               {childCategories.map((sub, index) => {
                 const slug = sub.slug || sub.id || normalize(sub.name || '');
-                const linkTarget = `/service/${slug}`;
                 const subImage = getImage(sub);
                 const location = sub.location || sub.description || null;
                 
+                console.log('🖼️ Airport transfer subcategory:', sub.name, 'Image:', sub.image?.substring(0, 50));
+                
                 const handleClick = (e) => {
+                  // Prevent navigation for airport-transfers subcategories
+                  e.preventDefault();
+                  
                   if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
+                    // Allow admin edit with Ctrl/Cmd+Click
                     navigate(`/admin?tab=subcategories&edit=${sub.id}`);
                   }
+                  // Otherwise, do nothing - stay on current page
                 };
                 
                 return (
                   <CategoryCard
                     key={slug}
-                    as={Link}
-                    to={linkTarget}
+                    as={motion.div}
                     onClick={handleClick}
+                    style={{ cursor: 'default' }}
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}

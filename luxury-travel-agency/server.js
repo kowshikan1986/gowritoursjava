@@ -112,24 +112,34 @@ app.post('/api/categories', async (req, res) => {
 // Update category
 app.put('/api/categories/:slug', async (req, res) => {
   try {
-    const { name, description, image, parent_id, visible, sort_order } = req.body;
+    const { name, description, image, parent_id, visible, sort_order, highlights } = req.body;
+    
+    // Get current category to preserve image if not provided
+    const current = await pool.query('SELECT * FROM categories WHERE slug = $1', [req.params.slug]);
+    if (current.rows.length === 0) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
     
     // Generate new slug from name if name is provided
     const newSlug = name ? name.toString().trim().toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') : req.params.slug;
     
+    // Use new image if provided (not undefined and not empty string), otherwise keep existing
+    const imageToUse = (image !== undefined && image !== null && image !== '') ? image : current.rows[0].image;
+    
+    // Use new highlights if provided, otherwise keep existing
+    const highlightsToUse = highlights !== undefined ? highlights : current.rows[0].highlights;
+    
+    console.log('📝 Updating category:', req.params.slug, '| New image:', image !== undefined ? (image ? 'YES (' + image.length + ')' : 'EMPTY STRING') : 'UNDEFINED (keeping existing)');
+    
     const result = await pool.query(
       `UPDATE categories 
-       SET name = $1, description = $2, image = $3, parent_id = $4, visible = $5, sort_order = $6, slug = $7, updated_at = NOW()
-       WHERE slug = $8
+       SET name = $1, description = $2, image = $3, parent_id = $4, visible = $5, sort_order = $6, slug = $7, highlights = $8, updated_at = NOW()
+       WHERE slug = $9
        RETURNING *`,
-      [name, description, image, parent_id, visible, sort_order, newSlug, req.params.slug]
+      [name, description, imageToUse, parent_id, visible, sort_order, newSlug, highlightsToUse, req.params.slug]
     );
-    
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Category not found' });
-    }
     
     res.json(result.rows[0]);
   } catch (error) {

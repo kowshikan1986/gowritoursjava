@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { fetchFrontendData, normalize } from '../../services/frontendData';
+import { onDataChange } from '../../services/postgresDatabase';
 
 const Nav = styled.nav`
   display: flex;
@@ -259,10 +260,13 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
     };
     fetchCategories();
     
-    // Auto-refresh every 2 seconds to sync with admin updates
-    const intervalId = setInterval(() => {
-      fetchCategories();
-    }, 2000);
+    // Listen for database changes instead of polling
+    const unsubscribe = onDataChange((type) => {
+      if (type === 'categories') {
+        console.log('🔄 Navigation: Categories changed, reloading...');
+        fetchCategories();
+      }
+    });
     
     // Click outside handler to close dropdowns
     const handleClickOutside = (e) => {
@@ -276,7 +280,7 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
     document.addEventListener('click', handleClickOutside);
     
     return () => {
-      clearInterval(intervalId);
+      unsubscribe();
       document.removeEventListener('click', handleClickOutside);
     };
   }, []);
@@ -322,63 +326,18 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
       </NavItem>
 
       {(() => {
-        const desiredOrder = [
-          { key: 'tours', label: 'Tours' },
-          { key: 'cruises', label: 'Cruises' },
-          { key: 'airport-transfers', label: 'Airport Transfers' },
-          { key: 'vehicle-hire', label: 'Vehicle Hire' },
-          { key: 'sri-lanka-tours', label: 'Sri Lanka Tours' },
-          { key: 'other-services', label: 'Other Services' },
-        ];
+        // Get all root categories (no parent_id) and sort them
+        const rootCategories = (menuCategories || [])
+          .filter((c) => !c.parent_id)
+          .sort((a, b) => {
+            // Sort by sort_order first, then by name
+            const orderA = a.sort_order ?? 999;
+            const orderB = b.sort_order ?? 999;
+            if (orderA !== orderB) return orderA - orderB;
+            return (a.name || '').localeCompare(b.name || '');
+          });
 
-        const normalizeKey = (c) => normalize(c.slug || c.id || c.name || '');
-
-        const allowedKeys = new Set([
-          'tours',
-          'cruises',
-          'airport-transfers',
-          'vehicle-hire',
-          'sri-lanka-tours',
-          'other-services',
-        ]);
-
-        const categoryByKey = new Map();
-        // Only root categories that match allowed keys
-        (menuCategories || []).filter((c) => !c.parent_id).forEach((c) => {
-          const key = normalizeKey(c);
-          if (allowedKeys.has(key)) {
-            categoryByKey.set(key, c);
-          }
-        });
-
-        // Special handling for "Tours" - if "tours" category doesn't exist, create a virtual one
-        if (!categoryByKey.has('tours')) {
-          // Get all tour root categories
-          const tourRootSlugs = ['uk-tours', 'european-tours', 'world-tours', 'india-sri-lankan-tours', 'group-tours', 'private-tours'];
-          const tourCategories = (menuCategories || [])
-            .filter((c) => !c.parent_id && tourRootSlugs.includes(normalizeKey(c)));
-          
-          if (tourCategories.length > 0) {
-            // Create virtual Tours category
-            categoryByKey.set('tours', {
-              id: 'virtual-tours',
-              slug: 'tours',
-              name: 'Tours',
-              parent_id: null,
-              _isToursMeta: true, // Mark as virtual
-            });
-          }
-        }
-
-        // Build list in desired order; skip missing ones
-        const ordered = desiredOrder
-          .map((entry) => {
-            const cat = categoryByKey.get(entry.key);
-            return cat ? { ...cat, _navLabel: entry.label } : null;
-          })
-          .filter(Boolean);
-
-        return ordered.map((category) => {
+        return rootCategories.map((category) => {
           const categorySlug = category.slug || category.id || normalize(category.name || '');
           const label = category._navLabel || category.name;
           

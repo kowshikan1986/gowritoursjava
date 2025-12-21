@@ -259,26 +259,7 @@ export const servicesData = [
       description: 'Book reliable and luxurious airport transfers. Professional chauffeurs, flight tracking, and premium vehicles for a stress-free journey.'
     }
   },
-  {
-    id: 'vehicle-hire',
-    title: 'Vehicle Hire',
-    location: 'Worldwide',
-    price: 'From $200/day',
-    shortDescription: 'Rent premium vehicles for your self-drive adventures or chauffeur needs.',
-    fullDescription: 'Explore at your own pace with our Vehicle Hire service. We offer a wide range of luxury cars, SUVs, and vans. Whether you prefer to drive yourself or hire a chauffeur, we provide well-maintained, high-end vehicles for all your travel needs.',
-    features: [
-      'Wide selection of luxury cars',
-      'Self-drive or chauffeur options',
-      'Comprehensive insurance included',
-      'GPS and child seats available',
-      'Flexible rental durations'
-    ],
-    image: 'https://images.unsplash.com/photo-1503376763036-066120622c74?q=80&w=1470&auto=format&fit=crop',
-    seo: {
-      title: 'Luxury Vehicle Hire | Premium Car Rental Services',
-      description: 'Rent luxury vehicles for your travels. Self-drive or chauffeur-driven options available with comprehensive insurance and flexible terms.'
-    }
-  },
+  // Removed vehicle-hire - now using database category
   {
     id: 'cruises',
     title: 'Cruises',
