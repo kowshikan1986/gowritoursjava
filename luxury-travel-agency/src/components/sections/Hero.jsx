@@ -206,31 +206,15 @@ const Hero = () => {
   }, []);
 
   useEffect(() => {
-    const fallback = [
-      {
-        title: 'Extraordinary Journeys',
-        subtitle: "Discover the world's most exclusive destinations with personalized luxury travel experiences crafted to perfection for the discerning traveler.",
-        background_image: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=2070&q=80',
-        cta_text: 'Explore Destinations',
-        cta_link: ''
-      },
-      {
-        title: 'Curated Luxury Escapes',
-        subtitle: 'Handpicked retreats and iconic routes designed for comfort and style.',
-        background_image: 'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=2070&q=80',
-        cta_text: 'Start Planning',
-        cta_link: ''
-      }
-    ];
-
     const fetchHero = async () => {
       try {
         const data = await fetchFrontendData();
         const activeBanners = (data.banners || []).filter(item => item.is_active);
-        setHeroItems(activeBanners.length ? activeBanners : fallback);
+        // Only use admin banners, no fallback
+        setHeroItems(activeBanners);
       } catch (e) {
         console.log('Failed to load hero banners from database:', e);
-        setHeroItems(fallback);
+        setHeroItems([]); // No fallback - empty array
       }
     };
     fetchHero();
@@ -261,6 +245,11 @@ const Hero = () => {
       nextSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  // Don't render hero section if no banners exist
+  if (heroItems.length === 0) {
+    return null;
+  }
 
   return (
     <HeroContainer>
