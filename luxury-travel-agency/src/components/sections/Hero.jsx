@@ -274,41 +274,37 @@ const Hero = () => {
         />
         <HeroContent>
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
             style={{ textAlign: 'center' }}
           >
-            {/* Company Logo Image */}
+            {/* Loading Spinner Animation */}
             <motion.div
               animate={{ 
-                scale: [1, 1.05, 1],
-                opacity: [0.8, 1, 0.8]
+                rotate: 360
               }}
               transition={{ 
-                duration: 2,
+                duration: 1,
                 repeat: Infinity,
-                ease: "easeInOut"
+                ease: "linear"
               }}
-              style={{ marginBottom: '2rem' }}
-            >
-              <img 
-                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPCEtLSBHIHdpdGggZmxhbWVzIC0tPgogIDxwYXRoIGQ9Ik02MCw0MCBDNDAsMzAgMzAsNTAgNDAsNzAgQzUwLDkwIDcwLDEwMCA5MCw5MCBMOTAsNzAgTDcwLDcwIEw3MCw1MCBMOTAsNTAgTDkwLDQwIFogTTQ1LDM1IEM0MCwyNSAzNSwzMCAzOCw0MCBDNDIsNTUgNTAsNjAgNTgsNTUiIGZpbGw9IiM5YjU5YjYiLz4KICA8cGF0aCBkPSJNNDgsNDAgQzQ1LDM1IDQyLDM4IDQ1LDQ1IEw1MCw1MCIgc3Ryb2tlPSIjZWM0ODk5IiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiLz4KICA8dGV4dCB4PSIxMCIgeT0iMTMwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjOWI1OWI2Ij5HT1dSSSBUT1VSUzwvdGV4dD4KPC9zdmc+" 
-                alt="GOWRITOURS Logo"
-                style={{
-                  width: '300px',
-                  height: 'auto',
-                  filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.3))'
-                }}
-              />
-            </motion.div>
+              style={{ 
+                width: '80px',
+                height: '80px',
+                margin: '0 auto 2rem',
+                border: '4px solid rgba(255,255,255,0.3)',
+                borderTop: '4px solid white',
+                borderRadius: '50%'
+              }}
+            />
             <div style={{ 
               fontSize: '1.2rem', 
               color: 'rgba(255,255,255,0.9)',
               fontWeight: '300',
               letterSpacing: '0.05em'
             }}>
-              Loading your journey...
+              Loading...
             </div>
           </motion.div>
         </HeroContent>
