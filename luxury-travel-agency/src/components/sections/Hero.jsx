@@ -192,6 +192,7 @@ const Hero = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [heroItems, setHeroItems] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -208,6 +209,7 @@ const Hero = () => {
   useEffect(() => {
     const fetchHero = async () => {
       try {
+        setIsLoading(true);
         const data = await fetchFrontendData();
         const activeBanners = (data.banners || []).filter(item => item.is_active);
         // Only use admin banners, no fallback
@@ -215,6 +217,8 @@ const Hero = () => {
       } catch (e) {
         console.log('Failed to load hero banners from database:', e);
         setHeroItems([]); // No fallback - empty array
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchHero();
@@ -247,8 +251,28 @@ const Hero = () => {
   };
 
   // Don't render hero section if no banners exist
-  if (heroItems.length === 0) {
+  if (!isLoading && heroItems.length === 0) {
     return null;
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <HeroContainer>
+        <BackgroundImage image="" />
+        <HeroContent>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+          >
+            <div style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.8)' }}>
+              Loading...
+            </div>
+          </motion.div>
+        </HeroContent>
+      </HeroContainer>
+    );
   }
 
   return (
