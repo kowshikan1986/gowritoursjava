@@ -259,15 +259,52 @@ const Hero = () => {
   if (isLoading) {
     return (
       <HeroContainer>
-        <BackgroundImage image="" />
+        <BackgroundImage 
+          image="" 
+          style={{ 
+            background: 'linear-gradient(135deg, #6A1B82 0%, #4a0e5c 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }} 
+        />
         <HeroContent>
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
+            style={{ textAlign: 'center' }}
           >
-            <div style={{ fontSize: '1.2rem', color: 'rgba(255,255,255,0.8)' }}>
-              Loading...
+            {/* Company Logo */}
+            <motion.div
+              animate={{ 
+                scale: [1, 1.05, 1],
+                opacity: [0.8, 1, 0.8]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              style={{ marginBottom: '2rem' }}
+            >
+              <div style={{
+                fontSize: '4rem',
+                fontWeight: 'bold',
+                color: 'white',
+                textShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                letterSpacing: '0.1em'
+              }}>
+                GOWRITOURS
+              </div>
+            </motion.div>
+            <div style={{ 
+              fontSize: '1.2rem', 
+              color: 'rgba(255,255,255,0.9)',
+              fontWeight: '300',
+              letterSpacing: '0.05em'
+            }}>
+              Loading your journey...
             </div>
           </motion.div>
         </HeroContent>
