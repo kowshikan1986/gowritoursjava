@@ -826,6 +826,7 @@ const ServicePage = () => {
     dropoffLocation: '',
     transferService: '',
     passengers: '',
+    vehicleType: '',
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1087,6 +1088,7 @@ const ServicePage = () => {
         dropoffLocation: '',
         transferService: '',
         passengers: '',
+        vehicleType: '',
         message: '',
         pickupDate: '',
         pickupTime: '',
@@ -1543,6 +1545,42 @@ const ServicePage = () => {
                   max="50"
                   placeholder="1"
                 />
+              </FormGroup>
+
+              {/* Vehicle Type Selection - Conditional based on passengers */}
+              <FormGroup>
+                <FormLabel htmlFor="vehicleType">Choose Vehicle Type *</FormLabel>
+                {parseInt(bookingForm.passengers) > 23 ? (
+                  <div style={{
+                    padding: '1rem',
+                    background: '#fff3cd',
+                    border: '2px solid #ffc107',
+                    borderRadius: '10px',
+                    color: '#856404',
+                    fontSize: '0.95rem',
+                    fontWeight: '500'
+                  }}>
+                    📞 For more than 23 passengers, please contact us at +44 20 8830 8611
+                  </div>
+                ) : (
+                  <FormSelect
+                    id="vehicleType"
+                    name="vehicleType"
+                    value={bookingForm.vehicleType}
+                    onChange={handleBookingInputChange}
+                    required
+                    disabled={!bookingForm.passengers}
+                  >
+                    <option value="">Select vehicle type</option>
+                    <option value="saloon-car">Saloon Car</option>
+                    <option value="estate-car">Estate Car</option>
+                    <option value="mpv">MPV</option>
+                    <option value="mpv-plus">MPV+</option>
+                    <option value="8-seater">8 Seater</option>
+                    <option value="16-seater">16 Seater</option>
+                    <option value="23-seater">23 Seater</option>
+                  </FormSelect>
+                )}
               </FormGroup>
 
               <FormGroup>
