@@ -255,17 +255,14 @@ const Hero = () => {
     return null;
   }
 
-  // Show loading state
+  // Show loading state with first hero image as background
   if (isLoading) {
     return (
       <HeroContainer>
         <BackgroundImage 
-          image="" 
+          image="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2070&q=80"
           style={{ 
-            background: 'linear-gradient(135deg, #6A1B82 0%, #4a0e5c 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            filter: 'brightness(0.4)'
           }} 
         />
         <HeroContent>
@@ -275,7 +272,7 @@ const Hero = () => {
             transition={{ duration: 0.5 }}
             style={{ textAlign: 'center' }}
           >
-            {/* Company Logo */}
+            {/* Company Logo Image */}
             <motion.div
               animate={{ 
                 scale: [1, 1.05, 1],
@@ -288,15 +285,15 @@ const Hero = () => {
               }}
               style={{ marginBottom: '2rem' }}
             >
-              <div style={{
-                fontSize: '4rem',
-                fontWeight: 'bold',
-                color: 'white',
-                textShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                letterSpacing: '0.1em'
-              }}>
-                GOWRITOURS
-              </div>
+              <img 
+                src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgdmlld0JveD0iMCAwIDIwMCAxNTAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CiAgPCEtLSBHIHdpdGggZmxhbWVzIC0tPgogIDxwYXRoIGQ9Ik02MCw0MCBDNDAsMzAgMzAsNTAgNDAsNzAgQzUwLDkwIDcwLDEwMCA5MCw5MCBMOTAsNzAgTDcwLDcwIEw3MCw1MCBMOTAsNTAgTDkwLDQwIFogTTQ1LDM1IEM0MCwyNSAzNSwzMCAzOCw0MCBDNDIsNTUgNTAsNjAgNTgsNTUiIGZpbGw9IiM5YjU5YjYiLz4KICA8cGF0aCBkPSJNNDgsNDAgQzQ1LDM1IDQyLDM4IDQ1LDQ1IEw1MCw1MCIgc3Ryb2tlPSIjZWM0ODk5IiBzdHJva2Utd2lkdGg9IjMiIGZpbGw9Im5vbmUiLz4KICA8dGV4dCB4PSIxMCIgeT0iMTMwIiBmb250LWZhbWlseT0iQXJpYWwsIHNhbnMtc2VyaWYiIGZvbnQtc2l6ZT0iMjQiIGZvbnQtd2VpZ2h0PSJib2xkIiBmaWxsPSIjOWI1OWI2Ij5HT1dSSSBUT1VSUzwvdGV4dD4KPC9zdmc+" 
+                alt="GOWRITOURS Logo"
+                style={{
+                  width: '300px',
+                  height: 'auto',
+                  filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.3))'
+                }}
+              />
             </motion.div>
             <div style={{ 
               fontSize: '1.2rem', 
