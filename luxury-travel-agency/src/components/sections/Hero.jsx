@@ -193,6 +193,7 @@ const Hero = () => {
   const [heroItems, setHeroItems] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingBackground, setLoadingBackground] = useState('');
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -212,6 +213,12 @@ const Hero = () => {
         setIsLoading(true);
         const data = await fetchFrontendData();
         const activeBanners = (data.banners || []).filter(item => item.is_active);
+        
+        // Set first banner's background as loading image
+        if (activeBanners.length > 0 && activeBanners[0].background_image) {
+          setLoadingBackground(resolveMediaUrl(activeBanners[0].background_image));
+        }
+        
         // Only use admin banners, no fallback
         setHeroItems(activeBanners);
       } catch (e) {
@@ -260,7 +267,7 @@ const Hero = () => {
     return (
       <HeroContainer>
         <BackgroundImage 
-          image="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2070&q=80"
+          image={loadingBackground || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2070&q=80'}
           style={{ 
             filter: 'brightness(0.4)'
           }} 
