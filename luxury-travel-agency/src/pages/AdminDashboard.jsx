@@ -278,6 +278,17 @@ const AdminDashboard = () => {
     is_active: true,
     background_image: null,
   });
+  
+  // Banner Edit State
+  const [editBannerId, setEditBannerId] = useState(null);
+  const [bannerEditForm, setBannerEditForm] = useState({
+    title: '',
+    subtitle: '',
+    cta_text: '',
+    cta_link: '',
+    is_active: true,
+    background_image: null,
+  });
   const [logoForm, setLogoForm] = useState({
     title: '',
     image: null,
@@ -952,6 +963,62 @@ const AdminDashboard = () => {
       fetchData('hero');
     } catch (err) {
       setError(err.message || 'Unable to delete banner');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditBanner = (banner) => {
+    setEditBannerId(banner.id);
+    setBannerEditForm({
+      title: banner.title || '',
+      subtitle: banner.subtitle || '',
+      cta_text: banner.cta_text || '',
+      cta_link: banner.cta_link || '',
+      is_active: banner.is_active,
+      background_image: null, // Will be updated if user uploads new image
+    });
+  };
+
+  const handleUpdateBanner = async () => {
+    if (!bannerEditForm.title) {
+      setError('Banner title is required.');
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      const updateData = {
+        title: bannerEditForm.title,
+        subtitle: bannerEditForm.subtitle,
+        cta_text: bannerEditForm.cta_text,
+        cta_link: bannerEditForm.cta_link,
+        is_active: bannerEditForm.is_active,
+      };
+
+      // Only include image if a new one was uploaded
+      if (bannerEditForm.background_image) {
+        const reader = new FileReader();
+        const imageData = await new Promise((resolve) => {
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(bannerEditForm.background_image);
+        });
+        updateData.image = imageData;
+      }
+
+      await updateHeroBanner(editBannerId, updateData);
+      setEditBannerId(null);
+      setBannerEditForm({
+        title: '',
+        subtitle: '',
+        cta_text: '',
+        cta_link: '',
+        is_active: true,
+        background_image: null,
+      });
+      fetchData('hero', true); // Force refresh
+    } catch (err) {
+      setError(err.message || 'Unable to update banner');
     } finally {
       setLoading(false);
     }
@@ -2283,36 +2350,108 @@ const AdminDashboard = () => {
             <List>
               {banners.map((b) => (
                 <Item key={b.id}>
-                  <div>
-                    <strong>{b.title}</strong>
-                    <Info>{b.subtitle || 'No subtitle'}</Info>
-                    <Tag $variant={b.is_active ? undefined : 'warn'}>
-                      {b.is_active ? 'Active' : 'Inactive'}
-                    </Tag>
-                  </div>
-                  {b.background_image && (
-                    <img
-                      src={resolveMedia(b.background_image)}
-                      alt={b.title}
-                      style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 8 }}
-                    />
+                  {editBannerId === b.id ? (
+                    // Edit Mode
+                    <div style={{ width: '100%' }}>
+                      <Flex style={{ marginBottom: '1rem' }}>
+                        <Field style={{ flex: 1 }}>
+                          <Label>Title *</Label>
+                          <Input
+                            value={bannerEditForm.title}
+                            onChange={(e) => setBannerEditForm({ ...bannerEditForm, title: e.target.value })}
+                          />
+                        </Field>
+                        <Field style={{ flex: 1 }}>
+                          <Label>Subtitle</Label>
+                          <Input
+                            value={bannerEditForm.subtitle}
+                            onChange={(e) => setBannerEditForm({ ...bannerEditForm, subtitle: e.target.value })}
+                          />
+                        </Field>
+                      </Flex>
+                      <Flex style={{ marginBottom: '1rem' }}>
+                        <Field style={{ flex: 1 }}>
+                          <Label>CTA Text</Label>
+                          <Input
+                            value={bannerEditForm.cta_text}
+                            onChange={(e) => setBannerEditForm({ ...bannerEditForm, cta_text: e.target.value })}
+                          />
+                        </Field>
+                        <Field style={{ flex: 1 }}>
+                          <Label>CTA Link</Label>
+                          <Input
+                            value={bannerEditForm.cta_link}
+                            onChange={(e) => setBannerEditForm({ ...bannerEditForm, cta_link: e.target.value })}
+                          />
+                        </Field>
+                      </Flex>
+                      <Flex style={{ marginBottom: '1rem' }}>
+                        <Field style={{ flex: 1 }}>
+                          <Label>Background Image (optional - leave empty to keep current)</Label>
+                          <Input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => setBannerEditForm({ ...bannerEditForm, background_image: e.target.files[0] })}
+                          />
+                        </Field>
+                        <Field>
+                          <Label>Active</Label>
+                          <Select
+                            value={bannerEditForm.is_active ? 'yes' : 'no'}
+                            onChange={(e) => setBannerEditForm({ ...bannerEditForm, is_active: e.target.value === 'yes' })}
+                          >
+                            <option value="yes">Yes</option>
+                            <option value="no">No</option>
+                          </Select>
+                        </Field>
+                      </Flex>
+                      <Flex>
+                        <Button onClick={handleUpdateBanner} disabled={loading}>
+                          {loading ? 'Saving...' : 'Save Changes'}
+                        </Button>
+                        <Button $variant="outline" onClick={() => setEditBannerId(null)}>
+                          Cancel
+                        </Button>
+                      </Flex>
+                    </div>
+                  ) : (
+                    // View Mode
+                    <>
+                      <div>
+                        <strong>{b.title}</strong>
+                        <Info>{b.subtitle || 'No subtitle'}</Info>
+                        <Tag $variant={b.is_active ? undefined : 'warn'}>
+                          {b.is_active ? 'Active' : 'Inactive'}
+                        </Tag>
+                      </div>
+                      {b.background_image && (
+                        <img
+                          src={resolveMedia(b.background_image)}
+                          alt={b.title}
+                          style={{ width: 80, height: 50, objectFit: 'cover', borderRadius: 8 }}
+                        />
+                      )}
+                      <Flex>
+                        <Button $variant="outline" onClick={() => handleEditBanner(b)}>
+                          Edit
+                        </Button>
+                        <Button $variant="outline" onClick={() => handleToggleBanner(b)}>
+                          {b.is_active ? 'Disable' : 'Enable'}
+                        </Button>
+                        <Button
+                          $variant="outline"
+                          onClick={() => {
+                            if (window.confirm(`Delete banner "${b.title}"?`)) {
+                              handleDeleteBanner(b);
+                            }
+                          }}
+                          style={{ color: '#b91c1c', borderColor: '#fca5a5' }}
+                        >
+                          Delete
+                        </Button>
+                      </Flex>
+                    </>
                   )}
-                  <Flex>
-                    <Button $variant="outline" onClick={() => handleToggleBanner(b)}>
-                      {b.is_active ? 'Disable' : 'Enable'}
-                    </Button>
-                    <Button
-                      $variant="outline"
-                      onClick={() => {
-                        if (window.confirm(`Delete banner "${b.title}"?`)) {
-                          handleDeleteBanner(b);
-                        }
-                      }}
-                      style={{ color: '#b91c1c', borderColor: '#fca5a5' }}
-                    >
-                      Delete
-                    </Button>
-                  </Flex>
                 </Item>
               ))}
             </List>
