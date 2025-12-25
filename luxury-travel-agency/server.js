@@ -47,6 +47,9 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
+// Serve public directory (robots.txt, .well-known, etc.)
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Serve uploaded images from public/uploads
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 

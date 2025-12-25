@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    publicDir: 'public', // Copy public folder to dist on build
     server: {
       host: true,
       port: 5173,
