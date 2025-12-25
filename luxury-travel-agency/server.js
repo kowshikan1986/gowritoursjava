@@ -4,6 +4,8 @@ import cors from 'cors';
 import pg from 'pg';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import fs from 'fs';
 
 const { Pool } = pg;
 const __filename = fileURLToPath(import.meta.url);
@@ -45,7 +47,113 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
+// Serve uploaded images from public/uploads
+app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const uploadDir = path.join(__dirname, 'public', 'uploads');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+});
+
+// ==================== JSON FALLBACK ====================
+// Load JSON fallback data
+let jsonFallback = null;
+let useJsonFallback = false;
+let postgresAvailable = false;
+
+try {
+  const fallbackPath = path.join(__dirname, 'database_export_2025-12-25T11-59-14.json');
+  if (fs.existsSync(fallbackPath)) {
+    jsonFallback = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+    useJsonFallback = true; // Start with JSON fallback
+    console.log('📦 JSON fallback loaded and enabled');
+  }
+} catch (err) {
+  console.warn('⚠️  Could not load JSON fallback:', err.message);
+}
+
+// Test PostgreSQL connection and switch to it if available
+pool.query('SELECT NOW()')
+  .then(() => {
+    postgresAvailable = true;
+    useJsonFallback = false; // Switch to PostgreSQL
+    console.log('✅ PostgreSQL connected - using database');
+  })
+  .catch(() => {
+    console.log('⚠️  PostgreSQL unavailable - using JSON fallback');
+  });
+
+// Function to export database to JSON after updates
+async function syncDatabaseToJSON() {
+  if (!postgresAvailable) return; // Don't export if PostgreSQL is not available
+  
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      tables: {}
+    };
+
+    // Get all tables
+    const tables = ['ads', 'categories', 'hero_banners', 'logos', 'tours'];
+    
+    for (const tableName of tables) {
+      const result = await pool.query(`SELECT * FROM ${tableName}`);
+      exportData.tables[tableName] = {
+        rowCount: result.rows.length,
+        data: result.rows
+      };
+    }
+
+    // Save to JSON file
+    const filename = `database_export_${timestamp}.json`;
+    const filepath = path.join(__dirname, filename);
+    fs.writeFileSync(filepath, JSON.stringify(exportData, null, 2));
+    
+    // Update in-memory fallback
+    jsonFallback = exportData;
+    
+    console.log('✅ Database synced to JSON:', filename);
+  } catch (error) {
+    console.error('❌ Error syncing database to JSON:', error.message);
+  }
+}
+
 // ==================== API ROUTES ====================
+
+// Upload image endpoint
+app.post('/api/upload', upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    // Return the path that can be used in the frontend
+    const imagePath = `/uploads/${req.file.filename}`;
+    res.json({ 
+      success: true, 
+      path: imagePath,
+      filename: req.file.filename 
+    });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // Health check
 app.get('/api/health', async (req, res) => {
@@ -66,6 +174,7 @@ app.get('/api/health', async (req, res) => {
 // Get all categories
 app.get('/api/categories', async (req, res) => {
   try {
+    // Always try PostgreSQL first, fallback to JSON only on error
     const result = await pool.query(
       'SELECT * FROM categories ORDER BY sort_order, name'
     );
@@ -74,6 +183,12 @@ app.get('/api/categories', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching categories:', error);
+    // Try fallback on error
+    if (jsonFallback) {
+      const categories = jsonFallback.tables.categories?.data || [];
+      res.set('Cache-Control', 'public, max-age=1');
+      return res.json(categories);
+    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -112,6 +227,9 @@ app.post('/api/categories', async (req, res) => {
        RETURNING *`,
       [generatedId, name, finalSlug, description || '', image || '', parent_id || null, visible !== false, sort_order || 0]
     );
+    
+    // Sync to JSON after creating
+    syncDatabaseToJSON();
     
     res.status(201).json(result.rows[0]);
   } catch (error) {
@@ -152,6 +270,9 @@ app.put('/api/categories/:slug', async (req, res) => {
       [name, description, imageToUse, parent_id, visible, sort_order, newSlug, highlightsToUse, req.params.slug]
     );
     
+    // Sync to JSON after updating
+    syncDatabaseToJSON();
+    
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Error updating category:', error);
@@ -179,6 +300,10 @@ app.delete('/api/categories/:slug', async (req, res) => {
     }
     
     console.log('  ✅ Deleted:', result.rows[0].name);
+    
+    // Sync to JSON after deleting
+    syncDatabaseToJSON();
+    
     res.json({ message: 'Category deleted successfully', deleted: result.rows[0] });
   } catch (error) {
     console.error('Error deleting category:', error);
@@ -202,6 +327,7 @@ app.delete('/api/categories/by-name/:name', async (req, res) => {
 // Get all tours
 app.get('/api/tours', async (req, res) => {
   try {
+    // Always try PostgreSQL first, fallback to JSON only on error
     const result = await pool.query(
       `SELECT t.*, c.name as category_name 
        FROM tours t 
@@ -213,6 +339,12 @@ app.get('/api/tours', async (req, res) => {
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching tours:', error);
+    // Try fallback on error
+    if (jsonFallback) {
+      const tours = jsonFallback.tables.tours?.data || [];
+      res.set('Cache-Control', 'public, max-age=1');
+      return res.json(tours);
+    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -352,12 +484,19 @@ app.delete('/api/tours/:slug', async (req, res) => {
 
 app.get('/api/hero-banners', async (req, res) => {
   try {
+    // Always try PostgreSQL first, fallback to JSON only on error
     const result = await pool.query('SELECT * FROM hero_banners ORDER BY created_at DESC');
     // Cache for 1 second
     res.set('Cache-Control', 'public, max-age=1');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching hero banners:', error);
+    // Try fallback on error
+    if (jsonFallback) {
+      const banners = jsonFallback.tables.hero_banners?.data || [];
+      res.set('Cache-Control', 'public, max-age=1');
+      return res.json(banners);
+    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -426,12 +565,19 @@ app.delete('/api/hero-banners/:id', async (req, res) => {
 
 app.get('/api/logos', async (req, res) => {
   try {
+    // Always try PostgreSQL first, fallback to JSON only on error
     const result = await pool.query('SELECT * FROM logos ORDER BY created_at DESC');
     // Cache for 1 second
     res.set('Cache-Control', 'public, max-age=1');
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching logos:', error);
+    // Try fallback on error
+    if (jsonFallback) {
+      const logos = jsonFallback.tables.logos?.data || [];
+      res.set('Cache-Control', 'public, max-age=1');
+      return res.json(logos);
+    }
     res.status(500).json({ error: error.message });
   }
 });

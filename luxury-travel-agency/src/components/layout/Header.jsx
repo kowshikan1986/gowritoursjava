@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Navigation from './Navigation';
+import { getCachedData } from '../../services/frontendData';
 import { initDatabase, getLogos } from '../../services/postgresDatabase';
 
 const HeaderContainer = styled.header`
@@ -109,22 +110,24 @@ const Header = () => {
   useEffect(() => {
     const fetchLogo = async () => {
       try {
-        // Initialize database
-        await initDatabase();
-        // Small delay to ensure database is ready
-        await new Promise(resolve => setTimeout(resolve, 50));
+        // Try cached data first for instant display
+        const cached = getCachedData();
+        if (cached && cached.logos && cached.logos.length > 0) {
+          const active = cached.logos.find(i => i.is_active) || cached.logos[0];
+          setLogoUrl(active.image);
+          return; // Use cached, skip fetch
+        }
         
+        // Only fetch if no cache
+        await initDatabase();
         const logos = await getLogos();
-        console.log('Logos from database:', logos);
         
         if (Array.isArray(logos) && logos.length > 0) {
           const active = logos.find(i => i.is_active) || logos[0];
-          console.log('Active logo:', active);
           setLogoUrl(active.image);
         }
       } catch (e) {
         console.error('Error loading logo:', e);
-        // keep no logo if database not available
       }
     };
     fetchLogo();

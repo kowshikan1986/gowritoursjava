@@ -1,5 +1,5 @@
 // Frontend data service - uses PostgreSQL database via API
-import { initDatabase, getCategories, getTours, getHeroBanners } from './postgresDatabase';
+import { initDatabase, getCategories, getTours, getHeroBanners, getLogos } from './postgresDatabase';
 
 // Helper to normalize slugs
 export const normalize = (str = '') =>
@@ -8,14 +8,19 @@ export const normalize = (str = '') =>
 // Cache for frontend data to avoid re-fetching
 let cachedData = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 100; // 100ms cache - fresh data but prevents excessive requests
+const CACHE_DURATION = 60000; // 60 seconds cache - fast loading
 let isFetching = false; // Prevent parallel fetches
+let initialLoadComplete = false;
 
 // Clear cache (call when data is updated)
 export const clearFrontendCache = () => {
   cachedData = null;
   cacheTimestamp = 0;
-  console.log('Frontend data cache cleared');
+};
+
+// Get cached data immediately (for instant display)
+export const getCachedData = () => {
+  return cachedData;
 };
 
 // Initialize database and fetch data for frontend
@@ -23,43 +28,32 @@ export const fetchFrontendData = async (forceRefresh = false) => {
   // Return cached data if still valid
   const now = Date.now();
   if (!forceRefresh && cachedData && (now - cacheTimestamp) < CACHE_DURATION) {
-    console.log('fetchFrontendData: Using cached data');
     return cachedData;
   }
   
   // If already fetching, wait for the existing request
   if (isFetching) {
-    console.log('fetchFrontendData: Already fetching, waiting...');
-    // Wait for the fetch to complete by checking every 100ms
     while (isFetching) {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 50));
     }
-    // Return the cached result from the completed fetch
     if (cachedData) return cachedData;
   }
   
   isFetching = true;
   
   try {
-    console.log('fetchFrontendData: Fetching from PostgreSQL database...');
     await initDatabase();
-    console.log('fetchFrontendData: Database connected, fetching data...');
     
     const allCategories = await getCategories();
     const tours = await getTours();
     const banners = await getHeroBanners();
+    const logos = await getLogos();
     
     // Map database field 'image' to frontend field 'background_image'
     const mappedBanners = (banners || []).map(banner => ({
       ...banner,
       background_image: banner.image || banner.background_image
     }));
-
-    console.log('fetchFrontendData: SQL data -', {
-      categoriesCount: allCategories?.length || 0,
-      toursCount: tours?.length || 0,
-      bannersCount: banners?.length || 0
-    });
 
     // Build category tree structure
     const categoryMap = new Map();
@@ -95,15 +89,13 @@ export const fetchFrontendData = async (forceRefresh = false) => {
       }
     });
 
-    console.log('fetchFrontendData: Root categories found:', rootCategories.length);
-    console.log('fetchFrontendData: Root category names:', rootCategories.map(c => c.name));
-
     // Cache the result
     cachedData = {
       categories: rootCategories,
       allCategories: allCategories || [],
       tours: tours || [],
       banners: mappedBanners || [],
+      logos: logos || [],
     };
     cacheTimestamp = Date.now();
 
@@ -117,6 +109,7 @@ export const fetchFrontendData = async (forceRefresh = false) => {
       allCategories: [],
       tours: [],
       banners: [],
+      logos: [],
     };
   } finally {
     isFetching = false; // Reset flag when done

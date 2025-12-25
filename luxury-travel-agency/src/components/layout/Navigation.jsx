@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import styled from 'styled-components';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { fetchFrontendData, normalize } from '../../services/frontendData';
+import { fetchFrontendData, getCachedData, normalize } from '../../services/frontendData';
 import { onDataChange } from '../../services/postgresDatabase';
 
 const Nav = styled.nav`
@@ -231,47 +231,41 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        // Don't force refresh on initial load - only refresh on data changes
+        // Immediately try cached data first
+        const cached = getCachedData();
+        if (cached && cached.allCategories && cached.allCategories.length > 0) {
+          setMenuCategories(cached.allCategories);
+          return; // Use cached data, skip fetch
+        }
+        
+        // Only fetch if no cache
         const { categories, allCategories } = await fetchFrontendData();
         const roots = (allCategories && allCategories.length ? allCategories : categories) || [];
-        console.log('🔍 Navigation: Fetched categories:', roots);
-        console.log('📊 Navigation: Number of categories:', roots?.length || 0);
-        console.log('🏷️ Navigation: Category details:', roots.map(c => ({ id: c.id, name: c.name, slug: c.slug, parent_id: c.parent_id })));
         
         if (roots && roots.length > 0) {
           setMenuCategories(roots);
-          
-          // Show tour categories specifically
-          const tourRootSlugs = ['uk-tours', 'european-tours', 'world-tours', 'india-sri-lankan-tours', 'group-tours', 'private-tours'];
-          const tourCats = roots.filter((c) => !c.parent_id && tourRootSlugs.includes(normalize(c.slug || c.id || c.name || '')));
-          console.log('🎫 Navigation: Found tour categories:', tourCats.map(c => c.name));
         } else {
-          console.warn('Navigation: No categories found in database. Please import categories from Admin page.');
           setMenuCategories([]);
         }
       } catch (err) {
-        console.error('❌ Navigation Error - Failed to fetch categories from database:');
-        console.error('Error details:', err);
-        console.error('Error message:', err?.message || 'Unknown error');
-        console.error('Error stack:', err?.stack);
-        // keep menu static if database fails
+        console.error('Navigation: Failed to fetch categories:', err.message);
         setMenuCategories([]);
       }
     };
+    
+    // Load immediately
     fetchCategories();
     
-    // Listen for database changes instead of polling
+    // Listen for database changes
     const unsubscribe = onDataChange((type) => {
       if (type === 'categories') {
-        console.log('🔄 Navigation: Categories changed, reloading...');
         fetchCategories();
       }
     });
     
-    // Refresh when page becomes visible (e.g., switching tabs)
+    // Refresh when page becomes visible
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        console.log('👁️ Navigation: Page visible, refreshing categories...');
         fetchCategories();
       }
     };
@@ -464,11 +458,10 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      console.log('📍 L2 Click - Parent:', parentSlug, 'Target:', targetSlug, grandchild.name);
                                       navigate(`/service/${targetSlug}`);
                                       setOpenSlug(null);
                                       setExpandedSubSlug(null);
-                                      if (onClose) onClose(); // Close mobile menu
+                                      if (onClose) onClose();
                                     }}
                                   >
                                     ↳ {grandchild.name}

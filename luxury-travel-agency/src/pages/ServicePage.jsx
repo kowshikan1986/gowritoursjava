@@ -1300,13 +1300,38 @@ const ServicePage = () => {
     : (derivedService?.packages || []);
 
   if (!derivedService) {
+    // Show loading state with category name from URL
+    const categoryName = id
+      ? id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+      : 'Loading';
+    
     return (
-      <NotFound>
-        <h1>Service Not Found</h1>
-        <p>The service you are looking for does not exist.</p>
-        <br />
-        <CTAButton to="/">Back to Home</CTAButton>
-      </NotFound>
+      <PageContainer>
+        <HeroSection>
+          <HeroBackground>
+            <img 
+              src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80" 
+              alt="Loading" 
+            />
+          </HeroBackground>
+          <HeroContent>
+            <Title
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              {categoryName}
+            </Title>
+            <Subtitle
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              Loading...
+            </Subtitle>
+          </HeroContent>
+        </HeroSection>
+      </PageContainer>
     );
   }
 

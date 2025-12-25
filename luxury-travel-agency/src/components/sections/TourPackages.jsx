@@ -297,7 +297,7 @@ const ExploreButton = styled(Link)`
   }
 `;
 
-const ServiceCard = memo(({ service, index, forceServiceLink }) => {
+const ServiceCard = memo(({ service, index, forceServiceLink, isVehicleHire }) => {
   const [currentPackageIndex, setCurrentPackageIndex] = useState(0);
   const hasPackages = service.packages && service.packages.length > 0;
   const [showSubs, setShowSubs] = useState(false);
@@ -371,9 +371,9 @@ const ServiceCard = memo(({ service, index, forceServiceLink }) => {
         )}
 
         <CardFooter>
-          <Price>{currentData.price}</Price>
-          <ExploreButton to={linkTo}>
-            Explore
+          {!isVehicleHire && <Price>{currentData.price}</Price>}
+          <ExploreButton to={linkTo} style={isVehicleHire ? { marginLeft: 'auto' } : {}}>
+            {isVehicleHire ? 'Book Now' : 'Explore'}
             <ArrowRightIcon />
           </ExploreButton>
         </CardFooter>
@@ -864,7 +864,7 @@ const TourPackages = () => {
   const currentOtherL2Cards = selectedOtherCategory?.cards || [];
 
   // Reusable component for rendering a tabbed category section
-  const renderTabbedSection = (title, l1Categories, selectedL1Id, setSelectedL1Fn, l2Cards, keyPrefix) => {
+  const renderTabbedSection = (title, l1Categories, selectedL1Id, setSelectedL1Fn, l2Cards, keyPrefix, isVehicleHire = false) => {
     if (l1Categories.length === 0) return null;
     
     return (
@@ -899,7 +899,8 @@ const TourPackages = () => {
               key={`${keyPrefix}-${selectedL1Id}-${service.id}`} 
               service={service} 
               index={index} 
-              forceServiceLink={true} 
+              forceServiceLink={true}
+              isVehicleHire={isVehicleHire}
             />
           ))}
         </Grid>
@@ -1031,7 +1032,7 @@ const TourPackages = () => {
           </>)}
         
           {vehicleL1Categories.length > 0 ? (
-            renderTabbedSection('Vehicle Hire', vehicleL1Categories, selectedVehicleL1, setSelectedVehicleL1, currentVehicleL2Cards, 'vehicle')
+            renderTabbedSection('Vehicle Hire', vehicleL1Categories, selectedVehicleL1, setSelectedVehicleL1, currentVehicleL2Cards, 'vehicle', true)
           ) : vehicleServices.length > 0 && (
           <>
             <SectionHeader style={{ marginTop: '2rem', textAlign: 'left' }}>
@@ -1047,7 +1048,7 @@ const TourPackages = () => {
             </SectionHeader>
             <Grid>
               {vehicleServices.map((service, index) => (
-                <ServiceCard key={`vehicle-${service.id}`} service={service} index={index} />
+                <ServiceCard key={`vehicle-${service.id}`} service={service} index={index} isVehicleHire={true} />
               ))}
             </Grid>
           </>)}

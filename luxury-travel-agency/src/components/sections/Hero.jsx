@@ -192,8 +192,6 @@ const Hero = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [heroItems, setHeroItems] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadingBackground, setLoadingBackground] = useState('');
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -210,22 +208,18 @@ const Hero = () => {
   useEffect(() => {
     const fetchHero = async () => {
       try {
-        setIsLoading(true);
         const data = await fetchFrontendData();
         const activeBanners = (data.banners || []).filter(item => item.is_active);
         
-        // Set first banner's background as loading image
+        // Preload first image for instant display
         if (activeBanners.length > 0 && activeBanners[0].background_image) {
-          setLoadingBackground(resolveMediaUrl(activeBanners[0].background_image));
+          const img = new Image();
+          img.src = resolveMediaUrl(activeBanners[0].background_image);
         }
         
-        // Only use admin banners, no fallback
         setHeroItems(activeBanners);
       } catch (e) {
-        console.log('Failed to load hero banners from database:', e);
-        setHeroItems([]); // No fallback - empty array
-      } finally {
-        setIsLoading(false);
+        setHeroItems([]);
       }
     };
     fetchHero();
@@ -241,13 +235,11 @@ const Hero = () => {
 
   const resolveMediaUrl = (url) => {
     if (!url) return '';
-    // If it's already a full URL, return it
     if (url.startsWith('http')) return url;
-    // If it's a base64 data URL, return it
     if (url.startsWith('data:')) return url;
-    // Otherwise return as-is (for local database)
     return url;
   };
+  
   const currentHero = heroItems[currentIndex] || {};
 
   const handleScrollToNext = () => {
@@ -257,59 +249,9 @@ const Hero = () => {
     }
   };
 
-  // Don't render hero section if no banners exist
-  if (!isLoading && heroItems.length === 0) {
+  // Don't render if no banners
+  if (heroItems.length === 0) {
     return null;
-  }
-
-  // Show loading state with first hero image as background
-  if (isLoading) {
-    return (
-      <HeroContainer>
-        <BackgroundImage 
-          image={loadingBackground || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=2070&q=80'}
-          style={{ 
-            filter: 'brightness(0.4)'
-          }} 
-        />
-        <HeroContent>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-            style={{ textAlign: 'center' }}
-          >
-            {/* Loading Spinner Animation */}
-            <motion.div
-              animate={{ 
-                rotate: 360
-              }}
-              transition={{ 
-                duration: 1,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-              style={{ 
-                width: '80px',
-                height: '80px',
-                margin: '0 auto 2rem',
-                border: '4px solid rgba(255,255,255,0.3)',
-                borderTop: '4px solid white',
-                borderRadius: '50%'
-              }}
-            />
-            <div style={{ 
-              fontSize: '1.2rem', 
-              color: 'rgba(255,255,255,0.9)',
-              fontWeight: '300',
-              letterSpacing: '0.05em'
-            }}>
-              Loading...
-            </div>
-          </motion.div>
-        </HeroContent>
-      </HeroContainer>
-    );
   }
 
   return (
@@ -320,23 +262,20 @@ const Hero = () => {
           image={resolveMediaUrl(currentHero.background_image)}
           initial={{ 
             opacity: 0, 
-            scale: 1.2,
-            x: -100
+            scale: 1.0
           }}
           animate={{ 
             opacity: 1, 
-            scale: 1.05,
-            x: 0,
+            scale: 1.1,
             transition: {
-              opacity: { duration: 1.5, ease: 'easeOut' },
-              scale: { duration: 6, ease: 'linear' },
-              x: { duration: 1.2, ease: 'easeOut' }
+              opacity: { duration: 0.8, ease: 'easeOut' },
+              scale: { duration: 8, ease: 'easeInOut' }
             }
           }}
           exit={{ 
             opacity: 0,
-            scale: 1,
-            transition: { duration: 0.8, ease: 'easeIn' }
+            scale: 1.15,
+            transition: { duration: 0.5, ease: 'easeIn' }
           }}
           style={{
             transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)`
@@ -379,9 +318,9 @@ const Hero = () => {
 
       <HeroContent>
         <HeroTitle
-          initial={{ opacity: 0, y: 50 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
         >
           {currentHero.title || 'Extraordinary Journeys'}
           <br />
@@ -389,17 +328,17 @@ const Hero = () => {
         </HeroTitle>
         
         <HeroSubtitle
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
         >
           {currentHero.subtitle || "Discover the world's most exclusive destinations with personalized luxury travel experiences crafted to perfection for the discerning traveler."}
         </HeroSubtitle>
 
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.3 }}
         >
           <CTAButton
             whileHover={{ scale: 1.05 }}
@@ -428,7 +367,7 @@ const Hero = () => {
       <ScrollIndicator
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 1, delay: 1.5 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
         onClick={handleScrollToNext}
       >
         <ChevronDownIcon />
