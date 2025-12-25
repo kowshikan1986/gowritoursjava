@@ -42,8 +42,8 @@ function AppContent() {
 
   return (
     <AppContainer>
-      <Header />
-      <MainContent>
+      {!isAdminPage && <Header />}
+      <MainContent $noHeader={isAdminPage}>
         <Routes>
           <Route path="/" element={<Home />} />
           

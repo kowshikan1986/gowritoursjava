@@ -839,6 +839,7 @@ const ServicePage = () => {
     'india-sri-lankan-tours',
     'group-tours',
     'private-tours',
+    'other-services',
   ];
 
   const isTourRoot = (cat) => TOUR_ROOT_SLUGS.includes(normalize(cat?.slug || cat?.name || ''));
