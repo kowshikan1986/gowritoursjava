@@ -1141,6 +1141,15 @@ const ServicePage = () => {
   })();
 
   const shouldShowSubcategories = id === 'tours' || (matchedCategory && isTourRoot(matchedCategory));
+  
+  console.log('🎯 shouldShowSubcategories check:', {
+    id,
+    shouldShowSubcategories,
+    matchedCategoryName: matchedCategory?.name,
+    matchedCategorySlug: matchedCategory?.slug,
+    isTourRootResult: matchedCategory ? isTourRoot(matchedCategory) : 'no matchedCategory',
+    normalizedSlug: matchedCategory ? normalize(matchedCategory.slug || matchedCategory.name || '') : 'N/A'
+  });
 
   const selectedCategoryIdToUse = matchedCategory?.id
     || (displayRootCategories.some((c) => c.id === selectedCategoryId)
