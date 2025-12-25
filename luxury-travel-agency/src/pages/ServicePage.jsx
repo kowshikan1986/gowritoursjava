@@ -935,7 +935,7 @@ const ServicePage = () => {
       document.title = `${derivedService.seo.title} | Luxury Travel Agency`;
       window.scrollTo(0, 0);
       
-      // Check if this is an airport-transfers subcategory - redirect to main page
+      // Check if this is an airport-transfers or other-services subcategory - redirect to main page
       if (matchedCategory && matchedCategory.parent_id) {
         const parentCategory = allCategories.find(c => c.id === matchedCategory.parent_id);
         const parentSlug = normalize(parentCategory?.slug || parentCategory?.name || '');
@@ -943,6 +943,12 @@ const ServicePage = () => {
         if (parentSlug === 'airport-transfers') {
           // This is a subcategory of airport-transfers, redirect to main page
           navigate('/service/airport-transfers', { replace: true });
+          return;
+        }
+        
+        if (parentSlug === 'other-services') {
+          // This is a subcategory of other-services, redirect to main page
+          navigate('/service/other-services', { replace: true });
           return;
         }
       }
