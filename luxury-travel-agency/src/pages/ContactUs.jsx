@@ -606,7 +606,13 @@ ${form.message}`;
                           <option disabled>Loading packages...</option>
                         ) : (
                           <>
-                            {categories.filter(c => !c.parent_id).map(category => (
+                            {categories
+                              .filter(c => !c.parent_id)
+                              .filter(c => {
+                                const slug = c.slug || '';
+                                return slug !== 'airport-transfers' && slug !== 'vehicle-hire';
+                              })
+                              .map(category => (
                               <optgroup key={category.id} label={category.name}>
                                 {categories.filter(sub => sub.parent_id === category.id).map(sub => (
                                   <option key={sub.id} value={sub.id}>{sub.name}</option>

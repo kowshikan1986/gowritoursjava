@@ -1034,12 +1034,12 @@ const ServicePage = () => {
 
   // Load airport transfer subcategories for booking form
   useEffect(() => {
-    if (normalize(id) === 'airport-transfer') {
+    if (normalize(id) === 'airport-transfers') {
       const loadTransferCategories = async () => {
         try {
           const { allCategories: cats } = await fetchFrontendData();
           const airportTransfersMain = (cats || []).find(c => 
-            normalize(c.slug || c.name || '') === 'airport-transfer'
+            normalize(c.slug || c.name || '') === 'airport-transfers'
           );
           
           if (airportTransfersMain) {
@@ -1424,7 +1424,7 @@ const ServicePage = () => {
       {(() => {
         const normalizedId = normalize(id);
         const hasChildren = childCategories.length > 0;
-        const shouldShow = normalizedId === 'airport-transfer' && hasChildren;
+        const shouldShow = normalizedId === 'airport-transfers' && hasChildren;
         console.log('🚕 Airport section check:', { id, normalizedId, hasChildren, childCategoriesLength: childCategories.length, shouldShow });
         return shouldShow;
       })() && (
@@ -1591,7 +1591,7 @@ const ServicePage = () => {
               {/* Vehicle Type Selection - Conditional based on passengers */}
               <FormGroup>
                 <FormLabel htmlFor="vehicleType">Choose Vehicle Type *</FormLabel>
-                {parseInt(bookingForm.passengers) > 23 ? (
+                {parseInt(bookingForm.passengers) > 16 ? (
                   <div style={{
                     padding: '1rem',
                     background: '#fff3cd',
@@ -1601,7 +1601,7 @@ const ServicePage = () => {
                     fontSize: '0.95rem',
                     fontWeight: '500'
                   }}>
-                    📞 For more than 23 passengers, please contact us at +44 20 8830 8611
+                    📞 For more than 16 passengers, please contact us via call or email
                   </div>
                 ) : (
                   <FormSelect
@@ -1619,7 +1619,6 @@ const ServicePage = () => {
                     <option value="mpv-plus">MPV+</option>
                     <option value="8-seater">8 Seater</option>
                     <option value="16-seater">16 Seater</option>
-                    <option value="23-seater">23 Seater</option>
                   </FormSelect>
                 )}
               </FormGroup>
@@ -1866,7 +1865,7 @@ const ServicePage = () => {
         </PackagesSection>
       )}
 
-      {shouldShowSubcategories && childCategories.length > 0 && normalize(id) !== 'airport-transfer' && normalize(id) !== 'vehicle-hire' && (
+      {shouldShowSubcategories && childCategories.length > 0 && normalize(id) !== 'airport-transfers' && normalize(id) !== 'vehicle-hire' && (
             <PackagesSection>
               <SectionHeader>
                 <motion.h2
