@@ -628,21 +628,6 @@ ${form.message}`;
                     </InputWrapper>
                   </Field>
 
-                  <Field>
-                    <Label>Budget Range</Label>
-                    <InputWrapper>
-                      <IconLeft><CurrencyPoundIcon style={{ width: 18, height: 18 }} /></IconLeft>
-                      <Select name="budget" value={form.budget} onChange={update}>
-                        <option value="">Select budget range</option>
-                        <option value="<5000">Under £5,000</option>
-                        <option value="5000-10000">£5,000 - £10,000</option>
-                        <option value="10000-20000">£10,000 - £20,000</option>
-                        <option value="20000-50000">£20,000 - £50,000</option>
-                        <option value="50000+">£50,000+</option>
-                      </Select>
-                    </InputWrapper>
-                  </Field>
-
                   <FullRow>
                     <Label>Preferred Travel Dates</Label>
                     <InputWrapper data-has-value={Boolean(form.travelDates)}>

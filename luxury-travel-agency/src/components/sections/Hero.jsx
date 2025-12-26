@@ -347,8 +347,7 @@ const Hero = () => {
               if (currentHero?.cta_link) {
                 window.location.href = currentHero.cta_link;
               } else {
-                const el = document.querySelector('#destinations');
-                el && el.scrollIntoView({ behavior: 'smooth' });
+                window.location.href = '/service/tours';
               }
             }}
           >
@@ -357,7 +356,7 @@ const Hero = () => {
           <SecondaryButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            onClick={() => document.querySelector('#contact').scrollIntoView({ behavior: 'smooth' })}
+            onClick={() => window.location.href = '/contact-us'}
           >
             Plan Your Journey
           </SecondaryButton>
