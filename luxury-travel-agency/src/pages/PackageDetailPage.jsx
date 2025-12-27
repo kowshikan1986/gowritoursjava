@@ -3,7 +3,8 @@ import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPinIcon, ClockIcon, CurrencyPoundIcon, CheckCircleIcon, CalendarIcon } from '@heroicons/react/24/outline';
-import { initDatabase, getTours, isDatabaseReady } from '../services/postgresDatabase';
+import { fetchFrontendData, clearFrontendCache } from '../services/frontendData';
+import { onDataChange } from '../services/postgresDatabase';
 import { servicesData } from '../data/servicesData';
 
 const PageContainer = styled.div`
@@ -393,7 +394,7 @@ const GalleryImageContent = styled.div`
 
 const PackageDetailPage = () => {
   const { id } = useParams();
-  const [activeTab, setActiveTab] = useState('itinerary');
+  const [activeTab, setActiveTab] = useState('overview');
   const [packageData, setPackageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -405,21 +406,10 @@ const PackageDetailPage = () => {
       
       console.log('PackageDetailPage: Looking for package with id:', id);
       
-      // 1. Try fetching from local SQL database first
+      // Try fetching from frontend data service
       try {
-        await initDatabase();
-        
-        // Wait for database to be fully ready with retry
-        let retries = 0;
-        while (!isDatabaseReady() && retries < 10) {
-          await new Promise(resolve => setTimeout(resolve, 100));
-          retries++;
-        }
-        
-        console.log('PackageDetailPage: Database ready after', retries, 'retries');
-        
-        const tours = await getTours();
-        console.log('PackageDetailPage: Found tours in database:', tours.length, tours.map(t => ({ slug: t.slug, id: t.id, title: t.title })));
+        const { tours } = await fetchFrontendData();
+        console.log('PackageDetailPage: Found tours:', tours.length, tours.map(t => ({ slug: t.slug, id: t.id, title: t.title })));
         
         const tour = tours.find(t => t.slug === id || String(t.id) === String(id));
         console.log('PackageDetailPage: Matched tour:', tour ? tour.title : 'NOT FOUND (slug: ' + id + ')');
@@ -453,6 +443,11 @@ const PackageDetailPage = () => {
             itinerary: details.itinerary || [],
             pickupPoints: details.pickupPoints || [],
             earlyBirdOffer: details.earlyBirdOffer || null,
+            advanceBookingOffer: details.advanceBookingOffer || null,
+            detailedOverview: details.detailedOverview || '',
+            importantNotes: details.importantNotes || '',
+            tourDates: details.tourDates || [],
+            detailedItinerary: details.detailedItinerary || '',
             hotels: details.hotels || '',
             starDifference: details.starDifference || [],
             additionalExcursions: details.additionalExcursions || [],
@@ -465,10 +460,10 @@ const PackageDetailPage = () => {
           return; // Exit if database fetch successful
         }
       } catch (error) {
-        console.log('Fetching from local database failed, falling back to static data:', error);
+        console.log('Fetching from frontend data failed, falling back to static data:', error);
       }
 
-      // 2. Fallback to static data from servicesData
+      // Fallback to static data from servicesData
       let foundPackage = null;
       for (const service of servicesData) {
         if (service.packages) {
@@ -490,6 +485,17 @@ const PackageDetailPage = () => {
     };
 
     fetchPackageData();
+    
+    // Listen for tour updates and reload
+    const unsubscribe = onDataChange((type) => {
+      console.log('PackageDetailPage: Data changed, reloading...', type);
+      if (type === 'tours') {
+        clearFrontendCache();
+        fetchPackageData();
+      }
+    });
+    
+    return () => unsubscribe();
   }, [id]);
 
   if (loading) {
@@ -539,23 +545,29 @@ const PackageDetailPage = () => {
         <MainContent>
           <TabContainer>
             <TabButton 
+              active={activeTab === 'overview'} 
+              onClick={() => setActiveTab('overview')}
+            >
+              Tour Overview
+            </TabButton>
+            <TabButton 
               active={activeTab === 'itinerary'} 
               onClick={() => setActiveTab('itinerary')}
             >
               Itinerary
             </TabButton>
             <TabButton 
-              active={activeTab === 'pickups'} 
-              onClick={() => setActiveTab('pickups')}
+              active={activeTab === 'dates'} 
+              onClick={() => setActiveTab('dates')}
             >
-              Pick Up Points
+              Dates
             </TabButton>
           </TabContainer>
 
           <AnimatePresence mode="wait">
-            {activeTab === 'itinerary' && (
+            {activeTab === 'overview' && (
               <motion.div
-                key="itinerary"
+                key="overview"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
@@ -568,9 +580,24 @@ const PackageDetailPage = () => {
                   </OfferBanner>
                 )}
                 
+                {/* Advance Booking Offer */}
+                {packageData.advanceBookingOffer && (
+                  <OfferBanner style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
+                    {packageData.advanceBookingOffer}
+                  </OfferBanner>
+                )}
+                
                 <p style={{ marginBottom: '2rem', lineHeight: '1.6', color: '#666' }}>
                   {packageData.description}
                 </p>
+                
+                {/* Detailed Overview */}
+                {packageData.detailedOverview && (
+                  <div style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f9fafb', borderRadius: '12px', borderLeft: '4px solid #6A1B82' }}>
+                    <h4 style={{ marginBottom: '1rem', color: '#6A1B82', fontSize: '1.25rem', fontWeight: 700 }}>Tour Overview</h4>
+                    <p style={{ margin: 0, lineHeight: '1.8', color: '#4a4a4a', whiteSpace: 'pre-wrap' }}>{packageData.detailedOverview}</p>
+                  </div>
+                )}
                 
                 {/* Tour Highlights */}
                 {packageData.highlights && packageData.highlights.length > 0 && (
@@ -617,20 +644,6 @@ const PackageDetailPage = () => {
                   </div>
                 )}
                 
-                {packageData.itinerary && packageData.itinerary.length > 0 ? (
-                  <div>
-                    <SectionTitle><CalendarIcon /> Day-wise Itinerary</SectionTitle>
-                    {packageData.itinerary.map((item) => (
-                      <ItineraryItem key={item.day} day={item.day}>
-                        <DayTitle>Day {item.day}: {item.title}</DayTitle>
-                        <DayDescription>{item.description}</DayDescription>
-                      </ItineraryItem>
-                    ))}
-                  </div>
-                ) : (
-                  <p>Itinerary details coming soon.</p>
-                )}
-                
                 {/* Hotels */}
                 {packageData.hotels && (
                   <InfoBox>
@@ -663,41 +676,82 @@ const PackageDetailPage = () => {
                     </Table>
                   </div>
                 )}
+                
+                {/* Important Notes */}
+                {packageData.importantNotes && (
+                  <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#fef3c7', borderRadius: '12px', borderLeft: '4px solid #f59e0b' }}>
+                    <h4 style={{ marginBottom: '1rem', color: '#d97706', fontSize: '1.25rem', fontWeight: 700 }}>⚠️ Important Notes</h4>
+                    <p style={{ margin: 0, lineHeight: '1.8', color: '#78350f', whiteSpace: 'pre-wrap' }}>{packageData.importantNotes}</p>
+                  </div>
+                )}
               </motion.div>
             )}
 
-            {activeTab === 'pickups' && (
+            {activeTab === 'itinerary' && (
               <motion.div
-                key="pickups"
+                key="itinerary"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                <SectionTitle><MapPinIcon /> Pick Up Points</SectionTitle>
-                {packageData.pickupPoints && packageData.pickupPoints.length > 0 ? (
+                {packageData.itinerary && packageData.itinerary.length > 0 ? (
+                  <div>
+                    <SectionTitle><CalendarIcon /> Day-wise Itinerary</SectionTitle>
+                    {packageData.itinerary.map((item) => (
+                      <ItineraryItem key={item.day} day={item.day}>
+                        <DayTitle>Day {item.day}: {item.title}</DayTitle>
+                        <DayDescription>{item.description}</DayDescription>
+                      </ItineraryItem>
+                    ))}
+                  </div>
+                ) : (
+                  <p>Itinerary details coming soon.</p>
+                )}
+                
+                {/* Detailed Day-by-Day Itinerary */}
+                {packageData.detailedItinerary && (
+                  <div style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+                    <SectionTitle><CalendarIcon /> Detailed Day-by-Day Itinerary</SectionTitle>
+                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                      <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#4a4a4a', fontFamily: 'inherit' }}>
+                        {packageData.detailedItinerary}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {activeTab === 'dates' && (
+              <motion.div
+                key="dates"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <SectionTitle><CalendarIcon /> Available Tour Dates</SectionTitle>
+                {packageData.tourDates && packageData.tourDates.length > 0 ? (
                   <Table>
                     <thead>
                       <tr>
-                        <th>Departure Point</th>
-                        <th>Time</th>
+                        <th>Date</th>
+                        <th>Price</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {packageData.pickupPoints.map((point, index) => (
+                      {packageData.tourDates.map((dateInfo, index) => (
                         <tr key={index}>
-                          <td>{point.location}</td>
-                          <td>{point.time}</td>
+                          <td>{dateInfo.date}</td>
+                          <td>{dateInfo.price}</td>
                         </tr>
                       ))}
                     </tbody>
                   </Table>
                 ) : (
-                  <p>Contact us for pick up details.</p>
+                  <p>Tour dates coming soon. Please contact us for availability.</p>
                 )}
-                <p style={{ marginTop: '1rem', fontSize: '0.9rem', color: '#666', fontStyle: 'italic' }}>
-                  Please Note: All pick ups are Northbound Services and all drops will be Southbound Services. Pick ups are subject to availability and change.
-                </p>
               </motion.div>
             )}
           </AnimatePresence>

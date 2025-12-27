@@ -144,6 +144,51 @@ const TourDetailsForm = ({ details, onChange }) => {
       </Field>
       
       <Field>
+        <Label>Advance Booking Offer</Label>
+        <TextArea
+          value={details.advanceBookingOffer || ''}
+          onChange={(e) => handleDetailsChange('advanceBookingOffer', e.target.value)}
+          placeholder="Book early and save! Special discount for advance bookings."
+        />
+      </Field>
+      
+      <Field>
+        <Label>Detailed Overview</Label>
+        <TextArea
+          value={details.detailedOverview || ''}
+          onChange={(e) => handleDetailsChange('detailedOverview', e.target.value)}
+          placeholder="Provide a comprehensive overview of the tour, including what makes it special and unique."
+          rows="6"
+        />
+      </Field>
+      
+      <Field>
+        <Label>Important Notes</Label>
+        <TextArea
+          value={details.importantNotes || ''}
+          onChange={(e) => handleDetailsChange('importantNotes', e.target.value)}
+          placeholder="Enter any important notes or information for travelers."
+          rows="4"
+        />
+      </Field>
+      
+      <Field>
+        <Label>Tour Dates (Format: Date | Price, one per line)</Label>
+        <TextArea
+          value={(details.tourDates || []).map(d => `${d.date} | ${d.price}`).join('\n')}
+          onChange={(e) => {
+            const dates = e.target.value.split('\n').filter(line => line.trim()).map(line => {
+              const [date, price] = line.split('|').map(s => s.trim());
+              return { date: date || '', price: price || '' };
+            });
+            handleDetailsChange('tourDates', dates);
+          }}
+          placeholder="15th January 2026 | £500\n22nd January 2026 | £550"
+          rows="6"
+        />
+      </Field>
+      
+      <Field>
         <Label>Hotels</Label>
         <TextArea
           value={details.hotels}
@@ -232,6 +277,30 @@ const TourDetailsForm = ({ details, onChange }) => {
           placeholder="Day 1 | London to Edinburgh | Depart from London, journey through scenic landscapes to Edinburgh&#10;Day 2 | Edinburgh City Tour | Visit Edinburgh Castle, Royal Mile, and Holyrood Palace&#10;Day 3 | Scottish Highlands | Explore the beautiful Scottish Highlands and Loch Ness&#10;Day 4 | Return to London | Journey back with wonderful memories"
           rows="8"
         />
+      </Field>
+      
+      <Field>
+        <Label>Detailed Day-by-Day Itinerary (Full descriptions with paragraphs)</Label>
+        <TextArea
+          value={details.detailedItinerary || ''}
+          onChange={(e) => handleDetailsChange('detailedItinerary', e.target.value)}
+          placeholder={`DAY 01:
+London - Gretna Green - Glasgow
+
+Journey to Scotland
+After meeting your tour manager...
+
+DAY 02:
+Glasgow - Edinburgh - Glasgow
+
+Depart for Edinburgh
+After breakfast, we begin...`}
+          rows="15"
+          style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}
+        />
+        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          Enter the full detailed itinerary with complete descriptions for each day. Use line breaks to separate paragraphs.
+        </p>
       </Field>
       
       {/* Gallery Images Section */}
