@@ -371,9 +371,8 @@ const ServiceCard = memo(({ service, index, forceServiceLink, isVehicleHire }) =
         )}
 
         <CardFooter>
-          {!isVehicleHire && <Price>{currentData.price}</Price>}
-          <ExploreButton to={linkTo} style={isVehicleHire ? { marginLeft: 'auto' } : {}}>
-            {isVehicleHire ? 'Book Now' : 'Explore'}
+          <ExploreButton to={linkTo} style={{ marginLeft: 'auto' }}>
+            Enquire Now
             <ArrowRightIcon />
           </ExploreButton>
         </CardFooter>
@@ -505,7 +504,7 @@ const TourPackages = () => {
             const apiPackages = dbCategory.tours ? dbCategory.tours.map(tour => ({
               id: tour.slug,
               title: tour.title,
-              price: `From £${tour.price}`,
+              price: 'Enquire Now',
               location: tour.location,
               description: tour.description,
               image: tour.featured_image || '',
@@ -539,7 +538,7 @@ const TourPackages = () => {
             const apiPackages = cat.tours ? cat.tours.map(tour => ({
               id: tour.slug,
               title: tour.title,
-              price: tour.price ? `From £${tour.price}` : 'From £—',
+              price: 'Enquire Now',
               location: tour.location,
               description: tour.description,
               image: tour.featured_image || '',
@@ -558,7 +557,7 @@ const TourPackages = () => {
               id: cat.slug || cat.id,
               title: cat.name,
               location: cat.name,
-              price: apiPackages[0]?.price || 'From £—',
+              price: 'Enquire Now',
               shortDescription: cat.description || '',
               fullDescription: cat.description || '',
               image: cat.image || '',
@@ -584,14 +583,13 @@ const TourPackages = () => {
             return l1Cat.subcategories.map(l2CatRaw => {
               const l2Cat = categoryMap.get(l2CatRaw.id) || l2CatRaw;
               const l2Tours = l2Cat.tours || [];
-              const firstTourPrice = l2Tours.length > 0 ? `£${l2Tours[0].price}` : 'View Details';
               const l2Slug = l2Cat.slug || l2CatRaw.slug || normalize(l2Cat.name || l2CatRaw.name);
               
               return {
                 id: l2Slug,
                 title: l2Cat.name,
                 location: l2Cat.name,
-                price: firstTourPrice,
+                price: 'Enquire Now',
                 shortDescription: l2Cat.description || '',
                 fullDescription: l2Cat.description || '',
                 image: l2Cat.image || (l2Tours.length > 0 ? l2Tours[0].featured_image : ''),
@@ -607,7 +605,7 @@ const TourPackages = () => {
               id: tour.slug,
               title: tour.title,
               location: tour.location || l1Cat.description || '',
-              price: tour.price ? `£${tour.price}` : 'View Details',
+              price: 'Enquire Now',
               shortDescription: tour.description || '',
               fullDescription: tour.description || '',
               image: tour.featured_image || l1Cat.image || '',
@@ -682,7 +680,7 @@ const TourPackages = () => {
               const subCategoryTours = subCat.tours ? subCat.tours.map(tour => ({
                 id: tour.slug,
                 title: tour.title,
-                price: tour.price ? `From £${tour.price}` : 'From £—',
+                price: 'Enquire Now',
                 location: tour.location,
                 description: tour.description,
                 image: tour.featured_image || '',
@@ -702,7 +700,7 @@ const TourPackages = () => {
                 id: subCat.slug || normalize(subCat.name),
                 title: subCat.name,
                 location: subCat.name,
-                price: subCategoryTours.length > 0 ? subCategoryTours[0].price : 'From £—',
+                price: 'Enquire Now',
                 shortDescription: subCat.description || '',
                 fullDescription: subCat.description || '',
                 image: subCat.image || '',
@@ -720,14 +718,14 @@ const TourPackages = () => {
               id: tour.slug,
               title: tour.title,
               location: tour.location || '',
-              price: tour.price ? `From £${tour.price}` : 'From £—',
+              price: 'Enquire Now',
               shortDescription: tour.description || '',
               fullDescription: tour.description || '',
               image: tour.featured_image || mainCategory.image || '',
               packages: [{
                 id: tour.slug,
                 title: tour.title,
-                price: tour.price ? `From £${tour.price}` : 'From £—',
+                price: 'Enquire Now',
                 location: tour.location,
                 description: tour.description,
                 image: tour.featured_image,
@@ -744,7 +742,7 @@ const TourPackages = () => {
             id: mainCategory.slug || normalize(mainCategory.name),
             title: mainCategory.name,
             location: mainCategory.name,
-            price: 'From £—',
+            price: 'Enquire Now',
             shortDescription: mainCategory.description || '',
             fullDescription: mainCategory.description || '',
             image: mainCategory.image || '',

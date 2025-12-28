@@ -48,13 +48,13 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           
           {/* Airport transfer subcategories redirect to parent */}
-          <Route path="/service/heathrow-lhr" element={<Navigate to="/service/airport-transfer" replace />} />
-          <Route path="/service/gatwick-lgw" element={<Navigate to="/service/airport-transfer" replace />} />
-          <Route path="/service/stansted-airport-stn" element={<Navigate to="/service/airport-transfer" replace />} />
-          <Route path="/service/luton-airport-ltn" element={<Navigate to="/service/airport-transfer" replace />} />
-          <Route path="/service/city-airport-lcy" element={<Navigate to="/service/airport-transfer" replace />} />
-          <Route path="/service/meet-greet-service" element={<Navigate to="/service/airport-transfer" replace />} />
-          <Route path="/service/fleet-classes" element={<Navigate to="/service/airport-transfer" replace />} />
+          <Route path="/service/heathrow-lhr" element={<Navigate to="/service/airport-transfers" replace />} />
+          <Route path="/service/gatwick-lgw" element={<Navigate to="/service/airport-transfers" replace />} />
+          <Route path="/service/stansted-airport-stn" element={<Navigate to="/service/airport-transfers" replace />} />
+          <Route path="/service/luton-airport-ltn" element={<Navigate to="/service/airport-transfers" replace />} />
+          <Route path="/service/city-airport-lcy" element={<Navigate to="/service/airport-transfers" replace />} />
+          <Route path="/service/meet-greet-service" element={<Navigate to="/service/airport-transfers" replace />} />
+          <Route path="/service/fleet-classes" element={<Navigate to="/service/airport-transfers" replace />} />
           
           {/* Vehicle hire subcategories redirect to parent */}
           <Route path="/service/mpv" element={<Navigate to="/service/vehicle-hire" replace />} />

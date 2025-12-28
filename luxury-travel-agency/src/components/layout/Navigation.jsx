@@ -446,11 +446,11 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
                               .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
                               .map((grandchild) => {
                                 const grandchildSlug = grandchild.slug || grandchild.id || normalize(grandchild.name || '');
-                                // For airport-transfer and vehicle-hire subcategories, link to parent instead
-                                // Check if parent (child) is airport-transfer or vehicle-hire
+                                // For airport-transfers and vehicle-hire subcategories, link to parent instead
+                                // Check if parent (child) is airport-transfers or vehicle-hire
                                 const parentCategory = menuCategories.find(c => c.id === grandchild.parent_id);
                                 const parentSlug = parentCategory?.slug;
-                                const targetSlug = (parentSlug === 'airport-transfer' || parentSlug === 'vehicle-hire') ? parentSlug : grandchildSlug;
+                                const targetSlug = (parentSlug === 'airport-transfers' || parentSlug === 'vehicle-hire') ? parentSlug : grandchildSlug;
                                 return (
                                   <L2Link
                                     key={grandchildSlug}
