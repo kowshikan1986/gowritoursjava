@@ -14,7 +14,15 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(compression({ level: 9, threshold: 0 }));
-app.use(cors());
+
+// CORS configuration - allow all origins for deployment
+const corsOptions = {
+  origin: '*',
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
