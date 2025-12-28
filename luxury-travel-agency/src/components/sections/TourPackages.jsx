@@ -653,9 +653,31 @@ const TourPackages = () => {
             return [];
           }
 
+          // Custom airport order for airport-transfers
+          const airportOrder = {
+            'heathrow-lhr': 1,
+            'gatwick-lgw': 2,
+            'stansted-airport-stn': 3,
+            'luton-airport-ltn': 4,
+            'city-airport-lcy': 5
+          };
+
+          // Check if this is airport-transfers category
+          const isAirportTransfers = normalize(mainCategory.slug || mainCategory.name || '') === 'airport-transfers';
+
           // If category has subcategories, show them (like Tours)
           if (mainCategory.subcategories && mainCategory.subcategories.length > 0) {
-            return mainCategory.subcategories.map(subCat => {
+            // Sort subcategories - custom order for airports, default sort_order for others
+            const sortedSubcategories = [...mainCategory.subcategories].sort((a, b) => {
+              if (isAirportTransfers) {
+                const orderA = airportOrder[normalize(a.slug || a.name || '')] || 999;
+                const orderB = airportOrder[normalize(b.slug || b.name || '')] || 999;
+                return orderA - orderB;
+              }
+              return (a.sort_order || 0) - (b.sort_order || 0);
+            });
+
+            return sortedSubcategories.map(subCat => {
               // Get tours for this subcategory
               const subCategoryTours = subCat.tours ? subCat.tours.map(tour => ({
                 id: tour.slug,

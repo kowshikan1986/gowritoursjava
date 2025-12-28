@@ -1186,13 +1186,31 @@ const ServicePage = () => {
         .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
     : [];
 
+  // Custom airport order for airport-transfers
+  const airportOrder = {
+    'heathrow-lhr': 1,
+    'gatwick-lgw': 2,
+    'stansted-airport-stn': 3,
+    'luton-airport-ltn': 4,
+    'city-airport-lcy': 5
+  };
+
   // When on /service/tours, show L1 tour categories (UK Tours, European Tours, etc.)
   // When on /service/uk-tours, show L2 subcategories (Scotland, Wales, etc.)
   const childCategories = id === 'tours'
     ? l1TourCategories // Show L1 tour categories on Tours page
     : (allCategories || [])
         .filter((c) => c.parent_id === activeParentId)
-        .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+        .sort((a, b) => {
+          // Special sorting for airport-transfers: use custom order
+          if (id === 'airport-transfers' || (matchedCategory && normalize(matchedCategory.slug || matchedCategory.name || '') === 'airport-transfers')) {
+            const orderA = airportOrder[normalize(a.slug || a.name || '')] || 999;
+            const orderB = airportOrder[normalize(b.slug || b.name || '')] || 999;
+            return orderA - orderB;
+          }
+          // Default sorting by sort_order field
+          return (a.sort_order || 0) - (b.sort_order || 0);
+        });
 
   console.log('🔍 ServicePage childCategories:', {
     id,
