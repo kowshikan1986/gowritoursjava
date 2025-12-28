@@ -1,5 +1,5 @@
-// Frontend data service - uses PostgreSQL database via API
-import { initDatabase, getCategories, getTours, getHeroBanners, getLogos } from './postgresDatabase';
+// Frontend data service - uses JSON database via API
+import { initDatabase, getCategories, getTours, getHeroBanners, getLogos } from './jsonDatabase';
 
 // Helper to normalize slugs
 export const normalize = (str = '') =>

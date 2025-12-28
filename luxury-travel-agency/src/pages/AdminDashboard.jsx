@@ -24,10 +24,9 @@ import {
   createLogo,
   updateLogo,
   deleteLogo,
-  fileToBase64,
   exportDatabase,
   importDatabase,
-} from '../services/postgresDatabase';
+} from '../services/jsonDatabase';
 import { clearFrontendCache } from '../services/frontendData';
 import { importAllCategories } from '../services/importData';
 

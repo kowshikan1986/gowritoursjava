@@ -74,32 +74,33 @@ const upload = multer({
 });
 
 // ==================== JSON FALLBACK ====================
-// Load JSON fallback data
-let jsonFallback = null;
-let useJsonFallback = false;
-let postgresAvailable = false;
+// Load JSON database (always use JSON, no PostgreSQL)
+let jsonDatabase = null;
+const useJsonOnly = true; // Force JSON-only mode
+const postgresAvailable = false; // Disable PostgreSQL
 
 try {
-  const fallbackPath = path.join(__dirname, 'database_export_2025-12-25T11-59-14.json');
-  if (fs.existsSync(fallbackPath)) {
-    jsonFallback = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-    useJsonFallback = true; // Start with JSON fallback
-    console.log('📦 JSON fallback loaded and enabled');
+  const dbPath = path.join(__dirname, 'data', 'database.json');
+  if (fs.existsSync(dbPath)) {
+    jsonDatabase = JSON.parse(fs.readFileSync(dbPath, 'utf8'));
+    console.log('📦 JSON database loaded (PostgreSQL disabled)');
+  } else {
+    console.error('❌ database.json not found!');
   }
 } catch (err) {
-  console.warn('⚠️  Could not load JSON fallback:', err.message);
+  console.error('❌ Could not load JSON database:', err.message);
 }
 
-// Test PostgreSQL connection and switch to it if available
-pool.query('SELECT NOW()')
-  .then(() => {
-    postgresAvailable = true;
-    useJsonFallback = false; // Switch to PostgreSQL
-    console.log('✅ PostgreSQL connected - using database');
-  })
-  .catch(() => {
-    console.log('⚠️  PostgreSQL unavailable - using JSON fallback');
-  });
+// Helper function to save JSON database
+function saveJsonDatabase() {
+  try {
+    const dbPath = path.join(__dirname, 'data', 'database.json');
+    fs.writeFileSync(dbPath, JSON.stringify(jsonDatabase, null, 2), 'utf8');
+    console.log('✅ Database saved to JSON');
+  } catch (error) {
+    console.error('❌ Error saving database:', error.message);
+  }
+}
 
 // Function to export database to JSON after updates
 async function syncDatabaseToJSON() {
@@ -177,21 +178,11 @@ app.get('/api/health', async (req, res) => {
 // Get all categories
 app.get('/api/categories', async (req, res) => {
   try {
-    // Always try PostgreSQL first, fallback to JSON only on error
-    const result = await pool.query(
-      'SELECT * FROM categories ORDER BY sort_order, name'
-    );
-    // Cache for 1 second
+    const categories = jsonDatabase?.categories || [];
     res.set('Cache-Control', 'public, max-age=1');
-    res.json(result.rows);
+    res.json(categories);
   } catch (error) {
     console.error('Error fetching categories:', error);
-    // Try fallback on error
-    if (jsonFallback) {
-      const categories = jsonFallback.tables.categories?.data || [];
-      res.set('Cache-Control', 'public, max-age=1');
-      return res.json(categories);
-    }
     res.status(500).json({ error: error.message });
   }
 });

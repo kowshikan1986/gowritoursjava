@@ -106,16 +106,23 @@ export const getCategoryBySlug = async (slug) => {
 
 export const createCategory = async (data) => {
   try {
-    // Convert image file to base64 if present
-    let imageData = '';
+    // Upload image to local folder if present
+    let imagePath = '';
     if (data.imageFile) {
-      imageData = await fileToBase64(data.imageFile);
+      const formData = new FormData();
+      formData.append('image', data.imageFile);
+      
+      const uploadResponse = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      imagePath = uploadResponse.data.path;
     }
     
     const payload = {
       name: data.name,
       description: data.description,
-      image: imageData,
+      image: imagePath,
       parent_id: data.parent_id,
       visible: data.visible,
       sort_order: data.sort_order
@@ -132,10 +139,17 @@ export const createCategory = async (data) => {
 
 export const updateCategory = async (slug, data) => {
   try {
-    // Convert image file to base64 if present
-    let imageData = undefined;
+    // Upload image to local folder if new file present
+    let imagePath = undefined;
     if (data.imageFile) {
-      imageData = await fileToBase64(data.imageFile);
+      const formData = new FormData();
+      formData.append('image', data.imageFile);
+      
+      const uploadResponse = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      imagePath = uploadResponse.data.path;
     }
     
     const payload = {
@@ -148,11 +162,11 @@ export const updateCategory = async (slug, data) => {
     };
     
     // Only include image in payload if it's being updated
-    if (imageData !== undefined) {
-      payload.image = imageData;
+    if (imagePath !== undefined) {
+      payload.image = imagePath;
     }
     
-    console.log('📦 Updating category', slug, 'with image:', imageData ? 'YES (' + imageData.length + ' chars)' : 'NO (keeping existing)');
+    console.log('📦 Updating category', slug, 'with image:', imagePath ? 'YES (' + imagePath + ')' : 'NO (keeping existing)');
     
     const response = await axios.put(`${API_BASE}/categories/${slug}`, payload);
     notifyDataChange('categories');
@@ -222,19 +236,26 @@ export const createTour = async (data) => {
       details: data.details
     });
     
-    // Convert featured image to base64 if present
-    let featuredImageData = '';
+    // Upload image to local folder if present
+    let featuredImagePath = '';
     if (data.featured_imageFile) {
-      console.log('Converting featured image to base64...');
-      featuredImageData = await fileToBase64(data.featured_imageFile);
-      console.log('Featured image converted, length:', featuredImageData.length);
+      console.log('Uploading featured image to local folder...');
+      const formData = new FormData();
+      formData.append('image', data.featured_imageFile);
+      
+      const uploadResponse = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      featuredImagePath = uploadResponse.data.path; // e.g., '/uploads/123456.jpg'
+      console.log('Featured image uploaded:', featuredImagePath);
     } else {
       console.warn('No featured_imageFile found in data');
     }
     
     const payload = {
       ...data,
-      featured_image: featuredImageData,
+      featured_image: featuredImagePath,
       details: JSON.stringify(data.details || {}), // Stringify details for database
       category_id: data.category_id || data.category
     };
@@ -244,7 +265,7 @@ export const createTour = async (data) => {
     
     console.log('Sending tour payload:', {
       ...payload,
-      featured_image: payload.featured_image ? `base64 string (${payload.featured_image.length} chars)` : 'empty',
+      featured_image: payload.featured_image || 'empty',
       details: 'stringified'
     });
     
@@ -260,15 +281,24 @@ export const createTour = async (data) => {
 
 export const updateTour = async (slug, data) => {
   try {
-    // Convert featured image to base64 if present
-    let featuredImageData = data.featured_image;
+    // Upload image to local folder if new file present
+    let featuredImagePath = data.featured_image;
     if (data.featured_imageFile) {
-      featuredImageData = await fileToBase64(data.featured_imageFile);
+      console.log('Uploading new featured image to local folder...');
+      const formData = new FormData();
+      formData.append('image', data.featured_imageFile);
+      
+      const uploadResponse = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      featuredImagePath = uploadResponse.data.path; // e.g., '/uploads/123456.jpg'
+      console.log('Featured image uploaded:', featuredImagePath);
     }
     
     const payload = {
       ...data,
-      featured_image: featuredImageData,
+      featured_image: featuredImagePath,
       details: JSON.stringify(data.details || {}), // Stringify details for database
       category_id: data.category_id || data.category
     };
@@ -318,12 +348,26 @@ export const getHeroBannerById = async (id) => {
 
 export const createHeroBanner = async (data) => {
   try {
-    // Convert image file to base64 if present
-    let imageData = '';
+    // Upload image to local folder if present
+    let imagePath = '';
     if (data.background_imageFile) {
-      imageData = await fileToBase64(data.background_imageFile);
+      const formData = new FormData();
+      formData.append('image', data.background_imageFile);
+      
+      const uploadResponse = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      imagePath = uploadResponse.data.path;
     } else if (data.imageFile) {
-      imageData = await fileToBase64(data.imageFile);
+      const formData = new FormData();
+      formData.append('image', data.imageFile);
+      
+      const uploadResponse = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      imagePath = uploadResponse.data.path;
     }
     
     const payload = {
@@ -331,8 +375,8 @@ export const createHeroBanner = async (data) => {
       subtitle: data.subtitle,
       cta_text: data.cta_text,
       cta_link: data.cta_link,
-      background_image: imageData,
-      image: imageData, // Also send as image for backend
+      background_image: imagePath,
+      image: imagePath, // Also send as image for backend
       is_active: data.is_active
     };
     
@@ -389,17 +433,24 @@ export const getLogoById = async (id) => {
 
 export const createLogo = async (data) => {
   try {
-    // Convert image file to base64 if present
-    let imageData = '';
+    // Upload image to local folder if present
+    let imagePath = '';
     if (data.imageFile) {
-      imageData = await fileToBase64(data.imageFile);
+      const formData = new FormData();
+      formData.append('image', data.imageFile);
+      
+      const uploadResponse = await axios.post(`${API_BASE}/upload`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      imagePath = uploadResponse.data.path;
     }
     
     const payload = {
       title: data.title,
       name: data.title, // Map title to name for backend
-      image: imageData,
-      image_url: imageData, // Also send as image_url for compatibility
+      image: imagePath,
+      image_url: imagePath, // Also send as image_url for compatibility
       is_active: data.is_active
     };
     
