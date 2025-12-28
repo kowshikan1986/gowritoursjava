@@ -228,19 +228,22 @@ const TourDetailsForm = ({ details, onChange }) => {
       </Field>
       
       <Field>
-        <Label>Pick Up Points (Format: Location | Time, one per line)</Label>
+        <Label>Pick Up Points (one per line, full address format)</Label>
         <TextArea
-          value={details.pickupPoints.map(p => `${p.location} | ${p.time}`).join('\n')}
+          value={(details.pickupPoints || []).map(p => p.location).join('\n')}
           onChange={(e) => {
-            const points = e.target.value.split('\n').filter(line => line.trim()).map(line => {
-              const [location, time] = line.split('|').map(s => s.trim());
-              return { location: location || '', time: time || '' };
-            });
+            const points = e.target.value.split('\n').filter(line => line.trim()).map(location => ({
+              location: location.trim(),
+              time: ''
+            }));
             handleDetailsChange('pickupPoints', points);
           }}
-          placeholder="East Ham (E6 2LL) | 05:15 hrs&#10;Southall (UB1 3DB) | 05:45 hrs"
-          rows="6"
+          placeholder="WEMBLEY HIGH TECHNOLOGY COLLEGE – OLD BOROUGH ROAD, OFF EAST LANE, NORTH WEMBLEY , HA0 3NT.&#10;EAST HAM TOWN HALL CAR PARK - BARKING RD, EAST HAM, LONDON E6 2RP.&#10;SOUTHALL LIBRARY CAR PARK - OSTERLEY PARK ROAD, SOUTHALL UB2 4BL."
+          rows="8"
         />
+        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          Enter full addresses, one per line. Time will not be displayed.
+        </p>
       </Field>
       
       <Field>

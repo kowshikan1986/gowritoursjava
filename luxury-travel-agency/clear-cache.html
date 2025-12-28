@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Clear Cache & Reload</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      text-align: center;
+    }
+    button {
+      background: #6A1B82;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      font-size: 18px;
+      cursor: pointer;
+      border-radius: 8px;
+      margin: 10px;
+    }
+    button:hover {
+      background: #7C2E9B;
+    }
+    .status {
+      margin-top: 20px;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    .success { background: #d1f2eb; color: #0f5132; }
+    .error { background: #f8d7da; color: #842029; }
+  </style>
+</head>
+<body>
+  <h1>🔄 Clear Cache & Reload</h1>
+  <p>If the homepage is not loading, click below to clear all caches and reload:</p>
+  
+  <button onclick="clearAllCaches()">Clear All Caches</button>
+  <button onclick="window.location.href='http://localhost:3000/'">Go to Homepage</button>
+  
+  <div id="status"></div>
+
+  <script>
+    async function clearAllCaches() {
+      const statusDiv = document.getElementById('status');
+      statusDiv.innerHTML = '<div class="status">⏳ Clearing caches...</div>';
+      
+      try {
+        // Clear localStorage
+        localStorage.clear();
+        
+        // Clear sessionStorage
+        sessionStorage.clear();
+        
+        // Clear IndexedDB
+        const databases = await indexedDB.databases();
+        for (const db of databases) {
+          indexedDB.deleteDatabase(db.name);
+          console.log('Deleted IndexedDB:', db.name);
+        }
+        
+        // Clear Service Worker caches
+        if ('caches' in window) {
+          const cacheNames = await caches.keys();
+          await Promise.all(cacheNames.map(name => caches.delete(name)));
+        }
+        
+        statusDiv.innerHTML = '<div class="status success">✅ All caches cleared! Click "Go to Homepage" or refresh the page.</div>';
+      } catch (error) {
+        console.error('Error clearing caches:', error);
+        statusDiv.innerHTML = '<div class="status error">❌ Error clearing caches: ' + error.message + '</div>';
+      }
+    }
+  </script>
+</body>
+</html>

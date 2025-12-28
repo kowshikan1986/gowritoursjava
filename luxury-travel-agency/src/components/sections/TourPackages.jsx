@@ -557,7 +557,7 @@ const TourPackages = () => {
             return {
               id: cat.slug || cat.id,
               title: cat.name,
-              location: cat.description || '',
+              location: cat.name,
               price: apiPackages[0]?.price || 'From £—',
               shortDescription: cat.description || '',
               fullDescription: cat.description || '',
@@ -590,7 +590,7 @@ const TourPackages = () => {
               return {
                 id: l2Slug,
                 title: l2Cat.name,
-                location: l2Cat.description || l2Cat.name,
+                location: l2Cat.name,
                 price: firstTourPrice,
                 shortDescription: l2Cat.description || '',
                 fullDescription: l2Cat.description || '',
@@ -679,7 +679,7 @@ const TourPackages = () => {
               return {
                 id: subCat.slug || normalize(subCat.name),
                 title: subCat.name,
-                location: subCat.description || '',
+                location: subCat.name,
                 price: subCategoryTours.length > 0 ? subCategoryTours[0].price : 'From £—',
                 shortDescription: subCat.description || '',
                 fullDescription: subCat.description || '',
@@ -721,7 +721,7 @@ const TourPackages = () => {
           return [{
             id: mainCategory.slug || normalize(mainCategory.name),
             title: mainCategory.name,
-            location: mainCategory.description || '',
+            location: mainCategory.name,
             price: 'From £—',
             shortDescription: mainCategory.description || '',
             fullDescription: mainCategory.description || '',

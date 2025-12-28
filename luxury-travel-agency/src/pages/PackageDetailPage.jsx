@@ -760,7 +760,7 @@ const PackageDetailPage = () => {
         <Sidebar>
           <BookingCard>
             <PriceTag>{packageData.price}</PriceTag>
-            <PriceNote>Per person based on twin sharing</PriceNote>
+            <PriceNote>Per person</PriceNote>
             <BookButton to="/#contact">Book This Tour</BookButton>
             
             {/* Tour Gallery */}

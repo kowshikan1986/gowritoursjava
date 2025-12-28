@@ -1201,14 +1201,16 @@ const AdminDashboard = () => {
                 />
               </Field>
               <Field>
-                <Label>Price</Label>
+                <Label>Price (per person)</Label>
                 <Input
                   type="number"
                   value={tourForm.price}
                   onChange={(e) =>
                     setTourForm({ ...tourForm, price: e.target.value })
                   }
+                  placeholder="e.g., 500"
                 />
+                <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Enter amount without £ symbol</p>
               </Field>
               <Field>
                 <Label>Duration</Label>
@@ -1435,12 +1437,14 @@ const AdminDashboard = () => {
                                       />
                                     </Field>
                                     <Field>
-                                      <Label>Price</Label>
+                                      <Label>Price (per person)</Label>
                                       <Input
                                         type="number"
                                         value={tourEditForm.price}
                                         onChange={(e) => setTourEditForm({ ...tourEditForm, price: e.target.value })}
+                                        placeholder="e.g., 500"
                                       />
+                                      <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Enter amount without £ symbol</p>
                                     </Field>
                                     <Field>
                                       <Label>Duration</Label>
@@ -1643,12 +1647,14 @@ const AdminDashboard = () => {
                                     />
                                   </Field>
                                   <Field>
-                                    <Label>Price</Label>
+                                    <Label>Price (per person)</Label>
                                     <Input
                                       type="number"
                                       value={tourEditForm.price}
                                       onChange={(e) => setTourEditForm({ ...tourEditForm, price: e.target.value })}
+                                      placeholder="e.g., 500"
                                     />
+                                    <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.25rem' }}>Enter amount without £ symbol</p>
                                   </Field>
                                   <Field>
                                     <Label>Duration</Label>
