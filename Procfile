@@ -1,1 +1,1 @@
-web: node luxury-travel-agency/server.js
+web: node luxury-travel-agency/server-json.js
