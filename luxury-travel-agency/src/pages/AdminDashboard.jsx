@@ -1119,10 +1119,9 @@ const AdminDashboard = () => {
         <Card>
           <Flex style={{ alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
-              <strong>{user.username}</strong> (PostgreSQL Database)
+              <strong>{user.username}</strong>
             </div>
             <Flex style={{ gap: '0.5rem', flexWrap: 'wrap' }}>
-              <Info>All data is stored in PostgreSQL database</Info>
               <Button
                 $variant="outline"
                 onClick={handleLogout}
