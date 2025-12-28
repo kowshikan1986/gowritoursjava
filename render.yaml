@@ -14,7 +14,7 @@ services:
     name: gowri-tours
     env: node
     buildCommand: cd luxury-travel-agency && npm install --legacy-peer-deps && npm run build
-    startCommand: node luxury-travel-agency/server.js
+    startCommand: node luxury-travel-agency/server-json.js
     envVars:
       - key: NODE_ENV
         value: production
