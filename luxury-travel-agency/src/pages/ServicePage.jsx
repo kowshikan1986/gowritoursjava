@@ -1110,8 +1110,7 @@ const ServicePage = () => {
         dropoffCity: '',
         dropoffPostcode: '',
         returnDate: '',
-        returnTime: '',
-        vehicleType: ''
+        returnTime: ''
       });
     }, 2000);
   };
