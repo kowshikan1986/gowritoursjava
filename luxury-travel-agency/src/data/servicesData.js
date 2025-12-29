@@ -239,26 +239,7 @@ export const servicesData = [
       description: 'Experience the ultimate in privacy and luxury with our private tours. Customized itineraries, private guides, and exclusive experiences.'
     }
   },
-  {
-    id: 'airport-transfers',
-    title: 'Airport Transfers',
-    location: 'Global Airports',
-    price: 'From $150',
-    shortDescription: 'Seamless and comfortable transfers to start your journey right.',
-    fullDescription: 'Start and end your trip with stress-free Airport Transfers. Our professional chauffeurs track your flight status to ensure timely pickups. We offer a fleet of premium vehicles to suit individuals, families, and large groups.',
-    features: [
-      'Meet and greet service',
-      'Flight tracking',
-      'Premium vehicle fleet',
-      'Fixed pricing with no hidden costs',
-      '24/7 availability'
-    ],
-    image: 'https://images.unsplash.com/photo-1555215696-99ac45e43d34?q=80&w=1374&auto=format&fit=crop',
-    seo: {
-      title: 'Luxury Airport Transfers | Reliable Chauffeur Service',
-      description: 'Book reliable and luxurious airport transfers. Professional chauffeurs, flight tracking, and premium vehicles for a stress-free journey.'
-    }
-  },
+  // Removed airport-transfers - now using database category
   // Removed vehicle-hire - now using database category
   {
     id: 'cruises',
