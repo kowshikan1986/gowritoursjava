@@ -8,7 +8,7 @@ export const normalize = (str = '') =>
 // Cache for frontend data to avoid re-fetching
 let cachedData = null;
 let cacheTimestamp = 0;
-const CACHE_DURATION = 60000; // 60 seconds cache - fast loading
+const CACHE_DURATION = 5000; // 5 seconds cache - fast loading with quick updates
 let isFetching = false; // Prevent parallel fetches
 let initialLoadComplete = false;
 

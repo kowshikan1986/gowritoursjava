@@ -371,6 +371,8 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
                       if (nextState === null) setExpandedSubSlug(null);
                     } else {
                       navigate(`/service/${categorySlug}`);
+                      setOpenSlug(null);
+                      setExpandedSubSlug(null);
                       if (onClose) onClose(); // Close mobile menu
                     }
                   } else {

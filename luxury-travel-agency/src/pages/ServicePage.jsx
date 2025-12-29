@@ -844,6 +844,17 @@ const Chip = styled.button`
   }
 `;
 
+const VehicleHireGrid = styled.div`
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 2rem;
+  align-items: start;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
 const ServicePage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -875,6 +886,7 @@ const ServicePage = () => {
     'european-tours',
     'world-tours',
     'india-sri-lankan-tours',
+    'sri-lanka-tours',
     'group-tours',
     'private-tours',
     'other-services',
@@ -932,12 +944,20 @@ const ServicePage = () => {
       const imageToUse = matchedCategory.image || 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80';
       console.log('🎯 derivedService building for', id, '| Image length:', imageToUse?.length);
       
+      // Add cache busting for uploaded images
+      let finalImage = imageToUse;
+      if (imageToUse && imageToUse.startsWith('/uploads/')) {
+        const timestamp = matchedCategory.updated_at ? new Date(matchedCategory.updated_at).getTime() : Date.now();
+        finalImage = `${imageToUse}?v=${timestamp}`;
+        console.log('🖼️ Added cache busting to image:', finalImage);
+      }
+      
       return {
         id: matchedCategory.slug || matchedCategory.id,
         title: matchedCategory.name,
         shortDescription: matchedCategory.description || 'Browse experiences for this category.',
         fullDescription: matchedCategory.description || '',
-        image: imageToUse,
+        image: finalImage,
         features: [],
         packages: filterToursByCategory(matchedCategory.id).map((tour) => ({
           ...tour,
@@ -1384,6 +1404,11 @@ const ServicePage = () => {
     if (img && img.startsWith('data:image')) {
       return img; // Base64 images don't need cache busting
     }
+    // Add cache busting for uploaded images using updated_at timestamp
+    if (img && img.startsWith('/uploads/')) {
+      const timestamp = item?.updated_at ? new Date(item.updated_at).getTime() : Date.now();
+      return `${img}?v=${timestamp}`;
+    }
     return img;
   };
 
@@ -1750,7 +1775,7 @@ const ServicePage = () => {
             </motion.h2>
           </SectionHeader>
           
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', alignItems: 'start' }}>
+          <VehicleHireGrid>
             {/* Left side - Vehicle cards */}
             <CategoryGrid>
               {childCategories.map((sub, index) => {
@@ -1980,7 +2005,7 @@ const ServicePage = () => {
                 {isSubmitting ? 'Sending...' : 'Submit Booking Request →'}
               </SubmitButton>
             </BookingForm>
-          </div>
+          </VehicleHireGrid>
         </PackagesSection>
       )}
 
@@ -2000,7 +2025,8 @@ const ServicePage = () => {
                 {childCategories.map((sub, index) => {
                   const slug = sub.slug || sub.id || normalize(sub.name || '');
                   const isOtherServices = normalize(id) === 'other-services';
-                  const linkTarget = isOtherServices ? '/contact-us' : `/service/${slug}`;
+                  const isSriLankaTours = normalize(id) === 'sri-lanka-tours';
+                  const linkTarget = (isOtherServices || isSriLankaTours) ? '/contact-us' : `/service/${slug}`;
                   const subImage = getImage(sub);
                   const location = sub.location || null;
                   
@@ -2033,7 +2059,7 @@ const ServicePage = () => {
                         )}
                         <CategoryFooter>
                           <ViewDetailsButton>
-                            {isOtherServices ? 'Enquire Now' : 'View Details'}
+                            {(isOtherServices || isSriLankaTours) ? 'Enquire Now' : 'View Details'}
                             <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
                           </ViewDetailsButton>
                         </CategoryFooter>
@@ -2108,7 +2134,7 @@ const ServicePage = () => {
           <p style={{ color: '#666', marginBottom: '2rem', fontSize: '1.1rem' }}>
             Contact our travel experts today to customize your {derivedService.title} experience.
           </p>
-          <CTAButton to="/#contact">Inquire Now</CTAButton>
+          <CTAButton to="/contact-us">Inquire Now</CTAButton>
         </motion.div>
       </CTASection>
     </PageContainer>
