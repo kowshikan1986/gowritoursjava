@@ -48,7 +48,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
   storage: storage,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
 // ==================== JSON FILE DATABASE ====================
@@ -197,12 +197,12 @@ app.put('/api/categories/:slug', (req, res) => {
     
     db.categories[index] = {
       ...current,
-      name,
-      description,
+      name: name !== undefined ? name : current.name,
+      description: description !== undefined ? description : current.description,
       image: imageToUse,
-      parent_id,
-      visible,
-      sort_order,
+      parent_id: parent_id !== undefined ? parent_id : current.parent_id,
+      visible: visible !== undefined ? visible : current.visible,
+      sort_order: sort_order !== undefined ? sort_order : current.sort_order,
       slug: newSlug,
       highlights: highlightsToUse,
       updated_at: new Date().toISOString()
@@ -592,6 +592,24 @@ app.delete('/api/ads/:id', (req, res) => {
     res.json({ message: 'Ad deleted successfully', deleted });
   } catch (error) {
     console.error('Error deleting ad:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== DATABASE EXPORT ====================
+
+// Export database as JSON file download
+app.get('/api/export-database', (req, res) => {
+  try {
+    const db = readDB();
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `database_backup_${timestamp}.json`;
+    
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.json(db);
+  } catch (error) {
+    console.error('Error exporting database:', error);
     res.status(500).json({ error: error.message });
   }
 });

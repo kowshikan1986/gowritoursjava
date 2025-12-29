@@ -24,6 +24,13 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Serve uploaded images
+const uploadsPath = path.join(__dirname, '..', 'public', 'uploads');
+if (!fs.existsSync(uploadsPath)) {
+  fs.mkdirSync(uploadsPath, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsPath));
+
 // Configure multer for file uploads
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
@@ -333,6 +340,35 @@ app.delete('/api/logos/:id', (req, res) => {
 
 // ==================== DATABASE BACKUP ====================
 
+// Image upload endpoint
+app.post('/api/upload', upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    const fileExt = path.extname(req.file.originalname);
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}${fileExt}`;
+    const filePath = path.join(uploadsDir, fileName);
+
+    fs.writeFileSync(filePath, req.file.buffer);
+
+    const publicPath = `/uploads/${fileName}`;
+    console.log(`✅ Image uploaded: ${publicPath}`);
+    res.json({ path: publicPath });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// ==================== DATABASE BACKUP ====================
+
 // Export database
 app.get('/api/export-database', (req, res) => {
   try {
@@ -370,6 +406,7 @@ app.listen(PORT, () => {
   console.log('  POST   /api/logos');
   console.log('  PUT    /api/logos/:id');
   console.log('  DELETE /api/logos/:id');
+  console.log('  POST   /api/upload');
   console.log('  GET    /api/export-database');
 });
 

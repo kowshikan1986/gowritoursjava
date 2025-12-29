@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-// API base URL - connects to local SQLite API server
+// API base URL - connects to the backend server
 const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_URL ||
-  'http://localhost:5000/api';
+  (import.meta.env.DEV ? 'http://localhost:3000/api' : '/api');
 
 const client = axios.create({
   baseURL: API_BASE,

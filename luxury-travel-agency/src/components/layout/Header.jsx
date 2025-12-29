@@ -62,7 +62,7 @@ const LogoImg = styled.img`
   max-height: 100%;
   object-fit: contain;
   @media (max-width: 768px) {
-    height: 80px;
+    height: 120px;
   }
 `;
 

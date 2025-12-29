@@ -1,7 +1,7 @@
 /**
  * Database API Service
- * Connects to local SQLite API server (http://localhost:5000)
- * This replaces the browser-based SQL.js with a real SQLite file
+ * Connects to JSON server (http://localhost:3000/api)
+ * Handles all API calls for categories, tours, hero banners, and logos
  */
 
 import client from '../api/client';
@@ -20,17 +20,17 @@ export const initDatabase = async () => {
   }
 
   try {
-    console.log('Connecting to local SQLite API server...');
+    console.log('Connecting to JSON database server...');
     const response = await client.get('/health');
     if (response.data.status === 'ok') {
-      console.log('✅ Connected to SQLite database successfully');
+      console.log('✅ Connected to JSON database successfully');
       dbInitialized = true;
       return true;
     }
   } catch (error) {
-    console.error('❌ Failed to connect to SQLite API server:', error.message);
-    console.error('Make sure the API server is running: npm run db:server');
-    throw new Error('Database API server not available. Run: npm run db:server');
+    console.error('❌ Failed to connect to JSON API server:', error.message);
+    console.error('Make sure the server is running: npm start');
+    throw new Error('Database API server not available. Run: npm start');
   }
 };
 
@@ -63,12 +63,31 @@ export const createCategory = async (data) => {
   const id = data.id || `cat-${Date.now()}`;
   const slug = data.slug || normalize(data.name);
   
+  // Handle image upload if provided
+  let imageUrl = data.image || '';
+  if (data.imageFile instanceof File) {
+    try {
+      const formData = new FormData();
+      formData.append('image', data.imageFile);
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      if (uploadResponse.ok) {
+        const uploadData = await uploadResponse.json();
+        imageUrl = uploadData.path;
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    }
+  }
+  
   const categoryData = {
     id,
     name: data.name,
     slug,
     description: data.description || '',
-    image: data.image || '',
+    image: imageUrl,
     parent_id: data.parent_id || null,
     visible: data.visible !== undefined ? data.visible : true,
     sort_order: data.sort_order || 0,
@@ -79,7 +98,27 @@ export const createCategory = async (data) => {
 };
 
 export const updateCategory = async (slug, data) => {
-  const response = await client.put(`/categories/${slug}`, data);
+  // Handle image upload if provided
+  let updateData = { ...data };
+  if (data.imageFile instanceof File) {
+    try {
+      const formData = new FormData();
+      formData.append('image', data.imageFile);
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      if (uploadResponse.ok) {
+        const uploadData = await uploadResponse.json();
+        updateData.image = uploadData.path;
+      }
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    }
+  }
+  delete updateData.imageFile; // Remove the File object before sending
+  
+  const response = await client.put(`/categories/${slug}`, updateData);
   return response.data;
 };
 
@@ -197,10 +236,29 @@ export const getLogos = async () => {
 export const createLogo = async (data) => {
   const id = data.id || `logo-${Date.now()}`;
   
+  // Handle image upload if provided
+  let imageUrl = data.image || '';
+  if (data.imageFile instanceof File) {
+    try {
+      const formData = new FormData();
+      formData.append('image', data.imageFile);
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      if (uploadResponse.ok) {
+        const uploadData = await uploadResponse.json();
+        imageUrl = uploadData.path;
+      }
+    } catch (error) {
+      console.error('Error uploading logo image:', error);
+    }
+  }
+  
   const logoData = {
     id,
     title: data.title,
-    image: data.image || '',
+    image: imageUrl,
     is_active: data.is_active !== undefined ? data.is_active : true,
   };
 
@@ -209,7 +267,27 @@ export const createLogo = async (data) => {
 };
 
 export const updateLogo = async (id, data) => {
-  const response = await client.put(`/logos/${id}`, data);
+  // Handle image upload if provided
+  let updateData = { ...data };
+  if (data.imageFile instanceof File) {
+    try {
+      const formData = new FormData();
+      formData.append('image', data.imageFile);
+      const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      if (uploadResponse.ok) {
+        const uploadData = await uploadResponse.json();
+        updateData.image = uploadData.path;
+      }
+    } catch (error) {
+      console.error('Error uploading logo image:', error);
+    }
+  }
+  delete updateData.imageFile; // Remove the File object before sending
+  
+  const response = await client.put(`/logos/${id}`, updateData);
   return response.data;
 };
 
@@ -228,13 +306,13 @@ export const getAds = async () => {
 
 export const exportDatabase = async () => {
   try {
-    window.open('http://localhost:5000/api/export-database', '_blank');
+    window.open('http://localhost:3000/api/export-database', '_blank');
   } catch (error) {
     console.error('Error exporting database:', error);
   }
 };
 
 export const importDatabase = async (file) => {
-  console.warn('Import database not implemented for API server');
-  console.log('Please replace the database/travel_agency.db file manually');
+  console.warn('Import database not implemented for JSON server');
+  console.log('Please replace the data/database.json file manually');
 };

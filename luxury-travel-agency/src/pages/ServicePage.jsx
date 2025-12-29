@@ -623,6 +623,7 @@ const BookingFormSection = styled.div`
   @media (max-width: 968px) {
     grid-template-columns: 1fr;
     gap: 2rem;
+    padding: 0 1rem 2rem;
   }
 `;
 
@@ -633,7 +634,8 @@ const BookingForm = styled.form`
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 
   @media (max-width: 768px) {
-    padding: 2rem;
+    padding: 1.5rem;
+    border-radius: 15px;
   }
 `;
 
@@ -643,16 +645,29 @@ const FormTitle = styled.h3`
   color: #6A1B82;
   margin-bottom: 0.5rem;
   font-family: 'Playfair Display', serif;
+  
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
 `;
 
 const FormSubtitle = styled.p`
   color: #666;
   margin-bottom: 2rem;
   font-size: 1.1rem;
+  
+  @media (max-width: 768px) {
+    font-size: 0.95rem;
+    margin-bottom: 1.5rem;
+  }
 `;
 
 const FormGroup = styled.div`
   margin-bottom: 1.5rem;
+  
+  @media (max-width: 768px) {
+    margin-bottom: 1rem;
+  }
 `;
 
 const FormLabel = styled.label`
@@ -661,6 +676,10 @@ const FormLabel = styled.label`
   color: #1a1a1a;
   margin-bottom: 0.5rem;
   font-size: 0.95rem;
+  
+  @media (max-width: 768px) {
+    font-size: 0.9rem;
+  }
 `;
 
 const FormInput = styled.input`
@@ -671,6 +690,7 @@ const FormInput = styled.input`
   font-size: 1rem;
   transition: all 0.3s ease;
   background: #fafafa;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
@@ -681,6 +701,11 @@ const FormInput = styled.input`
 
   &::placeholder {
     color: #999;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.875rem;
+    font-size: 0.95rem;
   }
 `;
 
@@ -693,12 +718,18 @@ const FormSelect = styled.select`
   transition: all 0.3s ease;
   background: #fafafa;
   cursor: pointer;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
     border-color: #6A1B82;
     background: white;
     box-shadow: 0 0 0 3px rgba(106, 27, 130, 0.1);
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.875rem;
+    font-size: 0.95rem;
   }
 `;
 
@@ -713,6 +744,7 @@ const FormTextarea = styled.textarea`
   min-height: 120px;
   transition: all 0.3s ease;
   background: #fafafa;
+  box-sizing: border-box;
 
   &:focus {
     outline: none;
@@ -723,6 +755,12 @@ const FormTextarea = styled.textarea`
 
   &::placeholder {
     color: #999;
+  }
+  
+  @media (max-width: 768px) {
+    padding: 0.875rem;
+    font-size: 0.95rem;
+    min-height: 100px;
   }
 `;
 
@@ -1195,6 +1233,20 @@ const ServicePage = () => {
     'city-airport-lcy': 5
   };
 
+  // Custom vehicle order for vehicle-hire
+  const vehicleOrder = {
+    'saloon-car': 1,
+    'estate-car': 2,
+    'mpv': 3,
+    'mpv-plus': 4,
+    '8-seater': 5,
+    '16-seater': 6,
+    '23-seater': 7,
+    '33-seater': 8,
+    '51-seater': 9,
+    '83-seater': 10
+  };
+
   // When on /service/tours, show L1 tour categories (UK Tours, European Tours, etc.)
   // When on /service/uk-tours, show L2 subcategories (Scotland, Wales, etc.)
   const childCategories = id === 'tours'
@@ -1202,12 +1254,23 @@ const ServicePage = () => {
     : (allCategories || [])
         .filter((c) => c.parent_id === activeParentId)
         .sort((a, b) => {
+          const normalizedSlug = normalize(a.slug || a.name || '');
+          const normalizedSlugB = normalize(b.slug || b.name || '');
+          
           // Special sorting for airport-transfers: use custom order
           if (id === 'airport-transfers' || (matchedCategory && normalize(matchedCategory.slug || matchedCategory.name || '') === 'airport-transfers')) {
-            const orderA = airportOrder[normalize(a.slug || a.name || '')] || 999;
-            const orderB = airportOrder[normalize(b.slug || b.name || '')] || 999;
+            const orderA = airportOrder[normalizedSlug] || 999;
+            const orderB = airportOrder[normalizedSlugB] || 999;
             return orderA - orderB;
           }
+          
+          // Special sorting for vehicle-hire: use custom order
+          if (id === 'vehicle-hire' || (matchedCategory && normalize(matchedCategory.slug || matchedCategory.name || '') === 'vehicle-hire')) {
+            const orderA = vehicleOrder[normalizedSlug] || 999;
+            const orderB = vehicleOrder[normalizedSlugB] || 999;
+            return orderA - orderB;
+          }
+          
           // Default sorting by sort_order field
           return (a.sort_order || 0) - (b.sort_order || 0);
         });
@@ -1344,8 +1407,9 @@ const ServicePage = () => {
         <HeroSection>
           <HeroBackground>
             <img 
-              src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80" 
+              src="/logo.png" 
               alt="Loading" 
+              style={{ objectFit: 'contain', background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
             />
           </HeroBackground>
           <HeroContent>
@@ -1730,154 +1794,191 @@ const ServicePage = () => {
             <BookingForm onSubmit={handleBookingSubmit}>
               <FormTitle>Book Now</FormTitle>
               <FormSubtitle>
-                To book your vehicle hire, either give us a call on +44(0) 20 8890 8181 or fill out the form below with your preferred dates and vehicle choice. We'll get back to you within one working day to discuss furthe
+                To book your vehicle hire, either give us a call on +44(0) 20 8890 8181 or fill out the form below with your preferred dates and vehicle choice. We'll get back to you within one working day to discuss further.
               </FormSubtitle>
 
-              <FormLabel>Vehicle Details</FormLabel>
-              
-              <FormInput
-                type="date"
-                name="pickupDate"
-                value={bookingForm.pickupDate}
-                onChange={handleBookingChange}
-                required
-              />
-              <FormLabel>Pick Up Date *</FormLabel>
+              <FormGroup>
+                <FormLabel htmlFor="pickupDate">Pick Up Date *</FormLabel>
+                <FormInput
+                  type="date"
+                  id="pickupDate"
+                  name="pickupDate"
+                  value={bookingForm.pickupDate}
+                  onChange={handleBookingChange}
+                  required
+                />
+              </FormGroup>
 
-              <FormInput
-                type="time"
-                name="pickupTime"
-                value={bookingForm.pickupTime}
-                onChange={handleBookingChange}
-                required
-              />
-              <FormLabel>Pick Up Time</FormLabel>
+              <FormGroup>
+                <FormLabel htmlFor="pickupTime">Pick Up Time *</FormLabel>
+                <FormInput
+                  type="time"
+                  id="pickupTime"
+                  name="pickupTime"
+                  value={bookingForm.pickupTime}
+                  onChange={handleBookingChange}
+                  required
+                />
+              </FormGroup>
 
-              <FormInput
-                type="text"
-                name="pickupAddress1"
-                placeholder="Address Line 1"
-                value={bookingForm.pickupAddress1}
-                onChange={handleBookingChange}
-                required
-              />
-              <FormLabel>Pick Up Address *</FormLabel>
-
-              <FormInput
-                type="text"
-                name="pickupAddress2"
-                placeholder="Address Line 2"
-                value={bookingForm.pickupAddress2}
-                onChange={handleBookingChange}
-              />
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              <FormGroup>
+                <FormLabel htmlFor="pickupAddress1">Pick Up Address *</FormLabel>
                 <FormInput
                   type="text"
-                  name="pickupCity"
-                  placeholder="City"
-                  value={bookingForm.pickupCity}
+                  id="pickupAddress1"
+                  name="pickupAddress1"
+                  placeholder="Address Line 1"
+                  value={bookingForm.pickupAddress1}
                   onChange={handleBookingChange}
+                  required
                 />
                 <FormInput
                   type="text"
-                  name="pickupPostcode"
-                  placeholder="Postal / Zip Code"
-                  value={bookingForm.pickupPostcode}
+                  name="pickupAddress2"
+                  placeholder="Address Line 2 (Optional)"
+                  value={bookingForm.pickupAddress2}
                   onChange={handleBookingChange}
+                  style={{ marginTop: '0.5rem' }}
                 />
-              </div>
+              </FormGroup>
 
-              <FormLabel>Drop Off Same Address</FormLabel>
-              <FormSelect
-                name="dropoffSameAddress"
-                value={bookingForm.dropoffSameAddress}
-                onChange={handleBookingChange}
-              >
-                <option value="">Select Drop Off Address</option>
-                <option value="yes">Yes</option>
-                <option value="no">No (different address)</option>
-              </FormSelect>
-
-              {bookingForm.dropoffSameAddress === 'no' && (
-                <>
-                  <FormLabel>Drop Off Address *</FormLabel>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <FormGroup>
+                  <FormLabel htmlFor="pickupCity">City *</FormLabel>
                   <FormInput
                     type="text"
-                    name="dropoffAddress1"
-                    placeholder="Drop Off Address Line 1"
-                    value={bookingForm.dropoffAddress1}
+                    id="pickupCity"
+                    name="pickupCity"
+                    placeholder="City"
+                    value={bookingForm.pickupCity}
                     onChange={handleBookingChange}
                     required
                   />
-
+                </FormGroup>
+                <FormGroup>
+                  <FormLabel htmlFor="pickupPostcode">Postcode *</FormLabel>
                   <FormInput
                     type="text"
-                    name="dropoffAddress2"
-                    placeholder="Drop Off Address Line 2"
-                    value={bookingForm.dropoffAddress2}
+                    id="pickupPostcode"
+                    name="pickupPostcode"
+                    placeholder="Postal / Zip Code"
+                    value={bookingForm.pickupPostcode}
                     onChange={handleBookingChange}
+                    required
                   />
+                </FormGroup>
+              </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                    <FormInput
-                      type="text"
-                      name="dropoffCity"
-                      placeholder="City"
-                      value={bookingForm.dropoffCity}
-                      onChange={handleBookingChange}
-                    />
-                    <FormInput
-                      type="text"
-                      name="dropoffPostcode"
-                      placeholder="Postal / Zip Code"
-                      value={bookingForm.dropoffPostcode}
-                      onChange={handleBookingChange}
-                    />
-                  </div>
-                </>
-              )}
+              <FormGroup>
+                <FormLabel htmlFor="dropoffAddress1">Drop Off Address *</FormLabel>
+                <FormInput
+                  type="text"
+                  id="dropoffAddress1"
+                  name="dropoffAddress1"
+                  placeholder="Address Line 1"
+                  value={bookingForm.dropoffAddress1}
+                  onChange={handleBookingChange}
+                  required
+                />
+                <FormInput
+                  type="text"
+                  name="dropoffAddress2"
+                  placeholder="Address Line 2 (Optional)"
+                  value={bookingForm.dropoffAddress2}
+                  onChange={handleBookingChange}
+                  style={{ marginTop: '0.5rem' }}
+                />
+              </FormGroup>
 
-              <FormInput
-                type="date"
-                name="returnDate"
-                value={bookingForm.returnDate}
-                onChange={handleBookingChange}
-              />
-              <FormLabel>Return Date *</FormLabel>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <FormGroup>
+                  <FormLabel htmlFor="dropoffCity">City *</FormLabel>
+                  <FormInput
+                    type="text"
+                    id="dropoffCity"
+                    name="dropoffCity"
+                    placeholder="City"
+                    value={bookingForm.dropoffCity}
+                    onChange={handleBookingChange}
+                    required
+                  />
+                </FormGroup>
+                <FormGroup>
+                  <FormLabel htmlFor="dropoffPostcode">Postcode *</FormLabel>
+                  <FormInput
+                    type="text"
+                    id="dropoffPostcode"
+                    name="dropoffPostcode"
+                    placeholder="Postal / Zip Code"
+                    value={bookingForm.dropoffPostcode}
+                    onChange={handleBookingChange}
+                    required
+                  />
+                </FormGroup>
+              </div>
 
-              <FormInput
-                type="time"
-                name="returnTime"
-                value={bookingForm.returnTime}
-                onChange={handleBookingChange}
-              />
-              <FormLabel>Return Time</FormLabel>
+              <FormGroup>
+                <FormLabel htmlFor="returnDate">Return Date *</FormLabel>
+                <FormInput
+                  type="date"
+                  id="returnDate"
+                  name="returnDate"
+                  value={bookingForm.returnDate}
+                  onChange={handleBookingChange}
+                  required
+                />
+              </FormGroup>
 
-              <FormInput
-                type="number"
-                name="passengers"
-                placeholder="Number of passengers"
-                value={bookingForm.passengers}
-                onChange={handleBookingChange}
-                required
-              />
-              <FormLabel>Number of Passengers / Luggage *</FormLabel>
+              <FormGroup>
+                <FormLabel htmlFor="returnTime">Return Time *</FormLabel>
+                <FormInput
+                  type="time"
+                  id="returnTime"
+                  name="returnTime"
+                  value={bookingForm.returnTime}
+                  onChange={handleBookingChange}
+                  required
+                />
+              </FormGroup>
 
-              <FormSelect
-                name="vehicleType"
-                value={bookingForm.vehicleType}
-                onChange={handleBookingChange}
-                required
+              <FormGroup>
+                <FormLabel htmlFor="passengers">Number of Passengers / Luggage *</FormLabel>
+                <FormInput
+                  type="number"
+                  id="passengers"
+                  name="passengers"
+                  placeholder="Number of passengers"
+                  value={bookingForm.passengers}
+                  onChange={handleBookingChange}
+                  required
+                  min="1"
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <FormLabel htmlFor="vehicleType">Vehicle Type *</FormLabel>
+                <FormSelect
+                  id="vehicleType"
+                  name="vehicleType"
+                  value={bookingForm.vehicleType}
+                  onChange={handleBookingChange}
+                  required
+                >
+                  <option value="">Select Vehicle Type</option>
+                  {childCategories.map(sub => (
+                    <option key={sub.id} value={sub.name}>{sub.name}</option>
+                  ))}
+                </FormSelect>
+              </FormGroup>
+
+              <SubmitButton
+                type="submit"
+                disabled={isSubmitting}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <option value="">Select Vehicle Type</option>
-                {childCategories.map(sub => (
-                  <option key={sub.id} value={sub.name}>{sub.name}</option>
-                ))}
-              </FormSelect>
-              <FormLabel>Vehicle type *</FormLabel>
-
-              <SubmitButton type="submit">Next →</SubmitButton>
+                {isSubmitting ? 'Sending...' : 'Submit Booking Request →'}
+              </SubmitButton>
             </BookingForm>
           </div>
         </PackagesSection>
@@ -1892,13 +1993,14 @@ const ServicePage = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.8 }}
                 >
-                  {id === 'tours' ? 'Tour Categories' : `${selectedCategory?.name || derivedService.title} Destinations`}
+                  {id === 'tours' ? 'Tour Categories' : `${selectedCategory?.name || derivedService.title}`}
                 </motion.h2>
               </SectionHeader>
               <CategoryGrid>
                 {childCategories.map((sub, index) => {
                   const slug = sub.slug || sub.id || normalize(sub.name || '');
-                  const linkTarget = `/service/${slug}`;
+                  const isOtherServices = normalize(id) === 'other-services';
+                  const linkTarget = isOtherServices ? '/contact-us' : `/service/${slug}`;
                   const subImage = getImage(sub);
                   const location = sub.location || null;
                   
@@ -1931,7 +2033,7 @@ const ServicePage = () => {
                         )}
                         <CategoryFooter>
                           <ViewDetailsButton>
-                            View Details
+                            {isOtherServices ? 'Enquire Now' : 'View Details'}
                             <ArrowRightIcon style={{ width: '16px', height: '16px' }} />
                           </ViewDetailsButton>
                         </CategoryFooter>

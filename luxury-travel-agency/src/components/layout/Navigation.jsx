@@ -360,7 +360,7 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
               }}
             >
               <NavLink
-                href="/service/${categorySlug}"
+                href={`/service/${categorySlug}`}
                 onClick={(e) => {
                   e.preventDefault();
                   if (window.innerWidth <= 768) {
@@ -376,6 +376,8 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
                   } else {
                     // Desktop: navigate
                     navigate(`/service/${categorySlug}`);
+                    setOpenSlug(null);
+                    setExpandedSubSlug(null);
                   }
                 }}
                 whileHover={{ scale: 1.05 }}
@@ -442,9 +444,51 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
                             </DropdownPill>
                                               
                             {/* L2 Items - Show below L1 */}
-                            {hasGrandchildren && isExpanded && grandchildren
-                              .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-                              .map((grandchild) => {
+                            {hasGrandchildren && isExpanded && (() => {
+                              // Custom sorting for airport-transfers and vehicle-hire
+                              const airportOrder = {
+                                'heathrow-lhr': 1,
+                                'gatwick-lgw': 2,
+                                'stansted-airport-stn': 3,
+                                'luton-airport-ltn': 4,
+                                'city-airport-lcy': 5
+                              };
+                              
+                              const vehicleOrder = {
+                                'saloon-car': 1,
+                                'estate-car': 2,
+                                'mpv': 3,
+                                'mpv-plus': 4,
+                                '8-seater': 5,
+                                '16-seater': 6,
+                                '23-seater': 7,
+                                '33-seater': 8,
+                                '51-seater': 9,
+                                '83-seater': 10
+                              };
+                              
+                              const sortedGrandchildren = grandchildren.sort((a, b) => {
+                                const slugA = normalize(a.slug || a.name || '');
+                                const slugB = normalize(b.slug || b.name || '');
+                                
+                                // Check if parent is airport-transfers
+                                if (childSlug === 'airport-transfers') {
+                                  const orderA = airportOrder[slugA] || 999;
+                                  const orderB = airportOrder[slugB] || 999;
+                                  return orderA - orderB;
+                                }
+                                
+                                // Check if parent is vehicle-hire
+                                if (childSlug === 'vehicle-hire') {
+                                  const orderA = vehicleOrder[slugA] || 999;
+                                  const orderB = vehicleOrder[slugB] || 999;
+                                  return orderA - orderB;
+                                }
+                                
+                                return (a.sort_order || 0) - (b.sort_order || 0);
+                              });
+                              
+                              return sortedGrandchildren.map((grandchild) => {
                                 const grandchildSlug = grandchild.slug || grandchild.id || normalize(grandchild.name || '');
                                 // For airport-transfers and vehicle-hire subcategories, link to parent instead
                                 // Check if parent (child) is airport-transfers or vehicle-hire
@@ -467,7 +511,8 @@ const Navigation = ({ isMobileMenuOpen, onClose }) => {
                                     ↳ {grandchild.name}
                                   </L2Link>
                                 );
-                              })}
+                              });
+                            })()}
                           </React.Fragment>
                         );
                       })}
