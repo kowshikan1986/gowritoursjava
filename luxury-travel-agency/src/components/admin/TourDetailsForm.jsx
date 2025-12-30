@@ -153,13 +153,42 @@ const TourDetailsForm = ({ details, onChange }) => {
       </Field>
       
       <Field>
-        <Label>Detailed Overview</Label>
+        <Label>Tour Overview (one per line)</Label>
+        <TextArea
+          value={(details.tourOverview || []).join('\n')}
+          onChange={(e) => handleDetailsChange('tourOverview', e.target.value.split('\n').filter(h => h.trim()))}
+          placeholder="Gretna Green – Explore the romantic village famous for runaway weddings\nWhisky Tasting at Gretna Green – Sample authentic Scottish whisky in a traditional setting\nGlasgow City Tour – Discover Glasgow Cathedral, the vibrant Main Square, and the prestigious University of Glasgow"
+          rows="8"
+        />
+        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          These points appear as the bullet list under "Tour Overview" on the tour page.
+        </p>
+      </Field>
+      
+      <Field>
+        <Label>Tour Overview (boxed, one per line)</Label>
         <TextArea
           value={details.detailedOverview || ''}
           onChange={(e) => handleDetailsChange('detailedOverview', e.target.value)}
-          placeholder="Provide a comprehensive overview of the tour, including what makes it special and unique."
-          rows="6"
+          placeholder="Enter one highlight per line. Each line becomes a bullet with a tick on the tour page."
+          rows="8"
         />
+        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          Add one line per point (no dashes needed). These show in the boxed "Tour Overview" section near the top of the tour page.
+        </p>
+      </Field>
+
+      <Field>
+        <Label>Additional Tour Highlights (one per line)</Label>
+        <TextArea
+          value={(details.highlights || []).join('\n')}
+          onChange={(e) => handleDetailsChange('highlights', e.target.value.split('\n').filter(h => h.trim()))}
+          placeholder="(Optional) Extra highlights to show under Tour Highlights on the tour page."
+          rows="4"
+        />
+        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          These lines appear in the "Tour Highlights" section on the tour page.
+        </p>
       </Field>
       
       <Field>
@@ -169,6 +198,27 @@ const TourDetailsForm = ({ details, onChange }) => {
           onChange={(e) => handleDetailsChange('importantNotes', e.target.value)}
           placeholder="Enter any important notes or information for travelers."
           rows="4"
+        />
+      </Field>
+
+      <Field>
+        <Label>Other Information & Terms & Conditions</Label>
+        <TextArea
+          value={details.otherInformation || ''}
+          onChange={(e) => handleDetailsChange('otherInformation', e.target.value)}
+          placeholder={`Enter terms and conditions, important information, or other details for travelers.
+
+Example structure:
+
+• Section Title
+  - Detail 1
+  - Detail 2
+
+• Another Section
+  - More details
+
+For the Isle of Wight tour, include pickup info, travel insurance, wheelchair policy, etc.`}
+          rows="12"
         />
       </Field>
       
@@ -194,16 +244,6 @@ const TourDetailsForm = ({ details, onChange }) => {
           value={details.hotels}
           onChange={(e) => handleDetailsChange('hotels', e.target.value)}
           placeholder="3 nights at Premier Inn or Holiday Inn Express Strathclyde or Similar"
-        />
-      </Field>
-      
-      <Field>
-        <Label>Tour Highlights (one per line)</Label>
-        <TextArea
-          value={details.highlights.join('\n')}
-          onChange={(e) => handleDetailsChange('highlights', e.target.value.split('\n').filter(h => h.trim()))}
-          placeholder="Nevis Range* with entrance&#10;Glasgow City Tour covering Glasgow Cathedral"
-          rows="6"
         />
       </Field>
       

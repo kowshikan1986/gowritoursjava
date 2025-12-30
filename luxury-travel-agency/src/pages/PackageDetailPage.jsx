@@ -334,6 +334,164 @@ const InfoBox = styled.div`
   border-left: 4px solid #6A1B82;
 `;
 
+const OverviewCard = styled.div`
+  background: linear-gradient(135deg, #f8f5ff 0%, #f3f4ff 100%);
+  padding: 1.75rem;
+  border-radius: 14px;
+  border: 1px solid #e5d9ff;
+  box-shadow: 0 10px 30px rgba(106, 27, 130, 0.08);
+`;
+
+const DetailedItinerarySection = styled.div`
+  margin-top: 2rem;
+  
+  .day-section {
+    margin-bottom: 3rem;
+    background: linear-gradient(135deg, #f8f5ff 0%, #f3f4ff 100%);
+    border-radius: 16px;
+    border-left: 5px solid #6A1B82;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(106, 27, 130, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(106, 27, 130, 0.15);
+    }
+  }
+  
+  .day-header {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #6A1B82;
+    margin-bottom: 1.5rem;
+    font-family: 'Playfair Display', serif;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .day-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #6A1B82 0%, #7C2E9B 100%);
+    color: white;
+    border-radius: 50%;
+    font-weight: bold;
+    font-size: 1.2rem;
+  }
+  
+  .stop-item {
+    margin-bottom: 2rem;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  .stop-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 0.75rem;
+  }
+  
+  .stop-description {
+    color: #4a4a4a;
+    line-height: 1.8;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+  }
+  
+  .meals {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(106, 27, 130, 0.2);
+    font-weight: 600;
+    color: #6A1B82;
+    font-size: 0.95rem;
+  }
+`;
+
+const TermsConditionsSection = styled.div`
+  margin-top: 2rem;
+  
+  .tc-section {
+    margin-bottom: 2.5rem;
+    background: linear-gradient(135deg, #fef5e7 0%, #fef9f3 100%);
+    border-radius: 16px;
+    border-left: 5px solid #f59e0b;
+    padding: 2rem;
+    box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15);
+    }
+  }
+  
+  .tc-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #d97706;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: 'Playfair Display', serif;
+  }
+  
+  .tc-header {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #000000;
+    margin: 1.5rem 0 1rem 0;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  }
+  
+  .tc-title-simple {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #d97706;
+    margin: 1.5rem 0 1rem 0;
+    padding: 0.75rem 0;
+    border-bottom: 2px solid rgba(217, 119, 6, 0.2);
+  }
+  
+  .tc-icon {
+    font-size: 1.75rem;
+  }
+  
+  .tc-content {
+    color: #4a4a4a;
+    line-height: 1.8;
+    font-size: 1rem;
+    
+    p {
+      margin: 0 0 1rem 0;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    
+    ul {
+      margin: 1rem 0;
+      padding-left: 1.5rem;
+      
+      li {
+        margin-bottom: 0.5rem;
+        line-height: 1.6;
+      }
+    }
+  }
+`;
+
 const GalleryGrid = styled.div`
   display: flex;
   flex-direction: column;
@@ -399,6 +557,13 @@ const PackageDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
+  const overviewBullets = packageData?.detailedOverview
+    ? packageData.detailedOverview
+        .split(/\r?\n/)
+        .map(item => item.trim())
+        .filter(Boolean)
+    : [];
+
   useEffect(() => {
     const fetchPackageData = async () => {
       setLoading(true);
@@ -438,6 +603,7 @@ const PackageDetailPage = () => {
             location: tour.location,
             description: tour.description,
             image: tour.featured_image,
+            tourOverview: details.tourOverview || [],
             highlights: details.highlights || [],
             priceIncludes: details.priceIncludes || [],
             itinerary: details.itinerary || [],
@@ -448,8 +614,10 @@ const PackageDetailPage = () => {
             importantNotes: details.importantNotes || '',
             tourDates: details.tourDates || [],
             detailedItinerary: details.detailedItinerary || '',
+            otherInformation: details.otherInformation || '',
             hotels: details.hotels || '',
             starDifference: details.starDifference || [],
+            otherInfo: details.otherInfo || [],
             additionalExcursions: details.additionalExcursions || [],
             galleryImages: details.galleryImages || [],
           });
@@ -562,6 +730,15 @@ const PackageDetailPage = () => {
             >
               Dates
             </TabButton>
+            {packageData?.otherInformation && packageData.otherInformation.trim() && (
+              <TabButton 
+                active={activeTab === 'info'} 
+                onClick={() => setActiveTab('info')}
+              >
+                Other Info
+              </TabButton>
+            )}
+
           </TabContainer>
 
           <AnimatePresence mode="wait">
@@ -591,14 +768,38 @@ const PackageDetailPage = () => {
                   {packageData.description}
                 </p>
                 
-                {/* Detailed Overview */}
-                {packageData.detailedOverview && (
-                  <div style={{ marginBottom: '2rem', padding: '1.5rem', background: '#f9fafb', borderRadius: '12px', borderLeft: '4px solid #6A1B82' }}>
-                    <h4 style={{ marginBottom: '1rem', color: '#6A1B82', fontSize: '1.25rem', fontWeight: 700 }}>Tour Overview</h4>
-                    <p style={{ margin: 0, lineHeight: '1.8', color: '#4a4a4a', whiteSpace: 'pre-wrap' }}>{packageData.detailedOverview}</p>
+                {/* Tour Overview (boxed list) */}
+                {overviewBullets.length > 0 && (
+                  <div style={{ marginBottom: '2rem' }}>
+                    <SectionTitle>Tour Overview</SectionTitle>
+                    <OverviewCard>
+                      <HighlightList>
+                        {overviewBullets.map((point, idx) => (
+                          <HighlightItem key={idx}>
+                            <CheckCircleIcon />
+                            {point}
+                          </HighlightItem>
+                        ))}
+                      </HighlightList>
+                    </OverviewCard>
                   </div>
                 )}
                 
+                {/* Tour Overview points (plain list) */}
+                {packageData.tourOverview && packageData.tourOverview.length > 0 && (
+                  <div style={{ marginBottom: '2rem' }}>
+                    <SectionTitle><CheckCircleIcon /> Tour Overview</SectionTitle>
+                    <HighlightList>
+                      {packageData.tourOverview.map((highlight, index) => (
+                        <HighlightItem key={index}>
+                          <CheckCircleIcon />
+                          {highlight}
+                        </HighlightItem>
+                      ))}
+                    </HighlightList>
+                  </div>
+                )}
+
                 {/* Tour Highlights */}
                 {packageData.highlights && packageData.highlights.length > 0 && (
                   <div style={{ marginBottom: '2rem' }}>
@@ -613,7 +814,7 @@ const PackageDetailPage = () => {
                     </HighlightList>
                   </div>
                 )}
-                
+
                 {/* Price Includes */}
                 {packageData.priceIncludes && packageData.priceIncludes.length > 0 && (
                   <div style={{ marginBottom: '2rem' }}>
@@ -644,6 +845,8 @@ const PackageDetailPage = () => {
                   </div>
                 )}
                 
+
+
                 {/* Hotels */}
                 {packageData.hotels && (
                   <InfoBox>
@@ -695,7 +898,7 @@ const PackageDetailPage = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                {packageData.itinerary && packageData.itinerary.length > 0 ? (
+                {packageData.itinerary && packageData.itinerary.length > 0 && (
                   <div>
                     <SectionTitle><CalendarIcon /> Day-wise Itinerary</SectionTitle>
                     {packageData.itinerary.map((item) => (
@@ -705,21 +908,90 @@ const PackageDetailPage = () => {
                       </ItineraryItem>
                     ))}
                   </div>
-                ) : (
-                  <p>Itinerary details coming soon.</p>
                 )}
                 
                 {/* Detailed Day-by-Day Itinerary */}
                 {packageData.detailedItinerary && (
-                  <div style={{ marginTop: '2rem', marginBottom: '2rem' }}>
+                  <DetailedItinerarySection>
                     <SectionTitle><CalendarIcon /> Detailed Day-by-Day Itinerary</SectionTitle>
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                      <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#4a4a4a', fontFamily: 'inherit' }}>
-                        {packageData.detailedItinerary}
-                      </div>
-                    </div>
-                  </div>
+                    {packageData.detailedItinerary.split('DAY').slice(1).map((dayText, idx) => {
+                      const dayNum = idx + 1;
+                      const dayLabel = `DAY ${String(dayNum).padStart(2, '0')}`;
+                      const lines = dayText.trim().split('\n').filter(l => l.trim());
+                      const mealMatch = dayText.match(/[BLD]{1,3}(?=[\n$])/);
+                      const meals = mealMatch ? mealMatch[0] : '';
+                      
+                      return (
+                        <div key={dayNum} className="day-section">
+                          <div className="day-header">
+                            <div className="day-number">{dayNum}</div>
+                            <div>{dayLabel} - {dayText.split('\n')[0]?.trim() || `Day ${dayNum}`}</div>
+                          </div>
+                          <div style={{ marginBottom: '1.5rem' }}>
+                            {dayText.split('\n\n').slice(1).map((paragraph, pIdx) => {
+                              const lines = paragraph.split('\n').filter(l => l.trim());
+                              if (lines.length === 0) return null;
+                              const title = lines[0];
+                              const desc = lines.slice(1).join(' ');
+                              
+                              return (
+                                <div key={pIdx} className="stop-item">
+                                  {title && <div className="stop-title">🎯 {title}</div>}
+                                  {desc && <div className="stop-description">{desc}</div>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {meals && <div className="meals">Meals: {meals === 'B' ? 'Breakfast' : meals === 'L' ? 'Lunch' : meals === 'D' ? 'Dinner' : 'All Meals Included'}</div>}
+                        </div>
+                      );
+                    })}
+                  </DetailedItinerarySection>
                 )}
+              </motion.div>
+            )}
+
+            {activeTab === 'info' && (
+              <motion.div
+                key="info"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <SectionTitle style={{ fontWeight: 'normal' }}>📋 Other Information & Terms & Conditions</SectionTitle>
+                <TermsConditionsSection>
+                  {packageData.otherInformation && (
+                    <div className="tc-content">
+                      {packageData.otherInformation.split('\n\n').map((paragraph, idx) => {
+                        // Check if this is a section header (all caps or contains common section names)
+                        const isSectionHeader = paragraph.trim().match(/^(PICK-?UP|TRAVEL INSURANCE|WHEELCHAIRS|ESSENTIALS|COACHES|BAGGAGE|CHILDREN|TOUR MANAGER|WEATHER|SEATING|LOST|EXCURSIONS|ITINERARY)/i);
+                        
+                        return (
+                          <div key={idx} className="tc-section">
+                            {isSectionHeader ? (
+                              <div className="tc-header">
+                                {paragraph.trim()}
+                              </div>
+                            ) : (
+                              <>
+                                {paragraph.trim().startsWith('•') || paragraph.trim().startsWith('-') ? (
+                                  <ul>
+                                    {paragraph.split(/\n(?=•|-)/).map((item, itemIdx) => (
+                                      <li key={itemIdx}>{item.replace(/^(•|-)\s*/, '').trim()}</li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p>{paragraph.trim()}</p>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </TermsConditionsSection>
               </motion.div>
             )}
 
@@ -754,6 +1026,8 @@ const PackageDetailPage = () => {
                 )}
               </motion.div>
             )}
+
+
           </AnimatePresence>
         </MainContent>
 
