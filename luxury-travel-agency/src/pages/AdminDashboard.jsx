@@ -219,6 +219,7 @@ const AdminDashboard = () => {
     tour_code: '',
     details: {
       earlyBirdOffer: '',
+      tourOverview: [],
       highlights: [],
       priceIncludes: [],
       hotels: '',
@@ -226,6 +227,7 @@ const AdminDashboard = () => {
       additionalExcursions: [],
       pickupPoints: [],
       itinerary: [],
+      detailedItinerary: '',
       galleryImages: [], // Array of { image: base64, title: string, description: string }
     },
   });
@@ -245,6 +247,7 @@ const AdminDashboard = () => {
     tour_code: '',
     details: {
       earlyBirdOffer: '',
+      tourOverview: [],
       highlights: [],
       priceIncludes: [],
       hotels: '',
@@ -252,6 +255,7 @@ const AdminDashboard = () => {
       additionalExcursions: [],
       pickupPoints: [],
       itinerary: [],
+      detailedItinerary: '',
       galleryImages: [],
     },
   });
@@ -506,6 +510,7 @@ const AdminDashboard = () => {
         tour_code: '',
         details: {
           earlyBirdOffer: '',
+          tourOverview: [],
           highlights: [],
           priceIncludes: [],
           hotels: '',
@@ -513,6 +518,7 @@ const AdminDashboard = () => {
           additionalExcursions: [],
           pickupPoints: [],
           itinerary: [],
+          detailedItinerary: '',
         },
       });
       fetchData('tours');
@@ -550,6 +556,7 @@ const AdminDashboard = () => {
     setEditTourSlug(tour.slug);
     let parsedDetails = {
       earlyBirdOffer: '',
+      tourOverview: [],
       highlights: [],
       priceIncludes: [],
       hotels: '',
@@ -557,6 +564,7 @@ const AdminDashboard = () => {
       additionalExcursions: [],
       pickupPoints: [],
       itinerary: [],
+      detailedItinerary: '',
       galleryImages: [],
     };
     try {
@@ -596,6 +604,7 @@ const AdminDashboard = () => {
       tour_code: '',
       details: {
         earlyBirdOffer: '',
+        tourOverview: [],
         highlights: [],
         priceIncludes: [],
         hotels: '',
@@ -603,6 +612,7 @@ const AdminDashboard = () => {
         additionalExcursions: [],
         pickupPoints: [],
         itinerary: [],
+        detailedItinerary: '',
         galleryImages: [],
       },
     });

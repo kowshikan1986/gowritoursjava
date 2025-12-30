@@ -30,5 +30,8 @@ export default defineConfig(({ mode }) => {
         ...extraHosts,
       ],
     },
+    build: {
+      chunkSizeWarningLimit: 1500,
+    },
   }
 })

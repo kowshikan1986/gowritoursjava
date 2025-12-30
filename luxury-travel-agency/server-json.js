@@ -26,6 +26,18 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
+// Add cache control middleware for static files
+app.use((req, res, next) => {
+  if (req.path.endsWith('.js') || req.path.endsWith('.css') || req.path.endsWith('.woff2') || req.path.endsWith('.png') || req.path.endsWith('.jpg') || req.path.endsWith('.gif')) {
+    // Cache assets for long time (they have hashes in names)
+    res.set('Cache-Control', 'public, max-age=31536000, immutable');
+  } else if (req.path === '/index.html' || req.path === '/') {
+    // Never cache HTML - always fetch fresh
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate, public, max-age=0');
+  }
+  next();
+});
+
 // Serve static files
 app.use(express.static(path.join(__dirname, 'dist')));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -618,6 +630,8 @@ app.get('/api/export-database', (req, res) => {
 
 // Serve React app for all other routes
 app.get('*', (req, res) => {
+  // Never cache HTML
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate, public, max-age=0');
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 

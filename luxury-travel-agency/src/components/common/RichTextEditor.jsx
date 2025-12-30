@@ -1,154 +1,127 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 const EditorContainer = styled.div`
   border: 1px solid #d1d5db;
-  border-radius: 8px;
+  border-radius: 10px;
+  background: #fff;
   overflow: hidden;
 `;
 
 const Toolbar = styled.div`
-  background: #f9fafb;
-  border-bottom: 1px solid #d1d5db;
-  padding: 0.5rem;
   display: flex;
-  gap: 0.5rem;
   flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
 `;
 
 const ToolButton = styled.button`
-  padding: 0.4rem 0.8rem;
   border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background: white;
+  background: #fff;
+  border-radius: 6px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.9rem;
   cursor: pointer;
-  font-size: 0.85rem;
-  transition: all 0.2s;
-  
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  transition: all 0.15s ease;
+  color: #374151;
+
   &:hover {
-    background: #e5e7eb;
-  }
-  
-  &.active {
-    background: #6A1B82;
-    color: white;
-    border-color: #6A1B82;
+    background: #eef2ff;
+    border-color: #c7d2fe;
+    color: #4338ca;
   }
 `;
 
-const TextArea = styled.textarea`
-  width: 100%;
-  min-height: 300px;
-  padding: 1rem;
-  border: none;
-  font-size: 16px;
-  font-family: inherit;
-  resize: vertical;
-  
-  &:focus {
-    outline: none;
-  }
-`;
-
-const Preview = styled.div`
-  padding: 1rem;
-  min-height: 300px;
-  max-height: 500px;
+const EditorSurface = styled.div`
+  min-height: 240px;
+  max-height: 480px;
   overflow-y: auto;
-  background: white;
-  
-  h1, h2, h3 { margin-top: 1rem; margin-bottom: 0.5rem; }
-  p { margin-bottom: 0.5rem; }
-  ul, ol { margin-left: 1.5rem; margin-bottom: 0.5rem; }
-  img { max-width: 100%; border-radius: 8px; margin: 0.5rem 0; }
+  padding: 1rem;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #1f2937;
+  outline: none;
+  white-space: pre-wrap;
+
+  h1, h2, h3, h4, h5, h6 { margin: 0.75rem 0 0.35rem; font-weight: 700; }
+  p { margin: 0 0 0.65rem; }
+  ul, ol { margin: 0 0 0.65rem 1.25rem; }
+  strong { font-weight: 700; }
+  em { font-style: italic; }
+  u { text-decoration: underline; }
 `;
 
-const RichTextEditor = ({ value, onChange, placeholder = 'Write detailed description here...' }) => {
-  const [mode, setMode] = useState('edit');
+const Placeholder = styled.div`
+  position: absolute;
+  color: #9ca3af;
+  pointer-events: none;
+  padding: 1rem;
+`;
 
-  const insertTag = (tag) => {
-    const textarea = document.querySelector('textarea');
-    if (!textarea) return;
-    
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = value.substring(start, end) || 'text';
-    
-    let insertText = '';
-    switch(tag) {
-      case 'h1':
-        insertText = `<h1>${selectedText}</h1>`;
-        break;
-      case 'h2':
-        insertText = `<h2>${selectedText}</h2>`;
-        break;
-      case 'h3':
-        insertText = `<h3>${selectedText}</h3>`;
-        break;
-      case 'bold':
-        insertText = `<strong>${selectedText}</strong>`;
-        break;
-      case 'italic':
-        insertText = `<em>${selectedText}</em>`;
-        break;
-      case 'ul':
-        insertText = `<ul>\n  <li>${selectedText}</li>\n</ul>`;
-        break;
-      case 'ol':
-        insertText = `<ol>\n  <li>${selectedText}</li>\n</ol>`;
-        break;
-      case 'link':
-        insertText = `<a href="URL">${selectedText}</a>`;
-        break;
-      case 'image':
-        insertText = `<img src="IMAGE_URL" alt="${selectedText}" />`;
-        break;
-      default:
-        insertText = selectedText;
+const SurfaceWrapper = styled.div`
+  position: relative;
+`;
+
+const RichTextEditor = ({ value = '', onChange, placeholder = 'Start typing…' }) => {
+  const editorRef = useRef(null);
+  const [isFocused, setIsFocused] = useState(false);
+
+  // Keep DOM in sync when external value changes
+  useEffect(() => {
+    if (!editorRef.current) return;
+    if (editorRef.current.innerHTML !== value) {
+      editorRef.current.innerHTML = value || '';
     }
-    
-    const newValue = value.substring(0, start) + insertText + value.substring(end);
-    onChange(newValue);
+  }, [value]);
+
+  const runCommand = (cmd, arg = null) => {
+    editorRef.current?.focus();
+    document.execCommand(cmd, false, arg);
+    onChange?.(editorRef.current?.innerHTML || '');
   };
+
+  const handleInput = () => {
+    onChange?.(editorRef.current?.innerHTML || '');
+  };
+
+  const isEmpty = !value || value === '<br>' || value === '<div><br></div>';
 
   return (
     <EditorContainer>
       <Toolbar>
-        <ToolButton 
-          type="button"
-          className={mode === 'edit' ? 'active' : ''}
-          onClick={() => setMode('edit')}
-        >
-          Edit HTML
-        </ToolButton>
-        <ToolButton 
-          type="button"
-          className={mode === 'preview' ? 'active' : ''}
-          onClick={() => setMode('preview')}
-        >
-          Preview
-        </ToolButton>
-        <div style={{ borderLeft: '1px solid #d1d5db', height: '30px', margin: '0 0.5rem' }}></div>
-        <ToolButton type="button" onClick={() => insertTag('h1')}>H1</ToolButton>
-        <ToolButton type="button" onClick={() => insertTag('h2')}>H2</ToolButton>
-        <ToolButton type="button" onClick={() => insertTag('h3')}>H3</ToolButton>
-        <ToolButton type="button" onClick={() => insertTag('bold')}><strong>B</strong></ToolButton>
-        <ToolButton type="button" onClick={() => insertTag('italic')}><em>I</em></ToolButton>
-        <ToolButton type="button" onClick={() => insertTag('ul')}>• List</ToolButton>
-        <ToolButton type="button" onClick={() => insertTag('ol')}>1. List</ToolButton>
-        <ToolButton type="button" onClick={() => insertTag('link')}>Link</ToolButton>
-        <ToolButton type="button" onClick={() => insertTag('image')}>Image</ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('bold')}><strong>B</strong></ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('italic')}><em>I</em></ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('underline')}><u>U</u></ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('insertUnorderedList')}>• List</ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('insertOrderedList')}>1. List</ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('formatBlock', 'h3')}>H3</ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('formatBlock', 'h4')}>H4</ToolButton>
+        <ToolButton type="button" onClick={() => {
+          const url = window.prompt('Enter link URL');
+          if (url) runCommand('createLink', url);
+        }}>Link</ToolButton>
+        <ToolButton type="button" onClick={() => {
+          const url = window.prompt('Enter image URL');
+          if (url) runCommand('insertImage', url);
+        }}>Image</ToolButton>
       </Toolbar>
-      
-      {mode === 'edit' ? (
-        <TextArea
-          value={value || ''}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
+
+      <SurfaceWrapper>
+        {!isFocused && isEmpty && <Placeholder>{placeholder}</Placeholder>}
+        <EditorSurface
+          ref={editorRef}
+          contentEditable
+          suppressContentEditableWarning
+          onInput={handleInput}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
         />
-      ) : (
-        <Preview dangerouslySetInnerHTML={{ __html: value || '<p style="color: #9ca3af;">No content yet. Switch to Edit mode to add content.</p>' }} />
-      )}
+      </SurfaceWrapper>
     </EditorContainer>
   );
 };
