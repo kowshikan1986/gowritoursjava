@@ -585,7 +585,13 @@ const PackageDetailPage = () => {
               active={activeTab === 'otherinfo'} 
               onClick={() => setActiveTab('otherinfo')}
             >
-              Other Info
+              Other Information
+            </TabButton>
+            <TabButton 
+              active={activeTab === 'pickup'} 
+              onClick={() => setActiveTab('pickup')}
+            >
+              Pick Up
             </TabButton>
           </TabContainer>
 
@@ -835,6 +841,34 @@ const PackageDetailPage = () => {
                 {(!packageData.otherInfo || packageData.otherInfo.length === 0) && 
                  (!packageData.termsAndConditions || packageData.termsAndConditions.length === 0) && (
                   <p>No additional information available for this tour.</p>
+                )}
+              </motion.div>
+            )}
+
+            {activeTab === 'pickup' && (
+              <motion.div
+                key="pickup"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <SectionTitle><MapPinIcon /> Pick Up Points</SectionTitle>
+                {packageData.pickupPoints && packageData.pickupPoints.length > 0 ? (
+                  <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                    {packageData.pickupPoints.map((point, index) => (
+                      <div key={index} style={{ 
+                        padding: '0.75rem 0', 
+                        borderBottom: index < packageData.pickupPoints.length - 1 ? '1px solid #f3f4f6' : 'none',
+                        color: '#4a4a4a',
+                        lineHeight: '1.6'
+                      }}>
+                        {point.location}{point.time ? ` - ${point.time}` : ''}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p>Pick up points coming soon. Please contact us for details.</p>
                 )}
               </motion.div>
             )}
