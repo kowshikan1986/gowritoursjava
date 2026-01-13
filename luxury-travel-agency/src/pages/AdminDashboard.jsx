@@ -234,6 +234,7 @@ const AdminDashboard = () => {
 
   // Tour Edit State
   const [editTourSlug, setEditTourSlug] = useState(null);
+  const [duplicatingTour, setDuplicatingTour] = useState(null);
   const [tourEditForm, setTourEditForm] = useState({
     title: '',
     price: '',
@@ -521,6 +522,7 @@ const AdminDashboard = () => {
           detailedItinerary: '',
         },
       });
+      setDuplicatingTour(null); // Clear duplicating state after successful creation
       fetchData('tours');
     } catch (err) {
       setError(err.message || 'Unable to create tour');
@@ -550,6 +552,75 @@ const AdminDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Handle duplicating a tour
+  const handleDuplicateTour = (tour) => {
+    let parsedDetails = {
+      earlyBirdOffer: '',
+      tourOverview: [],
+      highlights: [],
+      priceIncludes: [],
+      hotels: '',
+      starDifference: [],
+      additionalExcursions: [],
+      pickupPoints: [],
+      itinerary: [],
+      detailedItinerary: '',
+      galleryImages: [],
+    };
+    try {
+      if (tour.details_json) {
+        parsedDetails = { ...parsedDetails, ...JSON.parse(tour.details_json) };
+      }
+    } catch (e) {
+      console.error('Error parsing tour details:', e);
+    }
+    
+    // Pre-fill the tour form with the tour data but mark as duplicate
+    setDuplicatingTour(tour);
+    setTourForm({
+      title: `${tour.title} (Copy)`,
+      price: tour.price || '',
+      duration: tour.duration || '',
+      location: tour.location || '',
+      description: tour.description || '',
+      category: tour.category_id || '',
+      is_active: true,
+      is_featured: false,
+      featured_image: null, // User should upload new image or we could copy it
+      tour_code: tour.tour_code ? `${tour.tour_code}-COPY` : '',
+      details: parsedDetails,
+    });
+  };
+
+  const handleCancelDuplicate = () => {
+    setDuplicatingTour(null);
+    setTourForm({
+      title: '',
+      price: '',
+      duration: '',
+      location: '',
+      description: '',
+      category: '',
+      is_active: true,
+      is_featured: false,
+      featured_image: null,
+      tour_code: '',
+      details: {
+        earlyBirdOffer: '',
+        tourOverview: [],
+        highlights: [],
+        priceIncludes: [],
+        hotels: '',
+        starDifference: [],
+        additionalExcursions: [],
+        pickupPoints: [],
+        itinerary: [],
+        detailedItinerary: '',
+        galleryImages: [],
+      },
+    });
   };
 
   const handleStartEditTour = (tour) => {
@@ -1197,7 +1268,26 @@ const AdminDashboard = () => {
       {user && dbInitialized && active === 'tours' && (
         <>
           <Card>
-            <h3>Create Tour</h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <h3 style={{ margin: 0 }}>{duplicatingTour ? 'Duplicate Tour' : 'Create Tour'}</h3>
+              {duplicatingTour && (
+                <Button $variant="outline" onClick={handleCancelDuplicate} style={{ color: '#b91c1c', borderColor: '#fca5a5' }}>
+                  Cancel Duplicate
+                </Button>
+              )}
+            </div>
+            {duplicatingTour && (
+              <div style={{ 
+                background: '#f3e8ff', 
+                border: '1px solid #9b59b6', 
+                borderRadius: '8px', 
+                padding: '0.75rem 1rem', 
+                marginBottom: '1rem',
+                color: '#6b21a8'
+              }}>
+                📋 You are duplicating: <strong>{duplicatingTour.title}</strong>. Modify the details below and save.
+              </div>
+            )}
             <Flex>
               <Field>
                 <Label>Title</Label>
@@ -1362,7 +1452,7 @@ const AdminDashboard = () => {
               onChange={(newDetails) => setTourForm({ ...tourForm, details: newDetails })}
             />
             
-            <Button onClick={handleCreateTour}>Save Tour</Button>
+            <Button onClick={handleCreateTour}>{duplicatingTour ? 'Create Duplicate' : 'Save Tour'}</Button>
           </Card>
 
           <Card>
@@ -1602,6 +1692,13 @@ const AdminDashboard = () => {
                                     </Button>
                                     <Button
                                       $variant="outline"
+                                      onClick={() => handleDuplicateTour(t)}
+                                      style={{ color: '#9b59b6', borderColor: '#d8b4fe' }}
+                                    >
+                                      Duplicate
+                                    </Button>
+                                    <Button
+                                      $variant="outline"
                                       onClick={() => toggleTourFlag(t, 'is_active')}
                                     >
                                       Toggle Active
@@ -1795,6 +1892,13 @@ const AdminDashboard = () => {
                                     style={{ color: '#2563eb', borderColor: '#93c5fd' }}
                                   >
                                     Edit
+                                  </Button>
+                                  <Button
+                                    $variant="outline"
+                                    onClick={() => handleDuplicateTour(t)}
+                                    style={{ color: '#9b59b6', borderColor: '#d8b4fe' }}
+                                  >
+                                    Duplicate
                                   </Button>
                                   <Button
                                     $variant="outline"

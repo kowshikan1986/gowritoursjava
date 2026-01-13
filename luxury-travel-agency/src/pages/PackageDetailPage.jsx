@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPinIcon, ClockIcon, CurrencyPoundIcon, CheckCircleIcon, CalendarIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, ClockIcon, CurrencyPoundIcon, CheckCircleIcon, CalendarIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import { fetchFrontendData, clearFrontendCache } from '../services/frontendData';
 import { onDataChange } from '../services/postgresDatabase';
 import { servicesData } from '../data/servicesData';
+import ItineraryBuilder from '../components/ItineraryBuilder';
 
 const PageContainer = styled.div`
   padding-top: 0;
@@ -349,6 +350,141 @@ const GalleryGrid = styled.div`
   margin-top: 2rem;
 `;
 
+// Sub-package tabs (e.g., 1-Day Tour, 2-Day Tour)
+const PackageTabsContainer = styled.div`
+  display: flex;
+  gap: 0;
+  margin-bottom: 2rem;
+  background: #f3f4f6;
+  border-radius: 16px;
+  padding: 0.5rem;
+  position: relative;
+  overflow: hidden;
+`;
+
+const PackageTab = styled(motion.button)`
+  background: ${props => props.active ? 'linear-gradient(135deg, #6A1B82 0%, #9333ea 100%)' : 'transparent'};
+  color: ${props => props.active ? 'white' : '#6A1B82'};
+  border: none;
+  padding: 1.25rem 2rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  position: relative;
+  z-index: 1;
+  box-shadow: ${props => props.active ? '0 8px 25px rgba(106, 27, 130, 0.4)' : 'none'};
+
+  &:hover {
+    background: ${props => props.active ? 'linear-gradient(135deg, #7C2E9B 0%, #a855f7 100%)' : 'rgba(106, 27, 130, 0.1)'};
+  }
+
+  @media (max-width: 640px) {
+    padding: 1rem 1rem;
+    font-size: 0.95rem;
+  }
+`;
+
+const PackageInfo = styled(motion.div)`
+  background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  border: 2px solid #d8b4fe;
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1.5rem;
+  box-shadow: 0 10px 40px rgba(147, 51, 234, 0.15);
+`;
+
+const PackageInfoItem = styled.div`
+  text-align: center;
+  padding: 1rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+
+  .label {
+    font-size: 0.75rem;
+    color: #9333ea;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+  }
+
+  .value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #6A1B82;
+    font-family: 'Playfair Display', serif;
+  }
+
+  @media (max-width: 640px) {
+    padding: 0.75rem;
+    .value {
+      font-size: 1.25rem;
+    }
+  }
+`;
+
+const PackageDescription = styled(motion.div)`
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-left: 4px solid #9333ea;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  
+  p {
+    color: #4a4a4a;
+    line-height: 1.7;
+    margin: 0;
+    font-size: 1.05rem;
+  }
+`;
+
+const ItineraryCard = styled(motion.div)`
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  border-left: 5px solid ${props => props.$dayColor || '#6A1B82'};
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: 'Day ${props => props.$day}';
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: ${props => props.$dayColor || '#6A1B82'};
+    color: white;
+    padding: 0.5rem 1.5rem;
+    border-radius: 0 16px 0 16px;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+`;
+
+const ItineraryTitle = styled.h4`
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+  font-family: 'Playfair Display', serif;
+  padding-right: 80px;
+`;
+
+const ItineraryDescription = styled.p`
+  color: #555;
+  line-height: 1.8;
+  font-size: 1rem;
+`;
+
 const GalleryImage = styled.div`
   width: 100%;
   height: 200px;
@@ -400,15 +536,138 @@ const GalleryImageContent = styled.div`
   }
 `;
 
+// Enhanced Package Cards for multi-package display
+const PackageCardsContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+`;
+
+const PackageCard = styled(motion.div)`
+  background: ${props => props.$active ? 'linear-gradient(135deg, #6A1B82 0%, #9333ea 100%)' : 'white'};
+  color: ${props => props.$active ? 'white' : '#1a1a1a'};
+  border-radius: 20px;
+  padding: 1.5rem;
+  cursor: pointer;
+  border: 2px solid ${props => props.$active ? '#6A1B82' : '#e5e7eb'};
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(106, 27, 130, 0.2);
+    border-color: #6A1B82;
+  }
+`;
+
+const PackageCardBadge = styled.span`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: ${props => props.$type === 'required' ? '#dc2626' : '#10b981'};
+  color: white;
+`;
+
+const PackageCardTitle = styled.h4`
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  font-family: 'Playfair Display', serif;
+`;
+
+const PackageCardPrice = styled.div`
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+`;
+
+const PackageCardDuration = styled.span`
+  font-size: 0.9rem;
+  opacity: 0.9;
+`;
+
+const ExpandableSection = styled(motion.div)`
+  overflow: hidden;
+  background: #fafafa;
+  border-radius: 12px;
+  margin-top: 1rem;
+`;
+
+const ExpandableContent = styled.div`
+  padding: 1.5rem;
+`;
+
+const TCSection = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid ${props => props.$color || '#6A1B82'};
+  
+  h5 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #1a1a1a;
+  }
+  
+  ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    
+    li {
+      padding: 0.5rem 0;
+      padding-left: 1.5rem;
+      position: relative;
+      color: #4a4a4a;
+      border-bottom: 1px solid #f3f4f6;
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      &::before {
+        content: '${props => props.$icon || '•'}';
+        position: absolute;
+        left: 0;
+      }
+    }
+  }
+`;
+
 const PackageDetailPage = () => {
   const { id } = useParams();
   const [activeTab, setActiveTab] = useState('overview');
+  const [activePackage, setActivePackage] = useState(0); // For sub-packages
+  const [expandedPackageDetails, setExpandedPackageDetails] = useState(null); // For expandable package cards
   const [packageData, setPackageData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  const overviewBullets = packageData?.detailedOverview
-    ? packageData.detailedOverview
+  // Get active sub-package data (if exists), otherwise use main package data
+  const hasSubPackages = packageData?.subPackages && packageData.subPackages.length > 0;
+  const currentSubPackage = hasSubPackages ? packageData.subPackages[activePackage] : null;
+  
+  // Helper to get data from current sub-package or main package
+  const getActiveData = (field) => {
+    if (currentSubPackage && currentSubPackage[field] && 
+        (Array.isArray(currentSubPackage[field]) ? currentSubPackage[field].length > 0 : currentSubPackage[field])) {
+      return currentSubPackage[field];
+    }
+    return packageData?.[field];
+  };
+
+  // Get overview bullets - uses getActiveData to show sub-package specific content
+  const detailedOverviewData = getActiveData('detailedOverview');
+  const overviewBullets = detailedOverviewData
+    ? detailedOverviewData
         .split(/\r?\n/)
         .map(item => item.trim())
         .filter(Boolean)
@@ -449,6 +708,7 @@ const PackageDetailPage = () => {
             title: tour.title,
             code: tour.tour_code,
             price: `£${tour.price}`,
+            childPrice: tour.child_price ? `£${tour.child_price}` : null,
             duration: tour.duration,
             location: tour.location,
             description: tour.description,
@@ -471,7 +731,12 @@ const PackageDetailPage = () => {
             termsAndConditions: details.termsAndConditions || [],
             additionalExcursions: details.additionalExcursions || [],
             galleryImages: details.galleryImages || [],
+            // Sub-packages for multi-option tours (e.g., 1-Day, 2-Day options)
+            subPackages: details.subPackages || [],
           });
+          
+          // Reset active package when loading new tour
+          setActivePackage(0);
           
           document.title = `${tour.title} | Luxury Travel Agency`;
           window.scrollTo(0, 0);
@@ -562,6 +827,71 @@ const PackageDetailPage = () => {
 
       <ContentContainer>
         <MainContent>
+          {/* Sub-package tabs for multi-option tours */}
+          {packageData.subPackages && packageData.subPackages.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <h3 style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: 700, 
+                color: '#1a1a1a', 
+                marginBottom: '1rem',
+                fontFamily: "'Playfair Display', serif"
+              }}>
+                🎯 Choose Your Package
+              </h3>
+              
+              {/* Enhanced Package Cards View */}
+              <PackageCardsContainer>
+                {packageData.subPackages.map((pkg, index) => (
+                  <PackageCard
+                    key={index}
+                    $active={activePackage === index}
+                    onClick={() => {
+                      setActivePackage(index);
+                    }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <PackageCardBadge $type={pkg.packageType || 'optional'}>
+                      {pkg.packageType === 'required' ? 'Required' : 'Optional'}
+                    </PackageCardBadge>
+                    <PackageCardTitle>{pkg.name || `Package ${index + 1}`}</PackageCardTitle>
+                    {pkg.price && <PackageCardPrice>£{pkg.price}</PackageCardPrice>}
+                    {pkg.duration && <PackageCardDuration>{pkg.duration}</PackageCardDuration>}
+                    {pkg.description && (
+                      <p style={{ 
+                        fontSize: '0.9rem', 
+                        marginTop: '0.75rem', 
+                        opacity: 0.9,
+                        lineHeight: 1.5 
+                      }}>
+                        {pkg.description.substring(0, 100)}{pkg.description.length > 100 ? '...' : ''}
+                      </p>
+                    )}
+                    <div style={{ 
+                      marginTop: '1rem', 
+                      fontSize: '0.85rem', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '0.5rem',
+                      color: activePackage === index ? '#6A1B82' : '#888',
+                      fontWeight: activePackage === index ? '600' : '400'
+                    }}>
+                      {activePackage === index ? '✓ Selected - See details below' : 'Click to select'}
+                    </div>
+                  </PackageCard>
+                ))}
+              </PackageCardsContainer>
+            </motion.div>
+          )}
+          
           <TabContainer>
             <TabButton 
               active={activeTab === 'overview'} 
@@ -593,6 +923,12 @@ const PackageDetailPage = () => {
             >
               Pick Up
             </TabButton>
+            <TabButton 
+              active={activeTab === 'builder'} 
+              onClick={() => setActiveTab('builder')}
+            >
+              🛠️ Build Itinerary
+            </TabButton>
           </TabContainer>
 
           <AnimatePresence mode="wait">
@@ -619,7 +955,7 @@ const PackageDetailPage = () => {
                 )}
                 
                 <p style={{ marginBottom: '2rem', lineHeight: '1.6', color: '#666' }}>
-                  {packageData.description}
+                  {getActiveData('description') || packageData.description}
                 </p>
                 
                 {/* Tour Overview (boxed list) */}
@@ -640,11 +976,11 @@ const PackageDetailPage = () => {
                 )}
                 
                 {/* Tour Overview points (plain list) */}
-                {packageData.tourOverview && packageData.tourOverview.length > 0 && (
+                {getActiveData('tourOverview') && getActiveData('tourOverview').length > 0 && (
                   <div style={{ marginBottom: '2rem' }}>
                     <SectionTitle><CheckCircleIcon /> Tour Overview</SectionTitle>
                     <HighlightList>
-                      {packageData.tourOverview.map((highlight, index) => (
+                      {getActiveData('tourOverview').map((highlight, index) => (
                         <HighlightItem key={index}>
                           <CheckCircleIcon />
                           {highlight}
@@ -655,11 +991,11 @@ const PackageDetailPage = () => {
                 )}
 
                 {/* Tour Highlights */}
-                {packageData.highlights && packageData.highlights.length > 0 && (
+                {getActiveData('highlights') && getActiveData('highlights').length > 0 && (
                   <div style={{ marginBottom: '2rem' }}>
                     <SectionTitle><CheckCircleIcon /> Tour Highlights</SectionTitle>
                     <HighlightList>
-                      {packageData.highlights.map((highlight, index) => (
+                      {getActiveData('highlights').map((highlight, index) => (
                         <HighlightItem key={index}>
                           <CheckCircleIcon />
                           {highlight}
@@ -670,13 +1006,28 @@ const PackageDetailPage = () => {
                 )}
 
                 {/* Price Includes */}
-                {packageData.priceIncludes && packageData.priceIncludes.length > 0 && (
+                {getActiveData('priceIncludes') && getActiveData('priceIncludes').length > 0 && (
                   <div style={{ marginBottom: '2rem' }}>
                     <SectionTitle><CheckCircleIcon /> Price Includes</SectionTitle>
                     <HighlightList>
-                      {packageData.priceIncludes.map((item, index) => (
+                      {getActiveData('priceIncludes').map((item, index) => (
                         <HighlightItem key={index}>
-                          <CheckCircleIcon style={{ color: '#6A1B82' }} />
+                          <CheckCircleIcon style={{ color: '#10b981' }} />
+                          {item}
+                        </HighlightItem>
+                      ))}
+                    </HighlightList>
+                  </div>
+                )}
+                
+                {/* Price Excludes */}
+                {getActiveData('priceExcludes') && getActiveData('priceExcludes').length > 0 && (
+                  <div style={{ marginBottom: '2rem' }}>
+                    <SectionTitle style={{ borderColor: '#ef4444' }}>❌ Price Excludes</SectionTitle>
+                    <HighlightList>
+                      {getActiveData('priceExcludes').map((item, index) => (
+                        <HighlightItem key={index}>
+                          <span style={{ color: '#ef4444', marginRight: '0.5rem' }}>✕</span>
                           {item}
                         </HighlightItem>
                       ))}
@@ -685,11 +1036,11 @@ const PackageDetailPage = () => {
                 )}
                 
                 {/* The Star Difference */}
-                {packageData.starDifference && packageData.starDifference.length > 0 && (
+                {getActiveData('starDifference') && getActiveData('starDifference').length > 0 && (
                   <div style={{ marginBottom: '2rem' }}>
                     <SectionTitle><CheckCircleIcon /> The Star Difference</SectionTitle>
                     <HighlightList>
-                      {packageData.starDifference.map((item, index) => (
+                      {getActiveData('starDifference').map((item, index) => (
                         <HighlightItem key={index}>
                           <CheckCircleIcon style={{ color: '#fbbf24' }} />
                           {item}
@@ -700,17 +1051,17 @@ const PackageDetailPage = () => {
                 )}
                 
                 {/* Hotels */}
-                {packageData.hotels && (
+                {getActiveData('hotels') && (
                   <InfoBox>
-                    <h4 style={{ marginBottom: '0.5rem', color: '#6A1B82' }}>Hotels</h4>
-                    <p style={{ margin: 0, color: '#4a4a4a' }}>{packageData.hotels}</p>
+                    <h4 style={{ marginBottom: '0.5rem', color: '#6A1B82' }}>🏨 Hotels / Accommodation</h4>
+                    <p style={{ margin: 0, color: '#4a4a4a' }}>{getActiveData('hotels')}</p>
                   </InfoBox>
                 )}
                 
                 {/* Additional Excursions */}
-                {packageData.additionalExcursions && packageData.additionalExcursions.length > 0 && (
+                {getActiveData('additionalExcursions') && getActiveData('additionalExcursions').length > 0 && (
                   <div style={{ marginTop: '2rem' }}>
-                    <SectionTitle>Additional Excursions</SectionTitle>
+                    <SectionTitle>🎯 Additional Excursions</SectionTitle>
                     <Table>
                       <thead>
                         <tr>
@@ -720,7 +1071,7 @@ const PackageDetailPage = () => {
                         </tr>
                       </thead>
                       <tbody>
-                        {packageData.additionalExcursions.map((exc, index) => (
+                        {getActiveData('additionalExcursions').map((exc, index) => (
                           <tr key={index}>
                             <td>{exc.name}</td>
                             <td>{exc.adult}</td>
@@ -733,10 +1084,10 @@ const PackageDetailPage = () => {
                 )}
                 
                 {/* Important Notes */}
-                {packageData.importantNotes && (
+                {getActiveData('importantNotes') && (
                   <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#fef3c7', borderRadius: '12px', borderLeft: '4px solid #f59e0b' }}>
                     <h4 style={{ marginBottom: '1rem', color: '#d97706', fontSize: '1.25rem', fontWeight: 700 }}>⚠️ Important Notes</h4>
-                    <p style={{ margin: 0, lineHeight: '1.8', color: '#78350f', whiteSpace: 'pre-wrap' }}>{packageData.importantNotes}</p>
+                    <p style={{ margin: 0, lineHeight: '1.8', color: '#78350f', whiteSpace: 'pre-wrap' }}>{getActiveData('importantNotes')}</p>
                   </div>
                 )}
               </motion.div>
@@ -750,10 +1101,10 @@ const PackageDetailPage = () => {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.3 }}
               >
-                {packageData.itinerary && packageData.itinerary.length > 0 && (
+                {getActiveData('itinerary') && getActiveData('itinerary').length > 0 && (
                   <div>
                     <SectionTitle><CalendarIcon /> Day-wise Itinerary</SectionTitle>
-                    {packageData.itinerary.map((item) => (
+                    {getActiveData('itinerary').map((item) => (
                       <ItineraryItem key={item.day} day={item.day}>
                         <DayTitle>Day {item.day}: {item.title}</DayTitle>
                         <DayDescription>{item.description}</DayDescription>
@@ -763,12 +1114,12 @@ const PackageDetailPage = () => {
                 )}
                 
                 {/* Detailed Day-by-Day Itinerary */}
-                {packageData.detailedItinerary && (
+                {getActiveData('detailedItinerary') && (
                   <div style={{ marginTop: '2rem', marginBottom: '2rem' }}>
                     <SectionTitle><CalendarIcon /> Detailed Day-by-Day Itinerary</SectionTitle>
                     <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
                       <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#4a4a4a', fontFamily: 'inherit' }}>
-                        {packageData.detailedItinerary}
+                        {getActiveData('detailedItinerary')}
                       </div>
                     </div>
                   </div>
@@ -785,9 +1136,9 @@ const PackageDetailPage = () => {
                 transition={{ duration: 0.3 }}
               >
                 <SectionTitle><CalendarIcon /> Available Tour Dates</SectionTitle>
-                {packageData.tourDates && packageData.tourDates.length > 0 ? (
+                {getActiveData('tourDates') && getActiveData('tourDates').length > 0 ? (
                   <HighlightList>
-                    {packageData.tourDates.map((dateInfo, index) => (
+                    {getActiveData('tourDates').map((dateInfo, index) => (
                       <HighlightItem key={index}>
                         <CalendarIcon />
                         {dateInfo.date || dateInfo}
@@ -809,11 +1160,11 @@ const PackageDetailPage = () => {
                 transition={{ duration: 0.3 }}
               >
                 {/* Other Information */}
-                {packageData.otherInfo && packageData.otherInfo.length > 0 && (
+                {getActiveData('otherInfo') && getActiveData('otherInfo').length > 0 && (
                   <div style={{ marginBottom: '2rem' }}>
                     <SectionTitle><CheckCircleIcon /> Other Information</SectionTitle>
                     <HighlightList>
-                      {packageData.otherInfo.map((item, index) => (
+                      {getActiveData('otherInfo').map((item, index) => (
                         <HighlightItem key={index}>
                           <CheckCircleIcon />
                           {item}
@@ -824,11 +1175,11 @@ const PackageDetailPage = () => {
                 )}
                 
                 {/* Terms & Conditions */}
-                {packageData.termsAndConditions && packageData.termsAndConditions.length > 0 && (
+                {getActiveData('termsAndConditions') && getActiveData('termsAndConditions').length > 0 && (
                   <div style={{ marginBottom: '2rem' }}>
                     <SectionTitle><CheckCircleIcon /> Terms & Conditions</SectionTitle>
                     <HighlightList>
-                      {packageData.termsAndConditions.map((item, index) => (
+                      {getActiveData('termsAndConditions').map((item, index) => (
                         <HighlightItem key={index}>
                           <CheckCircleIcon />
                           {item}
@@ -838,8 +1189,8 @@ const PackageDetailPage = () => {
                   </div>
                 )}
 
-                {(!packageData.otherInfo || packageData.otherInfo.length === 0) && 
-                 (!packageData.termsAndConditions || packageData.termsAndConditions.length === 0) && (
+                {(!getActiveData('otherInfo') || getActiveData('otherInfo').length === 0) && 
+                 (!getActiveData('termsAndConditions') || getActiveData('termsAndConditions').length === 0) && (
                   <p>No additional information available for this tour.</p>
                 )}
               </motion.div>
@@ -854,12 +1205,12 @@ const PackageDetailPage = () => {
                 transition={{ duration: 0.3 }}
               >
                 <SectionTitle><MapPinIcon /> Pick Up Points</SectionTitle>
-                {packageData.pickupPoints && packageData.pickupPoints.length > 0 ? (
+                {getActiveData('pickupPoints') && getActiveData('pickupPoints').length > 0 ? (
                   <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                    {packageData.pickupPoints.map((point, index) => (
+                    {getActiveData('pickupPoints').map((point, index) => (
                       <div key={index} style={{ 
                         padding: '0.75rem 0', 
-                        borderBottom: index < packageData.pickupPoints.length - 1 ? '1px solid #f3f4f6' : 'none',
+                        borderBottom: index < getActiveData('pickupPoints').length - 1 ? '1px solid #f3f4f6' : 'none',
                         color: '#4a4a4a',
                         lineHeight: '1.6'
                       }}>
@@ -872,13 +1223,78 @@ const PackageDetailPage = () => {
                 )}
               </motion.div>
             )}
+
+            {activeTab === 'builder' && (
+              <motion.div
+                key="builder"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ItineraryBuilder 
+                  defaultTour={{
+                    name: packageData.title,
+                    duration: packageData.duration,
+                    price: packageData.price,
+                    childPrice: packageData.childPrice,
+                    description: packageData.description,
+                    included: packageData.priceIncludes || []
+                  }}
+                />
+              </motion.div>
+            )}
           </AnimatePresence>
         </MainContent>
 
         <Sidebar>
           <BookingCard>
-            <PriceTag>{packageData.price}</PriceTag>
-            <PriceNote>Per person</PriceNote>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={hasSubPackages ? activePackage : 'default'}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+              >
+                {hasSubPackages && currentSubPackage ? (
+                  <>
+                    <div style={{ 
+                      fontSize: '0.9rem', 
+                      color: '#6A1B82', 
+                      fontWeight: 600, 
+                      marginBottom: '0.5rem',
+                      background: '#f3e8ff',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '8px',
+                      textAlign: 'center'
+                    }}>
+                      {currentSubPackage.name}
+                    </div>
+                    <PriceTag>£{currentSubPackage.price}</PriceTag>
+                    <PriceNote>Per adult • {currentSubPackage.duration}</PriceNote>
+                    {currentSubPackage.childPrice && (
+                      <div style={{ 
+                        fontSize: '1rem', 
+                        color: '#666', 
+                        marginBottom: '1rem',
+                        padding: '0.5rem',
+                        background: '#f9fafb',
+                        borderRadius: '8px',
+                        textAlign: 'center'
+                      }}>
+                        Child: <strong style={{ color: '#6A1B82' }}>£{currentSubPackage.childPrice}</strong>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <PriceTag>{packageData.price}</PriceTag>
+                    <PriceNote>Per person</PriceNote>
+                  </>
+                )}
+              </motion.div>
+            </AnimatePresence>
             <BookButton to="/#contact">Book This Tour</BookButton>
             
             {/* Tour Gallery */}

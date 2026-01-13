@@ -212,6 +212,210 @@ const SubToggle = styled.button`
   margin-bottom: 0.6rem;
 `;
 
+// Expandable tour details panel
+const ExpandedDetailsOverlay = styled(motion.div)`
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  overflow-y: auto;
+`;
+
+const ExpandedDetailsCard = styled(motion.div)`
+  background: white;
+  border-radius: 20px;
+  max-width: 900px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.3);
+`;
+
+const ExpandedHeader = styled.div`
+  position: relative;
+  height: 300px;
+  overflow: hidden;
+  border-radius: 20px 20px 0 0;
+`;
+
+const ExpandedHeaderImage = styled.div`
+  width: 100%;
+  height: 100%;
+  background-image: url(${props => props.image});
+  background-size: cover;
+  background-position: center;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%);
+  }
+`;
+
+const ExpandedTitle = styled.h2`
+  position: absolute;
+  bottom: 1.5rem;
+  left: 2rem;
+  right: 2rem;
+  color: white;
+  font-size: 2rem;
+  font-weight: 700;
+  font-family: 'Playfair Display', serif;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+  margin: 0;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #333;
+  z-index: 10;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: white;
+    transform: scale(1.1);
+  }
+`;
+
+const ExpandedContent = styled.div`
+  padding: 2rem;
+`;
+
+const DetailSection = styled.div`
+  margin-bottom: 1.5rem;
+`;
+
+const DetailLabel = styled.h4`
+  color: #6A1B82;
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+`;
+
+const DetailValue = styled.p`
+  color: #333;
+  font-size: 1rem;
+  line-height: 1.6;
+  margin: 0;
+`;
+
+const DetailGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+`;
+
+const DetailItem = styled.div`
+  background: #f8f5fa;
+  padding: 1rem;
+  border-radius: 12px;
+  border-left: 4px solid #6A1B82;
+`;
+
+const PackagesList = styled.div`
+  display: grid;
+  gap: 1rem;
+`;
+
+const PackageItem = styled(Link)`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f5fa;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #efe8f3;
+    transform: translateX(5px);
+  }
+`;
+
+const PackageThumb = styled.div`
+  width: 80px;
+  height: 60px;
+  border-radius: 8px;
+  background-image: url(${props => props.image});
+  background-size: cover;
+  background-position: center;
+  flex-shrink: 0;
+`;
+
+const PackageInfo = styled.div`
+  flex: 1;
+`;
+
+const PackageName = styled.h5`
+  margin: 0 0 0.25rem 0;
+  color: #1a1a1a;
+  font-size: 1rem;
+  font-weight: 600;
+`;
+
+const PackageDesc = styled.p`
+  margin: 0;
+  color: #666;
+  font-size: 0.9rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+`;
+
+const ViewAllButton = styled(Link)`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #6A1B82;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 600;
+  margin-top: 1rem;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    background: #7C2E9B;
+    transform: translateY(-2px);
+  }
+  
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+`;
+
 const CategoryBadge = styled.div`
   position: absolute;
   top: 1rem;
@@ -301,6 +505,7 @@ const ServiceCard = memo(({ service, index, forceServiceLink, isVehicleHire }) =
   const [currentPackageIndex, setCurrentPackageIndex] = useState(0);
   const hasPackages = service.packages && service.packages.length > 0;
   const [showSubs, setShowSubs] = useState(false);
+  const [showExpanded, setShowExpanded] = useState(false);
 
   useEffect(() => {
     if (!hasPackages || service.packages.length <= 1) return;
@@ -312,6 +517,21 @@ const ServiceCard = memo(({ service, index, forceServiceLink, isVehicleHire }) =
     return () => clearInterval(interval);
   }, [hasPackages, service.packages?.length]);
 
+  // Close expanded view on escape key
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') setShowExpanded(false);
+    };
+    if (showExpanded) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [showExpanded]);
+
   const currentData = hasPackages ? service.packages[currentPackageIndex] : service;
   
   // Resolve link: if forceServiceLink is true, link to the subcategory service page
@@ -322,62 +542,185 @@ const ServiceCard = memo(({ service, index, forceServiceLink, isVehicleHire }) =
       : `/service/${service.id}`);
   const categorySlug = service.id || service.slug || normalize(service.title);
 
+  const handleTitleClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowExpanded(true);
+  };
+
   return (
-    <PackageCard
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
-    >
-      <CardImage image={currentData.image || service.image} />
-      
-      {/* Show Category Name if we are cycling packages inside a category */}
-      {hasPackages && (
-        <CategoryName>
-          {service.title}
-        </CategoryName>
-      )}
-
-      <CardContent>
-        <PackageTitle>{currentData.title}</PackageTitle>
-        <PackageLocation>
-          <MapPinIcon />
-          {currentData.location || service.location}
-        </PackageLocation>
+    <>
+      <PackageCard
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.3, delay: Math.min(index * 0.05, 0.3) }}
+      >
+        <CardImage image={currentData.image || service.image} />
         
-        <PackageDescription>
-          {currentData.description || currentData.shortDescription}
-        </PackageDescription>
-
-        {service.subcategories && service.subcategories.length > 0 && (
-          <>
-            <SubToggle type="button" onClick={() => setShowSubs((v) => !v)}>
-              {showSubs ? 'Hide Subcategories' : 'View Subcategories'}
-            </SubToggle>
-            {showSubs && (
-              <SubCategoryList>
-                {service.subcategories.map((sub) => (
-                  <SubCategoryChip
-                    key={sub.slug || sub.id}
-                    to={`/service/${categorySlug}?sub=${sub.slug || sub.id || ''}`}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {sub.name}
-                  </SubCategoryChip>
-                ))}
-              </SubCategoryList>
-            )}
-          </>
+        {/* Show Category Name if we are cycling packages inside a category */}
+        {hasPackages && (
+          <CategoryName>
+            {service.title}
+          </CategoryName>
         )}
 
-        <CardFooter>
-          <ExploreButton to={linkTo} style={{ marginLeft: 'auto' }}>
-            Enquire Now
-            <ArrowRightIcon />
-          </ExploreButton>
-        </CardFooter>
-      </CardContent>
-    </PackageCard>
+        <CardContent>
+          <PackageTitle 
+            onClick={handleTitleClick}
+            style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationColor: 'rgba(255,255,255,0.4)', textUnderlineOffset: '4px' }}
+            title="Click to view details"
+          >
+            {currentData.title}
+          </PackageTitle>
+          <PackageLocation>
+            <MapPinIcon />
+            {currentData.location || service.location}
+          </PackageLocation>
+          
+          <PackageDescription>
+            {currentData.description || currentData.shortDescription}
+          </PackageDescription>
+
+          {service.subcategories && service.subcategories.length > 0 && (
+            <>
+              <SubToggle type="button" onClick={() => setShowSubs((v) => !v)}>
+                {showSubs ? 'Hide Subcategories' : 'View Subcategories'}
+              </SubToggle>
+              {showSubs && (
+                <SubCategoryList>
+                  {service.subcategories.map((sub) => (
+                    <SubCategoryChip
+                      key={sub.slug || sub.id}
+                      to={`/service/${categorySlug}?sub=${sub.slug || sub.id || ''}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {sub.name}
+                    </SubCategoryChip>
+                  ))}
+                </SubCategoryList>
+              )}
+            </>
+          )}
+
+          <CardFooter>
+            <ExploreButton to={linkTo} style={{ marginLeft: 'auto' }}>
+              Enquire Now
+              <ArrowRightIcon />
+            </ExploreButton>
+          </CardFooter>
+        </CardContent>
+      </PackageCard>
+
+      {/* Expanded Details Modal */}
+      <AnimatePresence>
+        {showExpanded && (
+          <ExpandedDetailsOverlay
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowExpanded(false)}
+          >
+            <ExpandedDetailsCard
+              initial={{ opacity: 0, scale: 0.9, y: 50 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 50 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <ExpandedHeader>
+                <ExpandedHeaderImage image={currentData.image || service.image} />
+                <CloseButton onClick={() => setShowExpanded(false)}>×</CloseButton>
+                <ExpandedTitle>{service.title}</ExpandedTitle>
+              </ExpandedHeader>
+              
+              <ExpandedContent>
+                {/* Basic Info Grid */}
+                <DetailGrid>
+                  {service.location && (
+                    <DetailItem>
+                      <DetailLabel>Location</DetailLabel>
+                      <DetailValue>{service.location}</DetailValue>
+                    </DetailItem>
+                  )}
+                  {currentData.duration && (
+                    <DetailItem>
+                      <DetailLabel>Duration</DetailLabel>
+                      <DetailValue>{currentData.duration}</DetailValue>
+                    </DetailItem>
+                  )}
+                  {currentData.price && currentData.price !== 'Enquire Now' && (
+                    <DetailItem>
+                      <DetailLabel>Price</DetailLabel>
+                      <DetailValue>{typeof currentData.price === 'number' ? `£${currentData.price}` : currentData.price}</DetailValue>
+                    </DetailItem>
+                  )}
+                </DetailGrid>
+
+                {/* Description */}
+                {(service.fullDescription || service.shortDescription || currentData.description) && (
+                  <DetailSection>
+                    <DetailLabel>About This Tour</DetailLabel>
+                    <DetailValue>
+                      {service.fullDescription || service.shortDescription || currentData.description}
+                    </DetailValue>
+                  </DetailSection>
+                )}
+
+                {/* Tour Packages in this category */}
+                {hasPackages && service.packages.length > 0 && (
+                  <DetailSection>
+                    <DetailLabel>Available Tours ({service.packages.length})</DetailLabel>
+                    <PackagesList>
+                      {service.packages.slice(0, 5).map((pkg) => (
+                        <PackageItem key={pkg.id} to={`/package/${pkg.id}`} onClick={() => setShowExpanded(false)}>
+                          {pkg.image && <PackageThumb image={pkg.image} />}
+                          <PackageInfo>
+                            <PackageName>{pkg.title}</PackageName>
+                            {pkg.description && <PackageDesc>{pkg.description}</PackageDesc>}
+                          </PackageInfo>
+                          <ArrowRightIcon style={{ width: 20, height: 20, color: '#6A1B82' }} />
+                        </PackageItem>
+                      ))}
+                    </PackagesList>
+                    {service.packages.length > 5 && (
+                      <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                        + {service.packages.length - 5} more tours available
+                      </p>
+                    )}
+                  </DetailSection>
+                )}
+
+                {/* Subcategories */}
+                {service.subcategories && service.subcategories.length > 0 && (
+                  <DetailSection>
+                    <DetailLabel>Subcategories</DetailLabel>
+                    <SubCategoryList style={{ marginTop: '0.5rem' }}>
+                      {service.subcategories.map((sub) => (
+                        <SubCategoryChip
+                          key={sub.slug || sub.id}
+                          to={`/service/${categorySlug}?sub=${sub.slug || sub.id || ''}`}
+                          onClick={() => setShowExpanded(false)}
+                          style={{ background: '#6A1B82', color: 'white', border: 'none' }}
+                        >
+                          {sub.name}
+                        </SubCategoryChip>
+                      ))}
+                    </SubCategoryList>
+                  </DetailSection>
+                )}
+
+                {/* View All Button */}
+                <ViewAllButton to={linkTo} onClick={() => setShowExpanded(false)}>
+                  View All Details
+                  <ArrowRightIcon />
+                </ViewAllButton>
+              </ExpandedContent>
+            </ExpandedDetailsCard>
+          </ExpandedDetailsOverlay>
+        )}
+      </AnimatePresence>
+    </>
   );
 });
 
