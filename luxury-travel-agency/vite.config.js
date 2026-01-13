@@ -32,6 +32,24 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       chunkSizeWarningLimit: 1500,
+      // Production optimizations
+      minify: 'terser', // Use terser for better minification
+      sourcemap: false, // Disable source maps in production
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            vendor: ['react', 'react-dom'],
+            router: ['react-router-dom'],
+            ui: ['@heroicons/react', 'framer-motion', 'styled-components']
+          }
+        }
+      },
+      terserOptions: {
+        compress: {
+          drop_console: true, // Remove console logs in production
+          drop_debugger: true
+        }
+      }
     },
   }
 })

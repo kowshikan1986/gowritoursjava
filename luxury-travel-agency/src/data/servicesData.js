@@ -179,26 +179,7 @@ export const servicesData = [
       description: 'Discover the world with our global tour packages. Safaris, cultural expeditions, and luxury vacations in Asia, Africa, and the Americas.'
     }
   },
-  {
-    id: 'india-sri-lanka-tours',
-    title: 'India & Sri Lankan Tours',
-    location: 'South Asia',
-    price: 'From $1,800',
-    shortDescription: 'Journey through the vibrant cultures and landscapes of South Asia.',
-    fullDescription: 'Experience the vibrant colors, spicy flavors, and rich traditions of India and Sri Lanka. Our tours take you from the Taj Mahal and the backwaters of Kerala to the ancient temples and pristine beaches of Sri Lanka. Perfect for those seeking spirituality, wellness, and adventure.',
-    features: [
-      'Ayurveda and wellness retreats',
-      'Wildlife safaris in national parks',
-      'Houseboat stays in Kerala',
-      'Cultural heritage walks',
-      'Culinary workshops'
-    ],
-    image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?q=80&w=1471&auto=format&fit=crop',
-    seo: {
-      title: 'India & Sri Lanka Tours | South Asian Travel Experiences',
-      description: 'Explore the best of India and Sri Lanka. Heritage tours, wildlife safaris, and beach vacations tailored to your preferences.'
-    }
-  },
+
   {
     id: 'group-tours',
     title: 'Group Tours',
@@ -219,26 +200,7 @@ export const servicesData = [
       description: 'Join our exclusive small group tours. Meet fellow travelers and explore the world together with expert planning and guidance.'
     }
   },
-  {
-    id: 'private-tours',
-    title: 'Private Tours',
-    location: 'Custom',
-    price: 'From $4,000',
-    shortDescription: 'Bespoke itineraries designed exclusively for you and your companions.',
-    fullDescription: 'Enjoy complete privacy and flexibility with our Private Tours. Whether it is a honeymoon, a family reunion, or a getaway with close friends, we design the itinerary around your interests and pace. You have your own private vehicle and guide throughout the journey.',
-    features: [
-      'Flexible departure dates',
-      'Private chauffeur and vehicle',
-      'Exclusive access to venues',
-      'Tailored dining experiences',
-      'Personalized activity planning'
-    ],
-    image: 'https://images.unsplash.com/photo-1533105079780-92b9be482077?q=80&w=1374&auto=format&fit=crop',
-    seo: {
-      title: 'Private Luxury Tours | Bespoke Travel Itineraries',
-      description: 'Experience the ultimate in privacy and luxury with our private tours. Customized itineraries, private guides, and exclusive experiences.'
-    }
-  },
+
   // Removed airport-transfers - now using database category
   // Removed vehicle-hire - now using database category
   {

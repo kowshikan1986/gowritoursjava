@@ -202,40 +202,47 @@ const TourDetailsForm = ({ details, onChange }) => {
       </Field>
 
       <Field>
-        <Label>Other Information & Terms & Conditions</Label>
+        <Label>Other Information (one per line)</Label>
         <TextArea
-          value={details.otherInformation || ''}
-          onChange={(e) => handleDetailsChange('otherInformation', e.target.value)}
-          placeholder={`Enter terms and conditions, important information, or other details for travelers.
-
-Example structure:
-
-• Section Title
-  - Detail 1
-  - Detail 2
-
-• Another Section
-  - More details
-
-For the Isle of Wight tour, include pickup info, travel insurance, wheelchair policy, etc.`}
-          rows="12"
+          value={(details.otherInfo || []).join('\n')}
+          onChange={(e) => handleDetailsChange('otherInfo', e.target.value.split('\n').filter(h => h.trim()))}
+          placeholder="Enter other information for travelers, one item per line.\nEach line will appear as a bullet point on the tour page.\n\nExample:\nPickup available from select locations\nTravel insurance recommended\nWheelchair accessible with prior notice"
+          rows="8"
         />
+        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          Each line appears as a bullet point in the "Other Information" section on the tour page.
+        </p>
       </Field>
       
       <Field>
-        <Label>Tour Dates (Format: Date | Price, one per line)</Label>
+        <Label>Terms & Conditions (one per line)</Label>
         <TextArea
-          value={(details.tourDates || []).map(d => `${d.date} | ${d.price}`).join('\n')}
+          value={(details.termsAndConditions || []).join('\n')}
+          onChange={(e) => handleDetailsChange('termsAndConditions', e.target.value.split('\n').filter(h => h.trim()))}
+          placeholder="Enter terms and conditions, one item per line.\nEach line will appear as a bullet point on the tour page.\n\nExample:\nFull payment required 30 days before departure\nCancellation policy applies\nPassport must be valid for at least 6 months"
+          rows="8"
+        />
+        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          Each line appears as a bullet point in the "Terms & Conditions" section on the tour page.
+        </p>
+      </Field>
+      
+      <Field>
+        <Label>Tour Dates (Date and Time, one per line)</Label>
+        <TextArea
+          value={(details.tourDates || []).map(d => d.date || d).join('\n')}
           onChange={(e) => {
             const dates = e.target.value.split('\n').filter(line => line.trim()).map(line => {
-              const [date, price] = line.split('|').map(s => s.trim());
-              return { date: date || '', price: price || '' };
+              return { date: line.trim() };
             });
             handleDetailsChange('tourDates', dates);
           }}
-          placeholder="15th January 2026 | £500\n22nd January 2026 | £550"
+          placeholder="15th January 2026 - 10:00 AM\n22nd January 2026 - 9:30 AM"
           rows="6"
         />
+        <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
+          Enter each tour date and time on a separate line.
+        </p>
       </Field>
       
       <Field>

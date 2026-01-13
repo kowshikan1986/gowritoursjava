@@ -192,6 +192,7 @@ const Hero = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [heroItems, setHeroItems] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -220,6 +221,8 @@ const Hero = () => {
         setHeroItems(activeBanners);
       } catch (e) {
         setHeroItems([]);
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchHero();
@@ -249,8 +252,8 @@ const Hero = () => {
     }
   };
 
-  // Don't render if no banners
-  if (heroItems.length === 0) {
+  // Don't render while loading or if no banners
+  if (isLoading || heroItems.length === 0) {
     return null;
   }
 

@@ -506,6 +506,7 @@ const CategoryImage = styled.div`
   background-image: url(${props => props.$image});
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
   transition: transform 0.5s ease;
 
   ${CategoryCard}:hover & {

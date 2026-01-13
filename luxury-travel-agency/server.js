@@ -12,31 +12,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || (process.env.NODE_ENV === 'production' ? 3000 : 5002);
+const PORT = process.env.PORT || 3000;
 
-// PostgreSQL connection configuration
-const pool = new Pool({
-  host: process.env.DB_HOST || 'ec2-43-205-140-222.ap-south-1.compute.amazonaws.com',
-  port: process.env.DB_PORT || 5432,
-  database: process.env.DB_NAME || 'gowritour',
-  user: process.env.DB_USER || 'admin',
-  password: process.env.DB_PASSWORD || 'London25@',
-  // SSL disabled - server doesn't support it
-  ssl: false,
-  // Connection pool settings for better performance
-  max: 20, // Maximum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Return error after 2 seconds if connection cannot be established
-});
+// Database configuration - Using JSON only
+const pool = null; // PostgreSQL disabled
 
 // Test database connection
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
-    console.error('❌ Database connection failed:', err.message);
-  } else {
-    console.log('✅ PostgreSQL connected successfully at:', res.rows[0].now);
-  }
-});
+console.log('✅ Using JSON-only database mode');
 
 // Middleware
 app.use(compression({ level: 9, threshold: 0 })); // Max compression for all responses
@@ -76,6 +58,7 @@ const upload = multer({
 // ==================== JSON FALLBACK ====================
 // Load JSON database (always use JSON, no PostgreSQL)
 let jsonDatabase = null;
+let jsonFallback = null; // For fallback when PostgreSQL fails
 const useJsonOnly = true; // Force JSON-only mode
 const postgresAvailable = false; // Disable PostgreSQL
 
@@ -190,14 +173,12 @@ app.get('/api/categories', async (req, res) => {
 // Get category by slug
 app.get('/api/categories/:slug', async (req, res) => {
   try {
-    const result = await pool.query(
-      'SELECT * FROM categories WHERE slug = $1',
-      [req.params.slug]
-    );
-    if (result.rows.length === 0) {
+    const categories = jsonDatabase?.categories || [];
+    const category = categories.find(cat => cat.slug === req.params.slug);
+    if (!category) {
       return res.status(404).json({ error: 'Category not found' });
     }
-    res.json(result.rows[0]);
+    res.json(category);
   } catch (error) {
     console.error('Error fetching category:', error);
     res.status(500).json({ error: error.message });
@@ -321,24 +302,13 @@ app.delete('/api/categories/by-name/:name', async (req, res) => {
 // Get all tours
 app.get('/api/tours', async (req, res) => {
   try {
-    // Always try PostgreSQL first, fallback to JSON only on error
-    const result = await pool.query(
-      `SELECT t.*, c.name as category_name 
-       FROM tours t 
-       LEFT JOIN categories c ON t.category_id = c.id 
-       ORDER BY t.created_at DESC`
-    );
+    // Use JSON database
+    const tours = jsonDatabase?.tours || [];
     // Cache for 1 second
     res.set('Cache-Control', 'public, max-age=1');
-    res.json(result.rows);
+    res.json(tours);
   } catch (error) {
     console.error('Error fetching tours:', error);
-    // Try fallback on error
-    if (jsonFallback) {
-      const tours = jsonFallback.tables.tours?.data || [];
-      res.set('Cache-Control', 'public, max-age=1');
-      return res.json(tours);
-    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -347,17 +317,12 @@ app.get('/api/tours', async (req, res) => {
 app.get('/api/tours/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-    const result = await pool.query(
-      `SELECT t.*, c.name as category_name 
-       FROM tours t 
-       LEFT JOIN categories c ON t.category_id = c.id 
-       WHERE t.slug = $1`,
-      [slug]
-    );
-    if (result.rows.length === 0) {
+    const tours = jsonDatabase?.tours || [];
+    const tour = tours.find(t => t.slug === slug);
+    if (!tour) {
       return res.status(404).json({ error: 'Tour not found' });
     }
-    res.json(result.rows[0]);
+    res.json(tour);
   } catch (error) {
     console.error('Error fetching tour:', error);
     res.status(500).json({ error: error.message });
@@ -478,19 +443,12 @@ app.delete('/api/tours/:slug', async (req, res) => {
 
 app.get('/api/hero-banners', async (req, res) => {
   try {
-    // Always try PostgreSQL first, fallback to JSON only on error
-    const result = await pool.query('SELECT * FROM hero_banners ORDER BY created_at DESC');
+    const banners = jsonDatabase?.hero_banners || [];
     // Cache for 1 second
     res.set('Cache-Control', 'public, max-age=1');
-    res.json(result.rows);
+    res.json(banners);
   } catch (error) {
     console.error('Error fetching hero banners:', error);
-    // Try fallback on error
-    if (jsonFallback) {
-      const banners = jsonFallback.tables.hero_banners?.data || [];
-      res.set('Cache-Control', 'public, max-age=1');
-      return res.json(banners);
-    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -501,14 +459,26 @@ app.post('/api/hero-banners', async (req, res) => {
     const generatedId = id || `hero-${Date.now()}`;
     const bannerImage = background_image || image || '';
     
-    const result = await pool.query(
-      `INSERT INTO hero_banners (id, title, subtitle, cta_text, cta_link, image, is_active, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-       RETURNING *`,
-      [generatedId, title, subtitle || '', cta_text || '', cta_link || '', bannerImage, is_active !== false]
-    );
+    if (!jsonDatabase.hero_banners) {
+      jsonDatabase.hero_banners = [];
+    }
     
-    res.status(201).json(result.rows[0]);
+    const newBanner = {
+      id: generatedId,
+      title,
+      subtitle: subtitle || '',
+      cta_text: cta_text || '',
+      cta_link: cta_link || '',
+      image: bannerImage,
+      is_active: is_active !== false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    
+    jsonDatabase.hero_banners.push(newBanner);
+    saveJsonDatabase();
+    
+    res.status(201).json(newBanner);
   } catch (error) {
     console.error('Error creating hero banner:', error);
     res.status(500).json({ error: error.message });
@@ -521,19 +491,28 @@ app.put('/api/hero-banners/:id', async (req, res) => {
     const { title, subtitle, cta_text, cta_link, background_image, image, is_active } = req.body;
     const bannerImage = background_image || image;
     
-    const result = await pool.query(
-      `UPDATE hero_banners 
-       SET title = $1, subtitle = $2, cta_text = $3, cta_link = $4, 
-           image = $5, is_active = $6, updated_at = NOW()
-       WHERE id = $7
-       RETURNING *`,
-      [title, subtitle, cta_text, cta_link, bannerImage, is_active, req.params.id]
-    );
+    const banners = jsonDatabase?.hero_banners || [];
+    const bannerIndex = banners.findIndex(b => b.id === req.params.id);
     
-    if (result.rows.length === 0) {
+    if (bannerIndex === -1) {
       return res.status(404).json({ error: 'Hero banner not found' });
     }
-    res.json(result.rows[0]);
+    
+    const updatedBanner = {
+      ...banners[bannerIndex],
+      title: title !== undefined ? title : banners[bannerIndex].title,
+      subtitle: subtitle !== undefined ? subtitle : banners[bannerIndex].subtitle,
+      cta_text: cta_text !== undefined ? cta_text : banners[bannerIndex].cta_text,
+      cta_link: cta_link !== undefined ? cta_link : banners[bannerIndex].cta_link,
+      image: bannerImage !== undefined ? bannerImage : banners[bannerIndex].image,
+      is_active: is_active !== undefined ? is_active : banners[bannerIndex].is_active,
+      updated_at: new Date().toISOString()
+    };
+    
+    banners[bannerIndex] = updatedBanner;
+    saveJsonDatabase();
+    
+    res.json(updatedBanner);
   } catch (error) {
     console.error('Error updating hero banner:', error);
     res.status(500).json({ error: error.message });
@@ -543,12 +522,17 @@ app.put('/api/hero-banners/:id', async (req, res) => {
 // Delete hero banner
 app.delete('/api/hero-banners/:id', async (req, res) => {
   try {
-    const result = await pool.query('DELETE FROM hero_banners WHERE id = $1 RETURNING *', [req.params.id]);
+    const banners = jsonDatabase?.hero_banners || [];
+    const bannerIndex = banners.findIndex(b => b.id === req.params.id);
     
-    if (result.rows.length === 0) {
+    if (bannerIndex === -1) {
       return res.status(404).json({ error: 'Hero banner not found' });
     }
-    res.json({ message: 'Hero banner deleted successfully' });
+    
+    const deletedBanner = banners.splice(bannerIndex, 1)[0];
+    saveJsonDatabase();
+    
+    res.json({ message: 'Hero banner deleted successfully', deleted: deletedBanner });
   } catch (error) {
     console.error('Error deleting hero banner:', error);
     res.status(500).json({ error: error.message });
@@ -559,19 +543,12 @@ app.delete('/api/hero-banners/:id', async (req, res) => {
 
 app.get('/api/logos', async (req, res) => {
   try {
-    // Always try PostgreSQL first, fallback to JSON only on error
-    const result = await pool.query('SELECT * FROM logos ORDER BY created_at DESC');
+    const logos = jsonDatabase?.logos || [];
     // Cache for 1 second
     res.set('Cache-Control', 'public, max-age=1');
-    res.json(result.rows);
+    res.json(logos);
   } catch (error) {
     console.error('Error fetching logos:', error);
-    // Try fallback on error
-    if (jsonFallback) {
-      const logos = jsonFallback.tables.logos?.data || [];
-      res.set('Cache-Control', 'public, max-age=1');
-      return res.json(logos);
-    }
     res.status(500).json({ error: error.message });
   }
 });
@@ -642,8 +619,8 @@ app.delete('/api/logos/:id', async (req, res) => {
 
 app.get('/api/ads', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM ads ORDER BY created_at DESC');
-    res.json(result.rows);
+    const ads = jsonDatabase?.ads || [];
+    res.json(ads);
   } catch (error) {
     console.error('Error fetching ads:', error);
     res.status(500).json({ error: error.message });

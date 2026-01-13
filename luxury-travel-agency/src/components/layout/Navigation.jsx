@@ -112,8 +112,8 @@ const CTAButton = styled(motion.button)`
 const DropdownPanel = styled.div`
   position: absolute;
   top: 115%;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 0;
+  transform: translateX(0);
   background: radial-gradient(circle at 20% 20%, rgba(122, 55, 180, 0.08), transparent 45%),
     radial-gradient(circle at 80% 0%, rgba(89, 131, 252, 0.08), transparent 40%),
     #ffffff;
