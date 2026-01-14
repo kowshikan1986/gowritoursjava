@@ -1268,7 +1268,7 @@ const PackageDetailPage = () => {
                 )}
               </motion.div>
             </AnimatePresence>
-            <BookButton to="/#contact">Book This Tour</BookButton>
+            <BookButton to="/contact-us">Book This Tour</BookButton>
             
             {/* Tour Gallery */}
             {packageData.galleryImages && packageData.galleryImages.length > 0 ? (
