@@ -111,21 +111,34 @@ if (!fs.existsSync(DB_FILE)) {
   }
 }
 
-// Read database
+// ==================== IN-MEMORY CACHE FOR SPEED ====================
+let dbCache = null;
+let cacheTime = 0;
+const CACHE_TTL = 5000; // 5 seconds cache
+
+// Read database with caching
 const readDB = () => {
+  const now = Date.now();
+  if (dbCache && (now - cacheTime) < CACHE_TTL) {
+    return dbCache;
+  }
   try {
     const data = fs.readFileSync(DB_FILE, 'utf8');
-    return JSON.parse(data);
+    dbCache = JSON.parse(data);
+    cacheTime = now;
+    return dbCache;
   } catch (error) {
     console.error('Error reading database:', error);
     return { categories: [], tours: [], hero_banners: [], logos: [], ads: [] };
   }
 };
 
-// Write database
+// Write database and update cache
 const writeDB = (data) => {
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+    dbCache = data; // Update cache immediately
+    cacheTime = Date.now();
     console.log('✅ Database saved to', DB_FILE);
   } catch (error) {
     console.error('Error writing database:', error);
@@ -133,11 +146,26 @@ const writeDB = (data) => {
   }
 };
 
+// Pre-load database into cache on startup
+try {
+  dbCache = JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+  cacheTime = Date.now();
+  console.log('🚀 Database pre-loaded into memory cache');
+} catch (e) {
+  console.error('Failed to pre-load database:', e.message);
+}
+
 // Helper to normalize slugs
 const normalize = (str = '') =>
   str.toString().trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
 // ==================== API ROUTES ====================
+
+// Cache middleware for GET API requests (cache for 5 seconds)
+const apiCache = (req, res, next) => {
+  res.set('Cache-Control', 'public, max-age=5');
+  next();
+};
 
 // Upload image endpoint
 app.post('/api/upload', upload.single('image'), (req, res) => {
@@ -168,12 +196,12 @@ app.get('/api/health', (req, res) => {
 
 // ==================== CATEGORIES ====================
 
-app.get('/api/categories', (req, res) => {
+app.get('/api/categories', apiCache, (req, res) => {
   const db = readDB();
   res.json(db.categories || []);
 });
 
-app.get('/api/categories/:slug', (req, res) => {
+app.get('/api/categories/:slug', apiCache, (req, res) => {
   const db = readDB();
   const category = db.categories.find(c => c.slug === req.params.slug);
   if (!category) {
@@ -290,12 +318,12 @@ app.delete('/api/categories/by-name/:name', (req, res) => {
 
 // ==================== TOURS ====================
 
-app.get('/api/tours', (req, res) => {
+app.get('/api/tours', apiCache, (req, res) => {
   const db = readDB();
   res.json(db.tours || []);
 });
 
-app.get('/api/tours/:slug', (req, res) => {
+app.get('/api/tours/:slug', apiCache, (req, res) => {
   const db = readDB();
   const tour = db.tours.find(t => t.slug === req.params.slug);
   if (!tour) {
@@ -397,12 +425,12 @@ app.delete('/api/tours/:slug', (req, res) => {
 
 // ==================== HERO BANNERS ====================
 
-app.get('/api/hero-banners', (req, res) => {
+app.get('/api/hero-banners', apiCache, (req, res) => {
   const db = readDB();
   res.json(db.hero_banners || []);
 });
 
-app.get('/api/hero-banners/:id', (req, res) => {
+app.get('/api/hero-banners/:id', apiCache, (req, res) => {
   const db = readDB();
   const banner = db.hero_banners.find(b => b.id === req.params.id);
   if (!banner) {
@@ -483,12 +511,12 @@ app.delete('/api/hero-banners/:id', (req, res) => {
 
 // ==================== LOGOS ====================
 
-app.get('/api/logos', (req, res) => {
+app.get('/api/logos', apiCache, (req, res) => {
   const db = readDB();
   res.json(db.logos || []);
 });
 
-app.get('/api/logos/:id', (req, res) => {
+app.get('/api/logos/:id', apiCache, (req, res) => {
   const db = readDB();
   const logo = db.logos.find(l => l.id === req.params.id);
   if (!logo) {
@@ -567,7 +595,7 @@ app.delete('/api/logos/:id', (req, res) => {
 
 // ==================== ADS ====================
 
-app.get('/api/ads', (req, res) => {
+app.get('/api/ads', apiCache, (req, res) => {
   const db = readDB();
   res.json(db.ads || []);
 });
