@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import styled from 'styled-components';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPinIcon, ClockIcon, CurrencyPoundIcon, CheckCircleIcon, CalendarIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
+import { MapPinIcon, ClockIcon, CurrencyPoundIcon, CheckCircleIcon, CalendarIcon } from '@heroicons/react/24/outline';
 import { fetchFrontendData, clearFrontendCache } from '../services/frontendData';
 import { onDataChange } from '../services/postgresDatabase';
 import { servicesData } from '../data/servicesData';
-import ItineraryBuilder from '../components/ItineraryBuilder';
 
 const PageContainer = styled.div`
   padding-top: 0;
@@ -923,12 +922,6 @@ const PackageDetailPage = () => {
             >
               Pick Up
             </TabButton>
-            <TabButton 
-              active={activeTab === 'builder'} 
-              onClick={() => setActiveTab('builder')}
-            >
-              🛠️ Build Itinerary
-            </TabButton>
           </TabContainer>
 
           <AnimatePresence mode="wait">
@@ -1224,26 +1217,6 @@ const PackageDetailPage = () => {
               </motion.div>
             )}
 
-            {activeTab === 'builder' && (
-              <motion.div
-                key="builder"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ItineraryBuilder 
-                  defaultTour={{
-                    name: packageData.title,
-                    duration: packageData.duration,
-                    price: packageData.price,
-                    childPrice: packageData.childPrice,
-                    description: packageData.description,
-                    included: packageData.priceIncludes || []
-                  }}
-                />
-              </motion.div>
-            )}
           </AnimatePresence>
         </MainContent>
 
