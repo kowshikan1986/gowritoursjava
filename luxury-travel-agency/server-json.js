@@ -66,13 +66,27 @@ const upload = multer({
 // ==================== JSON FILE DATABASE ====================
 const DB_FILE = path.join(__dirname, 'data', 'database.json');
 
+// Debug: Log database file path
+console.log('📂 Database file path:', DB_FILE);
+console.log('📂 Database file exists:', fs.existsSync(DB_FILE));
+
 // Ensure data directory exists
 const dataDir = path.join(__dirname, 'data');
 if (!fs.existsSync(dataDir)) {
   fs.mkdirSync(dataDir, { recursive: true });
+  console.log('📁 Created data directory');
 }
 
-// Initialize database if doesn't exist
+// Check if database file exists and has content
+if (fs.existsSync(DB_FILE)) {
+  const stats = fs.statSync(DB_FILE);
+  console.log('📊 Database file size:', stats.size, 'bytes');
+  if (stats.size < 100) {
+    console.log('⚠️ Database file seems empty, will check content');
+  }
+}
+
+// Initialize database if doesn't exist OR if it's essentially empty
 if (!fs.existsSync(DB_FILE)) {
   const initialData = {
     categories: [],
@@ -83,6 +97,18 @@ if (!fs.existsSync(DB_FILE)) {
   };
   fs.writeFileSync(DB_FILE, JSON.stringify(initialData, null, 2));
   console.log('📝 Created new database.json file');
+} else {
+  // Verify the database has valid content
+  try {
+    const content = fs.readFileSync(DB_FILE, 'utf8');
+    const data = JSON.parse(content);
+    console.log('✅ Database loaded successfully');
+    console.log('📊 Categories:', (data.categories || []).length);
+    console.log('📊 Tours:', (data.tours || []).length);
+    console.log('📊 Hero Banners:', (data.hero_banners || []).length);
+  } catch (e) {
+    console.error('❌ Error parsing database:', e.message);
+  }
 }
 
 // Read database
