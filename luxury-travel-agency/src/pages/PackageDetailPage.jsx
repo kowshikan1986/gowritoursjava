@@ -14,24 +14,56 @@ const PageContainer = styled.div`
 `;
 
 const HeroSection = styled.div`
-  height: 60vh;
+  width: 100%;
+  height: 500px;
   position: relative;
-  background-image: linear-gradient(
-    135deg,
-    rgba(0, 0, 0, 0.1) 0%,
-    rgba(0, 0, 0, 0.6) 50%,
-    rgba(0, 0, 0, 0.9) 100%
-  ), url(${props => props.bgImage});
-  background-size: cover;
-  background-position: center;
   display: flex;
   align-items: flex-end;
   color: white;
-  padding-bottom: 4rem;
+  padding-bottom: 3rem;
+  overflow: hidden;
+
+  @media (max-width: 1024px) {
+    height: 450px;
+    padding-bottom: 2.5rem;
+  }
 
   @media (max-width: 768px) {
-    height: 50vh;
+    height: 400px;
+    padding-bottom: 2rem;
   }
+
+  @media (max-width: 480px) {
+    height: 350px;
+    padding-bottom: 1.5rem;
+  }
+`;
+
+const HeroImage = styled.img`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+`;
+
+const HeroOverlay = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60%;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.7) 0%,
+    rgba(0, 0, 0, 0.4) 40%,
+    transparent 100%
+  );
+  z-index: 1;
+  pointer-events: none;
 `;
 
 const HeroContent = styled.div`
@@ -39,6 +71,8 @@ const HeroContent = styled.div`
   width: 100%;
   margin: 0 auto;
   padding: 0 2rem;
+  position: relative;
+  z-index: 2;
 `;
 
 const Badge = styled.span`
@@ -486,15 +520,20 @@ const ItineraryDescription = styled.p`
 
 const GalleryImage = styled.div`
   width: 100%;
-  height: 200px;
+  height: 220px;
   border-radius: 16px;
   overflow: hidden;
   position: relative;
   cursor: pointer;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
-  background-image: url(${props => props.bgImage});
-  background-size: cover;
-  background-position: center;
+  
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
   
   &::before {
     content: '';
@@ -503,7 +542,9 @@ const GalleryImage = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.6) 100%);
+    background: linear-gradient(180deg, transparent 30%, rgba(0, 0, 0, 0.6) 100%);
+    z-index: 1;
+    pointer-events: none;
   }
   
   &:hover {
@@ -537,58 +578,57 @@ const GalleryImageContent = styled.div`
 
 // Enhanced Package Cards for multi-package display
 const PackageCardsContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   margin-bottom: 2rem;
 `;
 
 const PackageCard = styled(motion.div)`
   background: ${props => props.$active ? 'linear-gradient(135deg, #6A1B82 0%, #9333ea 100%)' : 'white'};
   color: ${props => props.$active ? 'white' : '#1a1a1a'};
-  border-radius: 20px;
-  padding: 1.5rem;
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
   cursor: pointer;
   border: 2px solid ${props => props.$active ? '#6A1B82' : '#e5e7eb'};
   transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  min-width: 180px;
+  max-width: 250px;
   
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 30px rgba(106, 27, 130, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(106, 27, 130, 0.15);
     border-color: #6A1B82;
   }
 `;
 
 const PackageCardBadge = styled.span`
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.65rem;
   font-weight: 600;
   background: ${props => props.$type === 'required' ? '#dc2626' : '#10b981'};
   color: white;
+  margin-bottom: 0.5rem;
 `;
 
 const PackageCardTitle = styled.h4`
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
 `;
 
 const PackageCardPrice = styled.div`
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: 700;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.25rem;
 `;
 
 const PackageCardDuration = styled.span`
-  font-size: 0.9rem;
-  opacity: 0.9;
+  font-size: 0.85rem;
+  opacity: 0.8;
 `;
 
 const ExpandableSection = styled(motion.div)`
@@ -807,7 +847,14 @@ const PackageDetailPage = () => {
 
   return (
     <PageContainer>
-      <HeroSection bgImage={packageData.image}>
+      <HeroSection>
+        <HeroImage 
+          src={packageData.image} 
+          alt={packageData.title}
+          loading="eager"
+          decoding="async"
+        />
+        <HeroOverlay />
         <HeroContent>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -843,18 +890,16 @@ const PackageDetailPage = () => {
                 🎯 Choose Your Package
               </h3>
               
-              {/* Enhanced Package Cards View */}
+              {/* Compact Package Cards */}
               <PackageCardsContainer>
                 {packageData.subPackages.map((pkg, index) => (
                   <PackageCard
                     key={index}
                     $active={activePackage === index}
-                    onClick={() => {
-                      setActivePackage(index);
-                    }}
-                    initial={{ opacity: 0, y: 20 }}
+                    onClick={() => setActivePackage(index)}
+                    initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                    transition={{ duration: 0.3, delay: index * 0.05 }}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
@@ -864,27 +909,6 @@ const PackageDetailPage = () => {
                     <PackageCardTitle>{pkg.name || `Package ${index + 1}`}</PackageCardTitle>
                     {pkg.price && <PackageCardPrice>£{pkg.price}</PackageCardPrice>}
                     {pkg.duration && <PackageCardDuration>{pkg.duration}</PackageCardDuration>}
-                    {pkg.description && (
-                      <p style={{ 
-                        fontSize: '0.9rem', 
-                        marginTop: '0.75rem', 
-                        opacity: 0.9,
-                        lineHeight: 1.5 
-                      }}>
-                        {pkg.description.substring(0, 100)}{pkg.description.length > 100 ? '...' : ''}
-                      </p>
-                    )}
-                    <div style={{ 
-                      marginTop: '1rem', 
-                      fontSize: '0.85rem', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      gap: '0.5rem',
-                      color: activePackage === index ? '#6A1B82' : '#888',
-                      fontWeight: activePackage === index ? '600' : '400'
-                    }}>
-                      {activePackage === index ? '✓ Selected - See details below' : 'Click to select'}
-                    </div>
                   </PackageCard>
                 ))}
               </PackageCardsContainer>
@@ -1274,7 +1298,8 @@ const PackageDetailPage = () => {
             {packageData.galleryImages && packageData.galleryImages.length > 0 ? (
               <GalleryGrid>
                 {packageData.galleryImages.map((item, index) => (
-                  <GalleryImage key={index} bgImage={item.image}>
+                  <GalleryImage key={index}>
+                    <img src={item.image} alt={item.title || `Gallery ${index + 1}`} />
                     <GalleryImageContent>
                       <h4>{item.title}</h4>
                       {item.description && <p>{item.description}</p>}
@@ -1284,21 +1309,24 @@ const PackageDetailPage = () => {
               </GalleryGrid>
             ) : (
               <GalleryGrid>
-                <GalleryImage bgImage="https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=2070&auto=format&fit=crop">
+                <GalleryImage>
+                  <img src="https://images.unsplash.com/photo-1551632811-561732d1e306?q=80&w=2070&auto=format&fit=crop" alt="Edinburgh Castle" />
                   <GalleryImageContent>
                     <h4>Edinburgh Castle</h4>
                     <p>Explore the historic fortress overlooking Scotland's capital</p>
                   </GalleryImageContent>
                 </GalleryImage>
                 
-                <GalleryImage bgImage="https://images.unsplash.com/photo-1486299267070-83823f5448dd?q=80&w=2071&auto=format&fit=crop">
+                <GalleryImage>
+                  <img src="https://images.unsplash.com/photo-1486299267070-83823f5448dd?q=80&w=2071&auto=format&fit=crop" alt="Glasgow Cathedral" />
                   <GalleryImageContent>
                     <h4>Glasgow Cathedral</h4>
                     <p>Visit the stunning medieval cathedral in the heart of Glasgow</p>
                   </GalleryImageContent>
                 </GalleryImage>
                 
-                <GalleryImage bgImage="https://images.unsplash.com/photo-1580709413627-83c5e5e6df80?q=80&w=2070&auto=format&fit=crop">
+                <GalleryImage>
+                  <img src="https://images.unsplash.com/photo-1580709413627-83c5e5e6df80?q=80&w=2070&auto=format&fit=crop" alt="Scottish Highlands" />
                   <GalleryImageContent>
                     <h4>Scottish Highlands</h4>
                     <p>Discover breathtaking landscapes and scenic routes</p>

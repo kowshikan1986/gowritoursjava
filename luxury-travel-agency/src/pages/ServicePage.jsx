@@ -13,7 +13,8 @@ const PageContainer = styled.div`
 `;
 
 const HeroSection = styled.div`
-  height: 60vh;
+  width: 100%;
+  height: 450px;
   position: relative;
   display: flex;
   align-items: center;
@@ -21,7 +22,25 @@ const HeroSection = styled.div`
   color: white;
   margin-bottom: 4rem;
   overflow: hidden;
-  border-radius: 50px;
+  border-radius: 30px;
+
+  @media (max-width: 1024px) {
+    height: 400px;
+    border-radius: 25px;
+    margin-bottom: 3rem;
+  }
+
+  @media (max-width: 768px) {
+    height: 350px;
+    border-radius: 20px;
+    margin-bottom: 2.5rem;
+  }
+
+  @media (max-width: 480px) {
+    height: 300px;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+  }
 `;
 
 const HeroBackground = styled.div`
@@ -31,7 +50,7 @@ const HeroBackground = styled.div`
   right: 0;
   bottom: 0;
   z-index: 0;
-  border-radius: 50px;
+  overflow: hidden;
   
   &::before {
     content: '';
@@ -40,16 +59,39 @@ const HeroBackground = styled.div`
     left: 0;
     right: 0;
     bottom: 0;
-    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5));
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.6) 0%,
+      rgba(0, 0, 0, 0.3) 40%,
+      transparent 70%
+    );
     z-index: 1;
-    border-radius: 50px;
+    pointer-events: none;
   }
   
   img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 50px;
+    object-position: center;
+  }
+
+  @media (max-width: 1024px) {
+    img {
+      object-position: center;
+    }
+  }
+
+  @media (max-width: 768px) {
+    img {
+      object-position: center;
+    }
+  }
+
+  @media (max-width: 480px) {
+    img {
+      object-position: center;
+    }
   }
 `;
 
