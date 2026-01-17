@@ -37,6 +37,10 @@ const ToolButton = styled.button`
   }
 `;
 
+const HiddenInput = styled.input`
+  display: none;
+`;
+
 const EditorSurface = styled.div`
   min-height: 240px;
   max-height: 480px;
@@ -54,6 +58,7 @@ const EditorSurface = styled.div`
   strong { font-weight: 700; }
   em { font-style: italic; }
   u { text-decoration: underline; }
+  img { max-width: 100%; height: auto; border-radius: 8px; margin: 0.5rem 0; }
 `;
 
 const Placeholder = styled.div`
@@ -69,7 +74,9 @@ const SurfaceWrapper = styled.div`
 
 const RichTextEditor = ({ value = '', onChange, placeholder = 'Start typing…' }) => {
   const editorRef = useRef(null);
+  const fileInputRef = useRef(null);
   const [isFocused, setIsFocused] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // Keep DOM in sync when external value changes
   useEffect(() => {
@@ -89,6 +96,41 @@ const RichTextEditor = ({ value = '', onChange, placeholder = 'Start typing…' 
     onChange?.(editorRef.current?.innerHTML || '');
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const imageUrl = data.path;
+        editorRef.current?.focus();
+        document.execCommand('insertImage', false, imageUrl);
+        onChange?.(editorRef.current?.innerHTML || '');
+      } else {
+        alert('Failed to upload image');
+      }
+    } catch (error) {
+      console.error('Upload error:', error);
+      alert('Failed to upload image');
+    } finally {
+      setUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
   const isEmpty = !value || value === '<br>' || value === '<div><br></div>';
 
   return (
@@ -101,6 +143,10 @@ const RichTextEditor = ({ value = '', onChange, placeholder = 'Start typing…' 
         <ToolButton type="button" onClick={() => runCommand('insertOrderedList')}>1. List</ToolButton>
         <ToolButton type="button" onClick={() => runCommand('formatBlock', 'h3')}>H3</ToolButton>
         <ToolButton type="button" onClick={() => runCommand('formatBlock', 'h4')}>H4</ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('justifyLeft')} title="Align Left">⬛◻◻</ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('justifyCenter')} title="Align Center">◻⬛◻</ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('justifyRight')} title="Align Right">◻◻⬛</ToolButton>
+        <ToolButton type="button" onClick={() => runCommand('justifyFull')} title="Justify">≡</ToolButton>
         <ToolButton type="button" onClick={() => {
           const url = window.prompt('Enter link URL');
           if (url) runCommand('createLink', url);
@@ -108,7 +154,21 @@ const RichTextEditor = ({ value = '', onChange, placeholder = 'Start typing…' 
         <ToolButton type="button" onClick={() => {
           const url = window.prompt('Enter image URL');
           if (url) runCommand('insertImage', url);
-        }}>Image</ToolButton>
+        }}>URL Image</ToolButton>
+        <ToolButton 
+          type="button" 
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          title="Upload image from your computer"
+        >
+          {uploading ? '⏳' : '📷'} Upload
+        </ToolButton>
+        <HiddenInput
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleImageUpload}
+        />
       </Toolbar>
 
       <SurfaceWrapper>

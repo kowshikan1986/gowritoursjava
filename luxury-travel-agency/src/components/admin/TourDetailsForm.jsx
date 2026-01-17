@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
+import RichTextEditor from '../common/RichTextEditor';
 
 const Field = styled.div`
   display: flex;
@@ -494,28 +495,26 @@ const TourDetailsForm = ({ details, onChange }) => {
       </Field>
 
       <Field>
-        <Label>📋 Other Information (one per line)</Label>
-        <TextArea
-          value={(details.otherInfo || []).join('\n')}
-          onChange={(e) => handleDetailsChange('otherInfo', e.target.value.split('\n').filter(h => h.trim()))}
-          placeholder="Provide additional relevant details, one per line.\n\nExample:\nPickup available from select locations\nTravel insurance recommended\nWheelchair accessible with prior notice\nChildren under 5 travel free\nMinimum group size: 10 passengers"
-          rows="8"
+        <Label>📋 Other Information</Label>
+        <RichTextEditor
+          value={details.otherInfo || ''}
+          onChange={(val) => handleDetailsChange('otherInfo', val)}
+          placeholder="Enter additional information about the tour. Use Bold for headings."
         />
         <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
-          Provide additional relevant details about the tour, one item per line. Each line appears as a bullet point.
+          Provide additional relevant details about the tour. Use <strong>Bold</strong> for headings and bullet lists for items.
         </p>
       </Field>
       
       <Field>
-        <Label>📜 Terms & Conditions (one per line)</Label>
-        <TextArea
-          value={(details.termsAndConditions || []).join('\n')}
-          onChange={(e) => handleDetailsChange('termsAndConditions', e.target.value.split('\n').filter(h => h.trim()))}
-          placeholder="List the terms and conditions, one per line.\n\nExample:\nFull payment required 30 days before departure\nCancellation policy applies - 50% refund if cancelled 14 days prior\nPassport must be valid for at least 6 months\nNo refunds for no-shows\nItinerary subject to change due to weather conditions"
-          rows="8"
+        <Label>📜 Terms & Conditions</Label>
+        <RichTextEditor
+          value={details.termsAndConditions || ''}
+          onChange={(val) => handleDetailsChange('termsAndConditions', val)}
+          placeholder="Enter terms and conditions. Use Bold for headings."
         />
         <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
-          List the terms and conditions, one item per line. Each line appears as a bullet point.
+          List the terms and conditions. Use <strong>Bold</strong> for section headings and bullet lists for items.
         </p>
       </Field>
       
@@ -583,21 +582,14 @@ const TourDetailsForm = ({ details, onChange }) => {
       </Field>
       
       <Field>
-        <Label>📍 Pick Up Points (one per line, full address format)</Label>
-        <TextArea
-          value={(details.pickupPoints || []).map(p => p.location).join('\n')}
-          onChange={(e) => {
-            const points = e.target.value.split('\n').filter(line => line.trim()).map(location => ({
-              location: location.trim(),
-              time: ''
-            }));
-            handleDetailsChange('pickupPoints', points);
-          }}
-          placeholder="List pick-up locations, one per line, in full address format:\n\nWEMBLEY HIGH TECHNOLOGY COLLEGE – OLD BOROUGH ROAD, OFF EAST LANE, NORTH WEMBLEY, HA0 3NT\nEAST HAM TOWN HALL CAR PARK - BARKING RD, EAST HAM, LONDON E6 2RP\nSOUTHALL LIBRARY CAR PARK - OSTERLEY PARK ROAD, SOUTHALL UB2 4BL\nHARROW LEISURE CENTRE - CHRISTCHURCH AVENUE, HARROW HA3 5BD"
-          rows="8"
+        <Label>📍 Pick Up Points</Label>
+        <RichTextEditor
+          value={details.pickupPoints || ''}
+          onChange={(val) => handleDetailsChange('pickupPoints', val)}
+          placeholder="Enter pick-up points. Use Bold for location names and add images if needed."
         />
         <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
-          List pick-up locations, one per line, in full address format including postcode.
+          List pick-up locations with full addresses. Use <strong>Bold</strong> for location names and add images for maps or directions.
         </p>
       </Field>
       
@@ -666,27 +658,13 @@ const TourDetailsForm = ({ details, onChange }) => {
       
       <Field>
         <Label>📖 Detailed Day-by-Day Itinerary (Full descriptions in paragraph form)</Label>
-        <TextArea
+        <RichTextEditor
           value={details.detailedItinerary || ''}
-          onChange={(e) => handleDetailsChange('detailedItinerary', e.target.value)}
-          placeholder={`DAY 01:
-London - Gretna Green - Glasgow
-
-Journey to Scotland
-After meeting your tour manager at the designated pickup point, we embark on our exciting journey north. Our first stop is the famous Gretna Green, known worldwide as the romantic destination for runaway weddings. Here you'll have time to explore the historic blacksmith's shop and take memorable photos.
-
-After lunch, we continue our journey through the beautiful Scottish countryside, arriving in Glasgow in the early evening.
-
-DAY 02:
-Glasgow - Edinburgh - Glasgow
-
-Exploring Edinburgh
-After a hearty breakfast at the hotel, we depart for Scotland's magnificent capital city. Our guided tour includes Edinburgh Castle perched atop Castle Rock, the historic Royal Mile, and the stunning Holyrood Palace, the official Scottish residence of the monarchy.`}
-          rows="20"
-          style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}
+          onChange={(val) => handleDetailsChange('detailedItinerary', val)}
+          placeholder="Enter detailed day-by-day itinerary. Use Bold for headings like DAY 01, location names, etc."
         />
         <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
-          Provide a full day-by-day breakdown with detailed descriptions in paragraph form for each day. Use DAY 01:, DAY 02: etc. as headers.
+          Provide a full day-by-day breakdown with detailed descriptions in paragraph form. Use <strong>Bold</strong> for headings like DAY 01:, DAY 02:, location names, and key highlights.
         </p>
       </Field>
       
@@ -1028,34 +1006,25 @@ After a hearty breakfast at the hotel, we depart for Scotland's magnificent capi
               
               <Field>
                 <Label>📖 Detailed Day-by-Day Itinerary (Full descriptions in paragraph form)</Label>
-                <TextArea
+                <RichTextEditor
                   value={pkg.detailedItinerary || ''}
-                  onChange={(e) => handleUpdateSubPackage(pkgIndex, 'detailedItinerary', e.target.value)}
-                  placeholder={`DAY 01:\nLondon - Isle of Wight\n\nMorning Departure\nMeet at the designated pickup point and board our luxury coach...\n\nDAY 02:\nIsle of Wight Exploration\n\nAfter breakfast at the hotel, we set off to explore...`}
-                  rows="12"
-                  style={{ fontFamily: 'monospace', fontSize: '0.9rem' }}
+                  onChange={(val) => handleUpdateSubPackage(pkgIndex, 'detailedItinerary', val)}
+                  placeholder="Enter detailed day-by-day itinerary. Use Bold for headings."
                 />
                 <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
-                  Provide a full day-by-day breakdown with detailed descriptions in paragraph form.
+                  Provide a full day-by-day breakdown with detailed descriptions. Use <strong>Bold</strong> for headings.
                 </p>
               </Field>
               
               <Field>
-                <Label>📍 Pick Up Points (one per line, full address format)</Label>
-                <TextArea
-                  value={(pkg.pickupPoints || []).map(p => typeof p === 'object' ? p.location : p).join('\n')}
-                  onChange={(e) => {
-                    const points = e.target.value.split('\n').filter(line => line.trim()).map(location => ({
-                      location: location.trim(),
-                      time: ''
-                    }));
-                    handleUpdateSubPackage(pkgIndex, 'pickupPoints', points);
-                  }}
-                  placeholder="WEMBLEY HIGH TECHNOLOGY COLLEGE – OLD BOROUGH ROAD, NORTH WEMBLEY, HA0 3NT&#10;EAST HAM TOWN HALL CAR PARK - BARKING RD, EAST HAM, LONDON E6 2RP"
-                  rows="6"
+                <Label>📍 Pick Up Points</Label>
+                <RichTextEditor
+                  value={pkg.pickupPoints || ''}
+                  onChange={(val) => handleUpdateSubPackage(pkgIndex, 'pickupPoints', val)}
+                  placeholder="Enter pick-up points. Use Bold for location names."
                 />
                 <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
-                  List pick-up locations specific to this package, one per line.
+                  List pick-up locations. Use <strong>Bold</strong> for location names and add images if needed.
                 </p>
               </Field>
               

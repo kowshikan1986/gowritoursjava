@@ -212,11 +212,13 @@ const Hero = () => {
         const data = await fetchFrontendData();
         const activeBanners = (data.banners || []).filter(item => item.is_active);
         
-        // Preload first image for instant display
-        if (activeBanners.length > 0 && activeBanners[0].background_image) {
-          const img = new Image();
-          img.src = resolveMediaUrl(activeBanners[0].background_image);
-        }
+        // Preload ALL images for instant transitions
+        activeBanners.forEach(banner => {
+          if (banner.background_image) {
+            const img = new Image();
+            img.src = resolveMediaUrl(banner.background_image);
+          }
+        });
         
         setHeroItems(activeBanners);
       } catch (e) {
@@ -259,26 +261,22 @@ const Hero = () => {
 
   return (
     <HeroContainer>
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="sync">
         <BackgroundImage
           key={resolveMediaUrl(currentHero.background_image) || 'default-hero'}
           image={resolveMediaUrl(currentHero.background_image)}
           initial={{ 
-            opacity: 0, 
-            scale: 1.0
+            opacity: 0
           }}
           animate={{ 
-            opacity: 1, 
-            scale: 1.1,
+            opacity: 1,
             transition: {
-              opacity: { duration: 0.8, ease: 'easeOut' },
-              scale: { duration: 8, ease: 'easeInOut' }
+              opacity: { duration: 0.001, ease: 'linear' }
             }
           }}
           exit={{ 
             opacity: 0,
-            scale: 1.15,
-            transition: { duration: 0.5, ease: 'easeIn' }
+            transition: { duration: 0.001, ease: 'linear' }
           }}
           style={{
             transform: `translate(${mousePosition.x}px, ${mousePosition.y}px)`
@@ -320,50 +318,62 @@ const Hero = () => {
       </FloatingElements>
 
       <HeroContent>
-        <HeroTitle
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          {currentHero.title || 'Extraordinary Journeys'}
-          <br />
-          <span style={{ color: '#7c3aed' }}>{heroItems.length ? '' : 'Await'}</span>
-        </HeroTitle>
+        <AnimatePresence mode="sync">
+          <HeroTitle
+            key={`title-${currentIndex}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.001 }}
+          >
+            {currentHero.title || 'Extraordinary Journeys'}
+            <br />
+            <span style={{ color: '#7c3aed' }}>{heroItems.length ? '' : 'Await'}</span>
+          </HeroTitle>
+        </AnimatePresence>
         
-        <HeroSubtitle
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-        >
-          {currentHero.subtitle || "Discover the world's most exclusive destinations with personalized luxury travel experiences crafted to perfection for the discerning traveler."}
-        </HeroSubtitle>
+        <AnimatePresence mode="sync">
+          <HeroSubtitle
+            key={`subtitle-${currentIndex}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.001 }}
+          >
+            {currentHero.subtitle || "Discover the world's most exclusive destinations with personalized luxury travel experiences crafted to perfection for the discerning traveler."}
+          </HeroSubtitle>
+        </AnimatePresence>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-        >
-          <CTAButton
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => {
-              if (currentHero?.cta_link) {
-                window.location.href = currentHero.cta_link;
-              } else {
-                window.location.href = '/service/tours';
-              }
-            }}
+        <AnimatePresence mode="sync">
+          <motion.div
+            key={`cta-${currentIndex}`}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.001 }}
           >
-            {currentHero?.cta_text || 'Explore Destinations'}
-          </CTAButton>
-          <SecondaryButton
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => window.location.href = '/contact-us'}
-          >
-            Plan Your Journey
-          </SecondaryButton>
-        </motion.div>
+            <CTAButton
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                if (currentHero?.cta_link) {
+                  window.location.href = currentHero.cta_link;
+                } else {
+                  window.location.href = '/service/tours';
+                }
+              }}
+            >
+              {currentHero?.cta_text || 'Explore Destinations'}
+            </CTAButton>
+            <SecondaryButton
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => window.location.href = '/contact-us'}
+            >
+              Plan Your Journey
+            </SecondaryButton>
+          </motion.div>
+        </AnimatePresence>
       </HeroContent>
 
       <ScrollIndicator

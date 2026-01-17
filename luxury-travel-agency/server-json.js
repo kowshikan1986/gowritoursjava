@@ -185,13 +185,25 @@ app.post('/api/upload', upload.single('image'), (req, res) => {
   }
 });
 
-// Health check
+// Health check endpoints (for Kubernetes/container orchestration)
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
     database: 'JSON File'
   });
+});
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.get('/healthz', (req, res) => {
+  res.send('ok');
+});
+
+app.get('/readyz', (req, res) => {
+  res.send('ok');
 });
 
 // ==================== CATEGORIES ====================
@@ -691,7 +703,9 @@ app.get('*', (req, res) => {
 
 // ==================== START SERVER ====================
 
-app.listen(PORT, () => {
+const HOST = process.env.HOST || '0.0.0.0';
+
+app.listen(PORT, HOST, () => {
   console.log('🚀 Server running on port', PORT);
   console.log('📁 Serving static files from:', path.join(__dirname, 'dist'));
   console.log('💾 Database: JSON File (data/database.json)');

@@ -1135,9 +1135,24 @@ const PackageDetailPage = () => {
                   <div style={{ marginTop: '2rem', marginBottom: '2rem' }}>
                     <SectionTitle><CalendarIcon /> Detailed Day-by-Day Itinerary</SectionTitle>
                     <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                      <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.8', color: '#4a4a4a', fontFamily: 'inherit' }}>
-                        {getActiveData('detailedItinerary')}
-                      </div>
+                      <div 
+                        style={{ lineHeight: '1.8', color: '#4a4a4a', fontFamily: 'inherit' }}
+                        dangerouslySetInnerHTML={{ __html: getActiveData('detailedItinerary') }}
+                        className="detailed-itinerary-content"
+                      />
+                      <style>{`
+                        .detailed-itinerary-content strong { font-weight: 700; color: #1f2937; }
+                        .detailed-itinerary-content b { font-weight: 700; color: #1f2937; }
+                        .detailed-itinerary-content em { font-style: italic; }
+                        .detailed-itinerary-content i { font-style: italic; }
+                        .detailed-itinerary-content u { text-decoration: underline; }
+                        .detailed-itinerary-content h1 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0 0.5rem; color: #6A1B82; }
+                        .detailed-itinerary-content h2 { font-size: 1.25rem; font-weight: 700; margin: 1rem 0 0.5rem; color: #6A1B82; }
+                        .detailed-itinerary-content h3 { font-size: 1.1rem; font-weight: 700; margin: 0.75rem 0 0.4rem; color: #374151; }
+                        .detailed-itinerary-content p { margin-bottom: 0.75rem; }
+                        .detailed-itinerary-content ul, .detailed-itinerary-content ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+                        .detailed-itinerary-content li { margin-bottom: 0.25rem; }
+                      `}</style>
                     </div>
                   </div>
                 )}
@@ -1177,39 +1192,73 @@ const PackageDetailPage = () => {
                 transition={{ duration: 0.3 }}
               >
                 {/* Other Information */}
-                {getActiveData('otherInfo') && getActiveData('otherInfo').length > 0 && (
+                {getActiveData('otherInfo') && (
                   <div style={{ marginBottom: '2rem' }}>
                     <SectionTitle><CheckCircleIcon /> Other Information</SectionTitle>
-                    <HighlightList>
-                      {getActiveData('otherInfo').map((item, index) => (
-                        <HighlightItem key={index}>
-                          <CheckCircleIcon />
-                          {item}
-                        </HighlightItem>
-                      ))}
-                    </HighlightList>
+                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                      {typeof getActiveData('otherInfo') === 'string' ? (
+                        <div 
+                          style={{ lineHeight: '1.8', color: '#4a4a4a', fontFamily: 'inherit' }}
+                          dangerouslySetInnerHTML={{ __html: getActiveData('otherInfo') }}
+                          className="rich-text-content"
+                        />
+                      ) : (
+                        <HighlightList>
+                          {getActiveData('otherInfo').map((item, index) => (
+                            <HighlightItem key={index}>
+                              <CheckCircleIcon />
+                              {item}
+                            </HighlightItem>
+                          ))}
+                        </HighlightList>
+                      )}
+                    </div>
                   </div>
                 )}
                 
                 {/* Terms & Conditions */}
-                {getActiveData('termsAndConditions') && getActiveData('termsAndConditions').length > 0 && (
+                {getActiveData('termsAndConditions') && (
                   <div style={{ marginBottom: '2rem' }}>
                     <SectionTitle><CheckCircleIcon /> Terms & Conditions</SectionTitle>
-                    <HighlightList>
-                      {getActiveData('termsAndConditions').map((item, index) => (
-                        <HighlightItem key={index}>
-                          <CheckCircleIcon />
-                          {item}
-                        </HighlightItem>
-                      ))}
-                    </HighlightList>
+                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                      {typeof getActiveData('termsAndConditions') === 'string' ? (
+                        <div 
+                          style={{ lineHeight: '1.8', color: '#4a4a4a', fontFamily: 'inherit' }}
+                          dangerouslySetInnerHTML={{ __html: getActiveData('termsAndConditions') }}
+                          className="rich-text-content"
+                        />
+                      ) : (
+                        <HighlightList>
+                          {getActiveData('termsAndConditions').map((item, index) => (
+                            <HighlightItem key={index}>
+                              <CheckCircleIcon />
+                              {item}
+                            </HighlightItem>
+                          ))}
+                        </HighlightList>
+                      )}
+                    </div>
                   </div>
                 )}
 
-                {(!getActiveData('otherInfo') || getActiveData('otherInfo').length === 0) && 
-                 (!getActiveData('termsAndConditions') || getActiveData('termsAndConditions').length === 0) && (
+                {(!getActiveData('otherInfo')) && 
+                 (!getActiveData('termsAndConditions')) && (
                   <p>No additional information available for this tour.</p>
                 )}
+                
+                <style>{`
+                  .rich-text-content strong { font-weight: 700; color: #1f2937; }
+                  .rich-text-content b { font-weight: 700; color: #1f2937; }
+                  .rich-text-content em { font-style: italic; }
+                  .rich-text-content i { font-style: italic; }
+                  .rich-text-content u { text-decoration: underline; }
+                  .rich-text-content h1 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0 0.5rem; color: #6A1B82; }
+                  .rich-text-content h2 { font-size: 1.25rem; font-weight: 700; margin: 1rem 0 0.5rem; color: #6A1B82; }
+                  .rich-text-content h3 { font-size: 1.1rem; font-weight: 700; margin: 0.75rem 0 0.4rem; color: #374151; }
+                  .rich-text-content p { margin-bottom: 0.75rem; }
+                  .rich-text-content ul, .rich-text-content ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+                  .rich-text-content li { margin-bottom: 0.25rem; }
+                `}</style>
               </motion.div>
             )}
 
@@ -1222,18 +1271,28 @@ const PackageDetailPage = () => {
                 transition={{ duration: 0.3 }}
               >
                 <SectionTitle><MapPinIcon /> Pick Up Points</SectionTitle>
-                {getActiveData('pickupPoints') && getActiveData('pickupPoints').length > 0 ? (
+                {getActiveData('pickupPoints') ? (
                   <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-                    {getActiveData('pickupPoints').map((point, index) => (
-                      <div key={index} style={{ 
-                        padding: '0.75rem 0', 
-                        borderBottom: index < getActiveData('pickupPoints').length - 1 ? '1px solid #f3f4f6' : 'none',
-                        color: '#4a4a4a',
-                        lineHeight: '1.6'
-                      }}>
-                        {point.location}{point.time ? ` - ${point.time}` : ''}
-                      </div>
-                    ))}
+                    {typeof getActiveData('pickupPoints') === 'string' ? (
+                      <div 
+                        style={{ lineHeight: '1.8', color: '#4a4a4a', fontFamily: 'inherit' }}
+                        dangerouslySetInnerHTML={{ __html: getActiveData('pickupPoints') }}
+                        className="rich-text-content"
+                      />
+                    ) : Array.isArray(getActiveData('pickupPoints')) && getActiveData('pickupPoints').length > 0 ? (
+                      getActiveData('pickupPoints').map((point, index) => (
+                        <div key={index} style={{ 
+                          padding: '0.75rem 0', 
+                          borderBottom: index < getActiveData('pickupPoints').length - 1 ? '1px solid #f3f4f6' : 'none',
+                          color: '#4a4a4a',
+                          lineHeight: '1.6'
+                        }}>
+                          {point.location}{point.time ? ` - ${point.time}` : ''}
+                        </div>
+                      ))
+                    ) : (
+                      <p>Pick up points coming soon. Please contact us for details.</p>
+                    )}
                   </div>
                 ) : (
                   <p>Pick up points coming soon. Please contact us for details.</p>
