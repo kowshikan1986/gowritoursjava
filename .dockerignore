@@ -1,0 +1,102 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Git
+.git
+.gitignore
+
+# Build outputs in subdirectory (will be rebuilt)
+luxury-travel-agency/dist
+
+# Development files
+*.log
+*.sql
+*.sqlite
+*.md
+!luxury-travel-agency/README.md
+
+# Database exports (large files)
+luxury-travel-agency/database_export_*.json
+luxury-travel-agency/database_export_*.sql
+
+# Editor directories
+.vscode
+.idea
+luxury-travel-agency/.vscode
+
+# Test files
+*.test.js
+*.spec.js
+
+# Temporary files
+temp-*
+*.tmp
+
+# Debug files
+luxury-travel-agency/debug-*.html
+luxury-travel-agency/clear-*.html
+
+# Old scripts we don't need
+luxury-travel-agency/check-*.js
+luxury-travel-agency/check-*.cjs
+luxury-travel-agency/fix-*.js
+luxury-travel-agency/fix-*.cjs
+luxury-travel-agency/delete-*.js
+luxury-travel-agency/delete-*.cjs
+luxury-travel-agency/update-*.js
+luxury-travel-agency/update-*.cjs
+luxury-travel-agency/create-*.js
+luxury-travel-agency/create-*.cjs
+luxury-travel-agency/export-*.js
+luxury-travel-agency/export-*.cjs
+luxury-travel-agency/import-*.js
+luxury-travel-agency/import-*.cjs
+luxury-travel-agency/migrate-*.js
+luxury-travel-agency/migrate-*.cjs
+luxury-travel-agency/test-*.js
+luxury-travel-agency/test-*.cjs
+luxury-travel-agency/add-*.js
+luxury-travel-agency/add-*.cjs
+luxury-travel-agency/list-*.cjs
+luxury-travel-agency/populate-*.js
+luxury-travel-agency/restore-*.js
+luxury-travel-agency/move-*.js
+luxury-travel-agency/cleanup-*.js
+luxury-travel-agency/RUN-THIS-NOW.js
+luxury-travel-agency/SUBCATEGORIES_UPDATE_INSTRUCTIONS.js
+luxury-travel-agency/UPDATE-SCOTLAND-CONSOLE.js
+
+# Environment example
+luxury-travel-agency/.env.example
+
+# Deployment configs for other platforms
+netlify.toml
+vercel.json
+render.yaml
+Procfile
+runtime.txt
+luxury-travel-agency/deploy-*.sh
+
+# Server alternatives
+luxury-travel-agency/server-postgres.js
+luxury-travel-agency/server-production.js
+luxury-travel-agency/server.js
+luxury-travel-agency/server-json-only.js
+
+# Database backups in database folder
+luxury-travel-agency/database/
+
+# Logs
+luxury-travel-agency/logs/
+
+# Root setup
+setup-database.js
+*.sqlite
+
+# Node modules in subdirectory
+luxury-travel-agency/node_modules
+
+# Vercel
+.vercel
+.vercelignore
