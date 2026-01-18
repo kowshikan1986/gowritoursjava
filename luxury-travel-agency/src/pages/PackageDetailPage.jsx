@@ -1193,6 +1193,9 @@ const PackageDetailPage = () => {
               >
                 {/* Other Information */}
                 {getActiveData('otherInfo') && (
+                  (typeof getActiveData('otherInfo') === 'string' && getActiveData('otherInfo').trim()) ||
+                  (Array.isArray(getActiveData('otherInfo')) && getActiveData('otherInfo').length > 0)
+                ) && (
                   <div style={{ marginBottom: '2rem' }}>
                     <SectionTitle><CheckCircleIcon /> Other Information</SectionTitle>
                     <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
@@ -1218,9 +1221,12 @@ const PackageDetailPage = () => {
                 
                 {/* Terms & Conditions */}
                 {getActiveData('termsAndConditions') && (
+                  (typeof getActiveData('termsAndConditions') === 'string' && getActiveData('termsAndConditions').trim()) ||
+                  (Array.isArray(getActiveData('termsAndConditions')) && getActiveData('termsAndConditions').length > 0)
+                ) && (
                   <div style={{ marginBottom: '2rem' }}>
                     <SectionTitle><CheckCircleIcon /> Terms & Conditions</SectionTitle>
-                    <div style={{ background: 'white', padding: '1.5rem', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
+                    <div style={{ background: '#fff9f0', padding: '1.5rem', borderRadius: '12px', border: '1px solid #f5e6d3' }}>
                       {typeof getActiveData('termsAndConditions') === 'string' ? (
                         <div 
                           style={{ lineHeight: '1.8', color: '#4a4a4a', fontFamily: 'inherit' }}

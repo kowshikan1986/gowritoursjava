@@ -807,15 +807,14 @@ const TourDetailsForm = ({ details, onChange }) => {
               </Field>
               
               <Field>
-                <Label>📋 Other Information (one per line)</Label>
-                <TextArea
-                  value={(pkg.otherInfo || []).join('\n')}
-                  onChange={(e) => handleUpdateSubPackage(pkgIndex, 'otherInfo', e.target.value.split('\n').filter(h => h.trim()))}
-                  placeholder="Provide additional relevant details, one per line.&#10;&#10;Example:&#10;Pickup available from select locations&#10;Travel insurance recommended&#10;Wheelchair accessible with prior notice"
-                  rows="8"
+                <Label>📋 Other Information</Label>
+                <RichTextEditor
+                  value={pkg.otherInfo || ''}
+                  onChange={(val) => handleUpdateSubPackage(pkgIndex, 'otherInfo', val)}
+                  placeholder="Provide additional relevant details. Use Bold for headings."
                 />
                 <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
-                  Provide additional relevant details about the tour, one item per line. Each line appears as a bullet point.
+                  Provide additional relevant details about the tour. Use <strong>Bold</strong> for headings.
                 </p>
               </Field>
               
@@ -1029,15 +1028,14 @@ const TourDetailsForm = ({ details, onChange }) => {
               </Field>
               
               <Field>
-                <Label>📜 Terms & Conditions (one per line)</Label>
-                <TextArea
-                  value={(pkg.termsAndConditions || []).join('\n')}
-                  onChange={(e) => handleUpdateSubPackage(pkgIndex, 'termsAndConditions', e.target.value.split('\n').filter(h => h.trim()))}
-                  placeholder="Full payment required 14 days before departure&#10;Valid passport required for all travelers&#10;Minimum age: 5 years&#10;Travel insurance recommended&#10;Itinerary subject to change due to weather"
-                  rows="6"
+                <Label>📜 Terms & Conditions</Label>
+                <RichTextEditor
+                  value={pkg.termsAndConditions || ''}
+                  onChange={(val) => handleUpdateSubPackage(pkgIndex, 'termsAndConditions', val)}
+                  placeholder="Enter terms and conditions. Use Bold for headings."
                 />
                 <p style={{ fontSize: '0.85rem', color: '#6b7280', marginTop: '0.5rem' }}>
-                  Enter each term or condition on a new line.
+                  Enter terms and conditions. Use <strong>Bold</strong> for headings.
                 </p>
               </Field>
               
